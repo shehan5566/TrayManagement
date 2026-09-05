@@ -22,6 +22,7 @@ const connectDB = async () => {
             bufferCommands: false
         }).catch(err => {
             cachedPromise = null;
+            console.error('MongoDB Connection Error:', err.message || err);
             throw err;
         });
     }
@@ -31,7 +32,6 @@ const connectDB = async () => {
         return mongoose.connection;
     } catch (err) {
         cachedPromise = null;
-        console.error('MongoDB connection error:', err);
         throw err;
     }
 };
@@ -42,12 +42,14 @@ mongoose.connection.on('disconnected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-    console.error('MongoDB connection error event:', err);
+    console.error('MongoDB connection error event:', err.message || err);
     cachedPromise = null;
 });
 
-// Initial connection attempt
-connectDB().catch(err => console.error('Initial MongoDB Connection Error:', err));
+// Initial connection attempt (Catch startup error to allow server port binding)
+connectDB().catch(err => {
+    console.error('Initial DB Connection Notice:', err.message || err);
+});
 
 // Define Schemas
 const LocationSchema = new mongoose.Schema({
