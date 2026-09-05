@@ -3,22 +3,51 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 dotenv.config();
 
-(async () => {
-    try {
-        console.log('Connecting to Live MongoDB Database...');
-        const uri = process.env.MONGODB_URI;
+let cachedPromise = null;
 
-        await mongoose.connect(uri, {
-            maxPoolSize: 20,
-            minPoolSize: 5,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000
-        });
-        console.log('Successfully connected to Live MongoDB with optimized connection pool.');
-    } catch (err) {
-        console.error('MongoDB connection error:', err);
+const connectDB = async () => {
+    if (mongoose.connection.readyState === 1) {
+        return mongoose.connection;
     }
-})();
+    if (!cachedPromise) {
+        const uri = process.env.MONGODB_URI;
+        if (!uri) {
+            console.error('MONGODB_URI environment variable is missing!');
+            throw new Error('MONGODB_URI environment variable is missing');
+        }
+        console.log('Connecting to MongoDB Atlas...');
+        cachedPromise = mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            bufferCommands: false
+        }).catch(err => {
+            cachedPromise = null;
+            throw err;
+        });
+    }
+    try {
+        await cachedPromise;
+        console.log('Successfully connected to Live MongoDB.');
+        return mongoose.connection;
+    } catch (err) {
+        cachedPromise = null;
+        console.error('MongoDB connection error:', err);
+        throw err;
+    }
+};
+
+mongoose.connection.on('disconnected', () => {
+    console.warn('MongoDB connection lost. Clearing cached promise.');
+    cachedPromise = null;
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error event:', err);
+    cachedPromise = null;
+});
+
+// Initial connection attempt
+connectDB().catch(err => console.error('Initial MongoDB Connection Error:', err));
 
 // Define Schemas
 const LocationSchema = new mongoose.Schema({
@@ -1136,6 +1165,7 @@ const SystemSetting = {
 };
 
 module.exports = {
+    connectDB,
     Location,
     StockTransfer,
     Customer,

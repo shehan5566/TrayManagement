@@ -13,7 +13,7 @@ const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 const MongoStore = require('connect-mongo').MongoStore || require('connect-mongo').default || require('connect-mongo');
 
-const { Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting } = require('./db');
+const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting } = require('./db');
 const smsService = require('./smsService');
 const backupService = require('./backupService');
 const cron = require('node-cron');
@@ -26,9 +26,14 @@ const emailService = require('./emailService');
 // Schedule Weekly Backup and Email Report (Every Monday at 8:00 AM)
 cron.schedule('0 8 * * 1', async () => {
     console.log('[CRON] Running scheduled weekly backup and email report...');
-    const result = await backupService.runBackup();
-    if (result && result.success) {
-        await emailService.sendWeeklyReport(result);
+    try {
+        await connectDB();
+        const result = await backupService.runBackup();
+        if (result && result.success) {
+            await emailService.sendWeeklyReport(result);
+        }
+    } catch (err) {
+        console.error('[CRON] Weekly backup error:', err);
     }
 });
 
@@ -36,6 +41,7 @@ cron.schedule('0 8 * * 1', async () => {
 cron.schedule('0 9 * * *', async () => {
     console.log('[CRON] Running automated 1-week overdue tray balance SMS reminders...');
     try {
+        await connectDB();
         const alerts = await Customer.getAlerts();
         for (const alert of alerts) {
             if ((alert.daysPending >= 7 || alert.currentBalance >= 50) && alert.phone) {
@@ -50,6 +56,17 @@ cron.schedule('0 9 * * *', async () => {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Ensure MongoDB connection is active for every request (Serverless safe)
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error('DB Connection Middleware Error:', err);
+        return res.status(500).send('Database connection error. Please ensure MONGODB_URI is correctly set in environment variables and MongoDB Atlas IP Whitelist allows 0.0.0.0/0.');
+    }
+});
 
 // Set EJS view engine & disable view cache
 app.set('view engine', 'ejs');
