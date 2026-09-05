@@ -1,0 +1,362 @@
+<style>
+    /* Chatbot Floating Button */
+    .chat-widget-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+    }
+
+    .chat-widget-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Chatbot Window */
+    .chat-window {
+        position: fixed;
+        bottom: 100px;
+        right: 30px;
+        width: 350px;
+        max-width: calc(100vw - 60px);
+        height: 500px;
+        max-height: calc(100vh - 120px);
+        background: var(--bg-card, #fff);
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 999;
+        transform-origin: bottom right;
+        transform: scale(0);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none;
+    }
+
+    .chat-window.open {
+        transform: scale(1);
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .chat-header {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+    }
+
+    .chat-close {
+        cursor: pointer;
+        font-size: 18px;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    .chat-close:hover {
+        opacity: 1;
+    }
+
+    .chat-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        background: var(--bg-body, #f8f9fa);
+    }
+
+    /* Messages */
+    .chat-msg {
+        max-width: 85%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 14px;
+        line-height: 1.4;
+        animation: fadeIn 0.3s ease;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+
+    .chat-msg.bot {
+        background: var(--bg-card, #fff);
+        color: var(--text-dark, #333);
+        align-self: flex-start;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .chat-msg.user {
+        background: var(--primary-green);
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Input Area */
+    .chat-input-area {
+        display: flex;
+        padding: 15px;
+        background: var(--bg-card, #fff);
+        border-top: 1px solid #eee;
+    }
+
+    .chat-input {
+        flex: 1;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        padding: 10px 15px;
+        outline: none;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .chat-input:focus {
+        border-color: var(--primary-green);
+    }
+
+    .chat-send-btn {
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        margin-left: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+    .chat-send-btn:hover {
+        background: var(--primary-green-dark);
+        transform: scale(1.05);
+    }
+    
+    .chat-send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        display: none;
+        align-self: flex-start;
+        background: var(--bg-card, #fff);
+        padding: 12px 16px;
+        border-radius: 14px;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 10px;
+    }
+    .typing-indicator span {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background-color: var(--primary-green);
+        border-radius: 50%;
+        margin-right: 4px;
+        animation: typing 1s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; margin-right: 0; }
+
+    @keyframes typing {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<!-- Floating Button -->
+<div class="chat-widget-btn" id="chatWidgetBtn" onclick="toggleChat()">
+    <i class="fa-solid fa-comments"></i>
+</div>
+
+<!-- Chat Window -->
+<div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+        <div>
+            <i class="fa-solid fa-robot" style="margin-right: 8px;"></i> Nelna Assistant
+        </div>
+        <div style="display: flex; gap: 15px;">
+            <div class="chat-close" onclick="clearChat()" title="Clear Chat" style="font-size: 14px; margin-top: 2px;">
+                <i class="fa-solid fa-trash"></i>
+            </div>
+            <div class="chat-close" onclick="toggleChat()" title="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-body" id="chatBody">
+        <div class="chat-msg bot">
+            Hello! 👋 I'm your AI Assistant. Ask me anything in English, Sinhala, or Singlish!
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." autocomplete="off" onkeypress="handleKeyPress(event)">
+        <button class="chat-send-btn" id="chatSendBtn" onclick="sendMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    const chatWindow = document.getElementById('chatWindow');
+    const chatBody = document.getElementById('chatBody');
+    const chatInput = document.getElementById('chatInput');
+    const chatBtnIcon = document.querySelector('#chatWidgetBtn i');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const sendBtn = document.getElementById('chatSendBtn');
+
+    const defaultGreeting = "Hello! 👋 I'm your AI Assistant. Ask me anything in English, Sinhala, or Singlish!";
+    const CURRENT_USER = "<%= user ? user.username : 'guest' %>";
+    
+    // Load chat history on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadChatHistory();
+    });
+
+    function toggleChat() {
+        const isOpen = chatWindow.classList.contains('open');
+        if (isOpen) {
+            chatWindow.classList.remove('open');
+            chatBtnIcon.classList.remove('fa-xmark');
+            chatBtnIcon.classList.add('fa-comments');
+        } else {
+            chatWindow.classList.add('open');
+            chatBtnIcon.classList.remove('fa-comments');
+            chatBtnIcon.classList.add('fa-xmark');
+            setTimeout(() => chatInput.focus(), 300);
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    async function sendMessage() {
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+
+        // Add user message to UI
+        appendMessage(msg, 'user');
+        saveMessage(msg, 'user');
+        chatInput.value = '';
+        
+        // Show typing indicator
+        chatBody.appendChild(typingIndicator); // move to bottom
+        typingIndicator.style.display = 'block';
+        chatBody.scrollTop = chatBody.scrollHeight;
+        sendBtn.disabled = true;
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            });
+            const data = await res.json();
+            
+            typingIndicator.style.display = 'none';
+            sendBtn.disabled = false;
+            
+            if (data.success) {
+                let formattedReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                appendMessage(formattedReply, 'bot');
+                saveMessage(formattedReply, 'bot');
+            } else {
+                appendMessage("Error: " + (data.error || "Something went wrong."), 'bot');
+            }
+        } catch (err) {
+            typingIndicator.style.display = 'none';
+            sendBtn.disabled = false;
+            appendMessage("Connection error. Please try again.", 'bot');
+        }
+    }
+
+    function appendMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `chat-msg ${sender}`;
+        msgDiv.innerHTML = text;
+        
+        // insert before typing indicator
+        chatBody.insertBefore(msgDiv, typingIndicator);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function saveMessage(text, sender) {
+        let historyObj = JSON.parse(sessionStorage.getItem('chatHistoryObj') || '{"messages":[], "timestamp":0, "user":""}');
+        historyObj.messages.push({ text, sender });
+        historyObj.timestamp = Date.now();
+        historyObj.user = CURRENT_USER;
+        sessionStorage.setItem('chatHistoryObj', JSON.stringify(historyObj));
+    }
+
+    function loadChatHistory() {
+        let historyObj = JSON.parse(sessionStorage.getItem('chatHistoryObj') || '{"messages":[], "timestamp":0, "user":""}');
+        
+        // Check if 10 mins passed (600,000 ms) OR user changed
+        const tenMins = 10 * 60 * 1000;
+        if (historyObj.timestamp > 0 && (Date.now() - historyObj.timestamp > tenMins || historyObj.user !== CURRENT_USER)) {
+            historyObj.messages = [];
+            sessionStorage.removeItem('chatHistoryObj');
+        }
+
+        if (historyObj.messages.length === 0) {
+            appendMessage(defaultGreeting, 'bot');
+            saveMessage(defaultGreeting, 'bot');
+        } else {
+            historyObj.messages.forEach(msg => {
+                appendMessage(msg.text, msg.sender);
+            });
+            // Update timestamp so it doesn't expire if they just loaded a new page
+            historyObj.timestamp = Date.now();
+            sessionStorage.setItem('chatHistoryObj', JSON.stringify(historyObj));
+        }
+    }
+
+    function clearChat() {
+        if(confirm("Are you sure you want to clear the chat history?")) {
+            sessionStorage.removeItem('chatHistoryObj');
+            // Remove all messages except typing indicator
+            const msgs = chatBody.querySelectorAll('.chat-msg');
+            msgs.forEach(msg => msg.remove());
+            
+            appendMessage(defaultGreeting, 'bot');
+            saveMessage(defaultGreeting, 'bot');
+        }
+    }
+</script>

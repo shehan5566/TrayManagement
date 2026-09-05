@@ -1,0 +1,117 @@
+<%- include('partials/header') %>
+
+<div class="content-header" style="margin-bottom: 24px;">
+    <div>
+        <h2 style="font-size: 26px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 12px;">
+            <i class="fa-solid fa-sliders" style="color: var(--primary-green);"></i> System Settings & Configuration
+        </h2>
+        <p style="color: var(--text-light); margin: 4px 0 0 0; font-size: 14px;">
+            Configure global default deposit rates, company details, SMS/Email notification endpoints, and receipt parameters.
+        </p>
+    </div>
+</div>
+
+<div class="card" style="max-width: 800px; padding: 32px; border-radius: 20px;">
+    <form id="settingsForm" onsubmit="handleSettingsSubmit(event)">
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-coins" style="color: var(--accent-yellow);"></i> Financial & Deposit Parameters
+            </h3>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
+                Global Deposit Rate per Tray (LKR)
+            </label>
+            <div style="position: relative;">
+                <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--primary-green);">LKR</span>
+                <input type="number" name="depositPerTray" class="form-control" value="<%= settings.depositPerTray || 2000 %>" style="padding-left: 55px; width: 100%; font-size: 16px; font-weight: 700;" min="0" step="100" required>
+            </div>
+            <p style="font-size: 12px; color: var(--text-light); margin-top: 6px;">
+                Default cash deposit expected per tray during Customer OUT transactions.
+            </p>
+        </div>
+
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px; margin-top: 36px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-building-user" style="color: var(--primary-green);"></i> Company Branding & Printing
+            </h3>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
+                Official Company Name
+            </label>
+            <input type="text" name="companyName" class="form-control" value="<%= settings.companyName || 'NELNA AGRI DEVELOPMENT (PVT) LTD' %>" style="width: 100%;" required>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
+                Print Receipt Footer Note
+            </label>
+            <textarea name="receiptFooterNote" class="form-control" rows="2" style="width: 100%; resize: vertical;"><%= settings.receiptFooterNote || 'Official Inward Stock Receipt & Verification Log' %></textarea>
+        </div>
+
+        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px; margin-top: 36px;">
+            <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-bell-concierge" style="color: #3b82f6;"></i> Notification & Automation Webhooks
+            </h3>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
+                SMS Gateway Webhook URL (MacroDroid / Twilio)
+            </label>
+            <input type="url" name="smsWebhookUrl" class="form-control" value="<%= settings.smsWebhookUrl || '' %>" style="width: 100%; font-family: monospace;" placeholder="https://trigger.macrodroid.com/..." required>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
+                System Alert Email Receiver
+            </label>
+            <input type="text" name="emailReceiver" class="form-control" value="<%= settings.emailReceiver || 'shehand@nelna.lk' %>" style="width: 100%;" placeholder="e.g. shehand@nelna.lk, admin@nelna.lk" required>
+            <small style="display: block; margin-top: 6px; color: var(--text-light); font-size: 12px;">
+                <i class="fa-solid fa-circle-info"></i> You can enter multiple email addresses separated by commas (e.g. <code>email1@nelna.lk, email2@nelna.lk</code>).
+            </small>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-floppy-disk"></i> Save System Configuration
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    async function handleSettingsSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const res = await fetch('/settings/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Settings Updated!',
+                    text: result.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire('Error', result.error || 'Failed to update settings', 'error');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Failed to save settings', 'error');
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>

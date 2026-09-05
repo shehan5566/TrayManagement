@@ -1,0 +1,179 @@
+<%- include('partials/header') %>
+
+<div style="margin-bottom: 25px;">
+    <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-users"></i> Customer Management</h2>
+    <p style="color: var(--text-light); font-size: 14px;">Manage Nelna Agri customer profiles.</p>
+</div>
+
+<% if (error) { %>
+    <div class="error-banner">
+        <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+    </div>
+<% } %>
+
+<div style="display: grid; grid-template-columns: <%= user.role === 'viewer' ? '1fr' : '350px 1fr' %>; gap: 30px; align-items: start;">
+    
+    <% if (typeof hasPerm !== 'function' || hasPerm('customer_create') || hasPerm('customer_edit')) { %>
+    <!-- Customer Form (Add / Edit) -->
+    <div class="content-box" style="border-top: 4px solid <%= editCustomer ? 'var(--accent-yellow)' : 'var(--primary-green)' %>;">
+        <div class="box-header">
+            <span class="box-title">
+                <%= editCustomer ? 'Edit Customer' : 'Add New Customer' %>
+            </span>
+        </div>
+        
+        <form action="<%= editCustomer ? '/customers/' + editCustomer.id + '/edit' : '/customers' %>" method="POST" onsubmit="submitAjaxForm(event, this, '<%= editCustomer ? 'Customer updated successfully' : 'Customer added successfully' %>')">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="form-group">
+                    <label for="name">Customer/Farm Name</label>
+                    <input type="text" id="name" name="name" value="<%= editCustomer ? editCustomer.name : '' %>" placeholder="e.g. Ruwan Agri Farm" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" name="address" value="<%= editCustomer ? editCustomer.address : '' %>" placeholder="Address...">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" value="<%= editCustomer ? editCustomer.phone : '' %>" placeholder="e.g. 0771234567" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" maxlength="10" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="initialBalance">Opening Tray Balance (Issued)</label>
+                    <input type="number" id="initialBalance" name="initialBalance" min="0" value="<%= editCustomer ? editCustomer.initialBalance : '0' %>" placeholder="0" <%= editCustomer ? '' : '' %>>
+                    <span style="font-size: 11px; color: var(--text-light);">Opening quantity of trays already with the customer.</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fa-solid <%= editCustomer ? 'fa-pen' : 'fa-plus' %>"></i> <%= editCustomer ? 'Update Customer' : 'Save Customer' %>
+                    </button>
+                    <% if (editCustomer) { %>
+                        <a href="/customers" class="btn btn-secondary">Cancel</a>
+                    <% } %>
+                </div>
+            </div>
+        </form>
+
+        <% if (typeof hasPerm !== 'function' || hasPerm('customer_create')) { %>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px dashed var(--border-color);">
+        <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; color: var(--text-dark);"><i class="fa-solid fa-file-excel" style="color: #107c41;"></i> Bulk Import (Excel)</div>
+        <form action="/customers/import" method="POST" enctype="multipart/form-data" onsubmit="submitAjaxForm(event, this, 'Customers imported successfully')">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="file" name="excelFile" accept=".xlsx, .xls, .csv" required style="font-size: 12px; padding: 8px; border: 1px dashed var(--border-color); border-radius: 4px; width: 100%; box-sizing: border-box;">
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary" style="flex-grow: 1; background-color: var(--accent-yellow); color: var(--primary-green-dark); border: none; padding: 8px;"><i class="fa-solid fa-upload"></i> Import</button>
+                    <a href="/templates/Customer_Template.xlsx" class="btn btn-secondary" style="padding: 8px;" title="Download Template"><i class="fa-solid fa-download"></i> Template</a>
+                </div>
+            </div>
+        </form>
+        <% } %>
+    </div>
+    <% } %>
+
+    <!-- Customer List -->
+    <div class="content-box">
+        <div class="box-header">
+            <span class="box-title"><i class="fa-solid fa-list-ul"></i> Customers Registry</span>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="customerSearch" class="search-input" placeholder="Search customer by name or phone...">
+        </div>
+
+        <% if (customers.length === 0) { %>
+            <p style="text-align: center; color: var(--text-light); padding: 30px 0;">No customers found. Create a customer to start tracking.</p>
+        <% } else { %>
+            <div class="table-responsive">
+                <table id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Phone</th>
+                            <th>Initial Balance</th>
+                            <th>Current Balance</th>
+                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
+                            <th style="text-align: center; width: 150px;">Actions</th>
+                            <% } %>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% customers.forEach(c => { %>
+                            <tr>
+                                <td>
+                                    <a href="/customers/<%= c.id %>/history" style="color: var(--primary-green-dark); text-decoration: none;" title="View History">
+                                        <strong><%= c.name %></strong> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 5px; color: var(--text-light);"></i>
+                                    </a>
+                                </td>
+                                <td><%= c.address || '-' %></td>
+                                <td><%= c.phone %></td>
+                                <td><%= c.initialBalance %></td>
+                                <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; display: flex; align-items: center; justify-content: space-between;">
+                                    <span><%= c.currentBalance %></span>
+                                    <% if (typeof hasPerm !== 'function' || hasPerm('customer_sms')) { %>
+                                    <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
+                                        <i class="fa-solid fa-comment-sms"></i>
+                                    </button>
+                                    <% } %>
+                                </td>
+                                <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
+                                <td>
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_history'))) { %>
+                                        <a href="/customers/<%= c.id %>/history" class="btn btn-primary" style="padding: 6px 10px; font-size: 12px;" title="View History">
+                                            <i class="fa-solid fa-clock-rotate-left"></i>
+                                        </a>
+                                        <% } %>
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_edit'))) { %>
+                                        <a href="/customers/<%= c.id %>/edit" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark);" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <% } %>
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_delete'))) { %>
+                                        <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')">
+                                            <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" title="Delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <% } %>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+async function sendBalanceSMS(customerId) {
+    if(!confirm("Are you sure you want to send a manual SMS balance update to this customer?")) return;
+    
+    try {
+        const response = await fetch('/api/sms/send-balance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ customerId })
+        });
+        const result = await response.json();
+        
+        if(result.success) {
+            showToast('Success', result.message, 'success');
+        } else {
+            showToast('Error', result.error || 'Failed to send SMS', 'error');
+        }
+    } catch(err) {
+        showToast('Error', 'Network error occurred while sending SMS', 'error');
+    }
+}
+</script>
+
+<%- include('partials/footer') %>

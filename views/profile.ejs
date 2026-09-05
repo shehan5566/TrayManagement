@@ -1,0 +1,103 @@
+<%- include('partials/header') %>
+
+<div style="margin-bottom: 25px;">
+    <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-user-gear"></i> Profile Settings</h2>
+    <p style="color: var(--text-light); font-size: 14px;">Manage your account credentials and system profile.</p>
+</div>
+
+<% if (typeof error !== 'undefined' && error) { %>
+    <div class="error-banner" style="margin-bottom: 20px; background-color: #ffebee; color: var(--danger); padding: 12px 15px; border-radius: 8px; border-left: 5px solid var(--danger); display: flex; align-items: center; gap: 10px; font-weight: 500;">
+        <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+    </div>
+<% } %>
+
+<% if (typeof success !== 'undefined' && success) { %>
+    <div class="success-banner" style="margin-bottom: 20px; background-color: #e8f5e9; color: var(--success); padding: 12px 15px; border-radius: 8px; border-left: 5px solid var(--success); display: flex; align-items: center; gap: 10px; font-weight: 500;">
+        <i class="fa-solid fa-circle-check"></i> <%= success %>
+    </div>
+<% } %>
+
+<div class="profile-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 30px; margin-top: 20px;">
+    <!-- Profile & Stats Panel -->
+    <div class="content-box" style="border-top: 4px solid var(--accent-yellow); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 30px;">
+        <div class="profile-avatar" style="width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--brand-green) 0%, var(--brand-green-dark) 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
+            <i class="fa-solid fa-circle-user" style="font-size: 55px; color: #ffffff;"></i>
+        </div>
+        <h3 style="font-size: 22px; font-weight: 700; color: var(--primary-green); margin-bottom: 5px;"><%= user.username %></h3>
+        <span class="badge" style="background-color: var(--badge-in-bg); color: var(--success); font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 25px;">
+            <i class="fa-solid fa-shield-halved"></i> <%= user.username === 'admin' ? 'Administrator' : 'System Operator' %>
+        </span>
+
+        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; width: 100%; border-bottom: 1px solid var(--border-light); padding-bottom: 10px; text-align: left;">
+            <i class="fa-solid fa-chart-simple"></i> Your Transaction Statistics
+        </h4>
+
+        <div style="display: flex; justify-content: space-around; width: 100%; gap: 15px; flex-wrap: wrap;">
+            <!-- Today's Count -->
+            <div style="display: flex; flex-direction: column; align-items: center; min-width: 80px;">
+                <div class="stat-circle" style="width: 75px; height: 75px; border-radius: 50%; background: var(--bg-color, #ffffff); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: var(--text-dark, #333333); box-shadow: 0 4px 8px var(--shadow-color); margin-bottom: 8px; border: 3px solid var(--brand-yellow);">
+                    <%= stats.dailyCount %>
+                </div>
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; text-align: center;">Today</span>
+            </div>
+
+            <!-- Month's Count -->
+            <div style="display: flex; flex-direction: column; align-items: center; min-width: 80px;">
+                <div class="stat-circle" style="width: 75px; height: 75px; border-radius: 50%; background: var(--bg-color, #ffffff); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: var(--text-dark, #333333); box-shadow: 0 4px 8px var(--shadow-color); margin-bottom: 8px; border: 3px solid var(--brand-yellow);">
+                    <%= stats.monthlyCount %>
+                </div>
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; text-align: center;">This Month</span>
+            </div>
+
+            <!-- Total Count -->
+            <div style="display: flex; flex-direction: column; align-items: center; min-width: 80px;">
+                <div class="stat-circle" style="width: 75px; height: 75px; border-radius: 50%; background: var(--bg-color, #ffffff); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: var(--text-dark, #333333); box-shadow: 0 4px 8px var(--shadow-color); margin-bottom: 8px; border: 3px solid var(--brand-yellow);">
+                    <%= stats.totalCount %>
+                </div>
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; text-align: center;">Total Saved</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Credentials Panel -->
+    <div class="content-box" style="border-top: 4px solid var(--primary-green);">
+        <div class="box-header">
+            <span class="box-title"><i class="fa-solid fa-lock"></i> Account Credentials</span>
+        </div>
+        
+        <form action="/profile" method="POST">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="<%= user.username %>" placeholder="Username..." required>
+                    <span style="font-size: 11px; color: var(--text-light);">This username is used to log in to the system.</span>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border-light); margin: 5px 0;">
+                
+                <div class="form-group">
+                    <label for="currentPassword">Current Password (Required to save changes)</label>
+                    <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter current password..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="newPassword">New Password (Leave blank to keep current)</label>
+                    <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password...">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password...">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+                        <i class="fa-solid fa-floppy-disk"></i> Update Credentials
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

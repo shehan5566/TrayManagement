@@ -1,0 +1,4135 @@
+{
+  "timestamp": "2026-08-25T05:38:16.396Z",
+  "stats": {
+    "usersCount": 4,
+    "customersCount": 405,
+    "transactionsCount": 7,
+    "activityLogsCount": 36
+  },
+  "data": {
+    "users": [
+      {
+        "_id": "1",
+        "__v": 0,
+        "password": "$2b$10$rSwgMT7urVFsLSrTXs0NPue4LsQkIWjPL/vWsR0cDXCTtKNgSJBne",
+        "username": "admin",
+        "role": "admin"
+      },
+      {
+        "_id": "1787297994994",
+        "username": "Sajeethran",
+        "password": "$2b$10$oHLWgFQeTxZ4BglOTpN9UO5zDzPonTDhS5dnX4O2VYYzHcB7ogJHK",
+        "role": "operator",
+        "__v": 0
+      },
+      {
+        "_id": "1787312338696",
+        "username": "Devinda",
+        "password": "$2b$10$4PtTz6ASMv1EqN55jW4LRujYI0J0ywQA82fm9Yom3rAf/FlSW6.GW",
+        "role": "user",
+        "__v": 0
+      },
+      {
+        "_id": "1787312350680",
+        "username": "Madusanka",
+        "password": "$2b$10$e0HOQShplEtDX15Vxh0.guoraTzwN0fSn49V.s8ZjJI2gKRWjwSYy",
+        "role": "user",
+        "__v": 0
+      }
+    ],
+    "customers": [
+      {
+        "_id": "1787142432062",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Steawia Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432063",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Raja Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432064",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Steawia Fruits(Dananjaya Traders)",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432065",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Prasansani Sumihiri Fruits And Vegetable Sellers",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432066",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Priyankara Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432067",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Duminda Fruits - Warakapola",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432068",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Udara Fruit Centre",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432069",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nuwan Fresh Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432070",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Roshan Enterprises",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432071",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "T.M Traders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432072",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Tharindu Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432073",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chanaka Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432074",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fazaal Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432075",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "L.S.C Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432076",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ashoka Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432077",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ranjith Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432078",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fernando Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432079",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Athula Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432080",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kumara Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432081",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Daluwatte Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432082",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chinthaka Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432083",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Heshan Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432084",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kumara Fruits Mirissa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432085",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pathma Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432086",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ruhunu Fruits Traders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432087",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Duminda Fruits Kottawa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432088",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sankaja Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432089",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Embilipitiya Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432090",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kumara Fruits (Malabe)",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432091",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dasanayake Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432092",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pettah Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432093",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Prasanna Fresh Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432094",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ravindra Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432095",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ambasewana (Ranwala )Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432096",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chathura Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432097",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dum Pettiya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432098",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dilhari Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432099",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Doubtful Debtors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432100",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kalu Malli Fruits Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432101",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Prisca Stores",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432102",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Athula Kollupitiya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432103",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "PSR Fernando",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432104",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "PSR Fernando",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432106",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Lakmal Weligama",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432107",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Be Cool",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432108",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sadagiri Supermarket",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432109",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Banujaya Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432110",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Thushitha Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432111",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kasun Sameera",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432112",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wasantha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432113",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wasana Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432114",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rajapaksha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432115",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sajana Fruit (Malwana)",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432116",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Best Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432117",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Scattered Harvest",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432118",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Welcom Hotel Lanka",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432119",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Thilina Fruits (Keppitipola)",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432120",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kegalle Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432121",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chamindha Kaduwela",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432122",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dinesh Makola",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432123",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Shashi Mango - Peliyagoda",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432124",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "T M Traders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432125",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mr. Harsha",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432126",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "P. Suranga Rangana",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432127",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Cloud & Layers",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432128",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Prasad (S)",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432129",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Roshan - Hikkaduwa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432130",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Indika Moratuwa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432131",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Manning Market - Peliyagoda",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432132",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mr. Thisara - Kolonnawa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432133",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Lucky Fresh",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432134",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mr. Rahuman",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432135",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mr. Asanka",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432136",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nelna Farm Fresh – Battaramulla",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432137",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sandeep & Brothers (Pvt) Ltd",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432138",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Janasiri Distributors (PVT) Ltd",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432139",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "M R Lakmal",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432140",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Banuja Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432141",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Udara Fruits - Homagama",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432142",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Millennium City",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432143",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kasun Fruits Malabe",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432145",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sadew Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432146",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Vijebandu Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432147",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Best Fruit Kattuwa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432148",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sadamali Ftuits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432149",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sajaan Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432150",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Yansiru Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432151",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ishara Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432152",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Red Apple Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432153",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "City Hotel",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432154",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Annashi Fruit Center",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432155",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Deniyaya Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432156",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Medu & Dinu Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432157",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Janaka Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432158",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Madushan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432159",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Hjp Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432160",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ramanayake Juice Bar",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432161",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Family Super - Galkissa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432162",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Diyon Fruits & Sweets",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432163",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Deniyaya Fruit Shop (hokandara)",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432164",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "RM Super Centre",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432165",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dambulla Fruits Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432166",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dambulla Fruits Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432167",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Samantha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432168",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dias Family Mart",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432169",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Gihan Feuit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432170",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pasgorasa Padukka",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432171",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ud Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432172",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Randhima Traders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432173",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Gpk Super",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432174",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kumara Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432175",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Economic Center",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432176",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "S.k Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432177",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mps Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432178",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Thathsara Traders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432179",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pasindu Cool Spot",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432180",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Galagedara Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432181",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "H.n.d Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432182",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pathirana Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432183",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "P.m Traders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432184",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dhanushka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432185",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Laksada",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432186",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sk Vegetable",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432187",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Indhika Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432188",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rkr Fresh",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432189",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Siri Rasa Fruit Center",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432190",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sujith Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432191",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Namina Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432192",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mondo Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432193",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Agith Chaines Vegetables",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432194",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ajith Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432195",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ruwan Manin Market",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432196",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nihal Super",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432197",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Amayuru Enterprises",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432198",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sajath Malwana",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432199",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pradeep Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432200",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rathna Fruit City",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432201",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Arosha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432202",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Prasanna Quality Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432203",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rkr Fresh",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432204",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kamal Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432205",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Cafe Management Service Pvt Ltd",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432206",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "H.K Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432207",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sunil Traders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432208",
+        "__v": 0,
+        "address": "nikawala, pugod",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Aba Sevana",
+        "phone": "0777993201"
+      },
+      {
+        "_id": "1787142432209",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sasnidu Fruit (rajarata Fruit)",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432210",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Shaveen Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432211",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ebilipitiya Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432212",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Akram Manin Market",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432213",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Daly Fresh",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432214",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pld Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432215",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sanu Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432216",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Priyadarshana Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432217",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chathura Mathugama",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432218",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Candidates Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432219",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Manjula Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432220",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ushan Fruits- Telulla Colony",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432221",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Adiru Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432222",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Bkg Abesooriya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432223",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dinu Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432224",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dhaluwatta Weligama",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432225",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "SF Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432226",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Keselwaththa Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432227",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nanuoya Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432228",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Aswanna Vegetable Market",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432229",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Saliya Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432230",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Presanna Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432231",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ananda Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432232",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Roshan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432233",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Karunathilaka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432234",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Janaka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432235",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nimsara Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432236",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mahawa Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432237",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ishani Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432238",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Manikinn Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432239",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Madawala Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432240",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Madu Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432241",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sadun Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432242",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ruwan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432243",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Hjp Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432244",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nandana Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432245",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Priyantha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432246",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mawanalla Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432247",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Green Fresh",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432248",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dabulu Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432249",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Yasiru Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432250",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Smk Aluth Elawalu Kade",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432251",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Raju Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432252",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sunil Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432253",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432254",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sanuli Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432255",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ishan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432256",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Athukoral Fruit City",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432257",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Usman",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432258",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Katugastota Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432259",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Anos Treders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432260",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Samagi Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432261",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dawal Giri",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432262",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Lion\"\"s Super Market",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432263",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Susantha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432264",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sujith Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432265",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rs Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432266",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Laksiri Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432267",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chaminda Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432268",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ar Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432269",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sm Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432270",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wazeem Proprietor",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432271",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Swm Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432272",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Madawal Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432273",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Digana Vegetables",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432274",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rbk Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432275",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Digana Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432276",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sunil Fruit - Waththegama",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432277",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "I.m. Vegetable Sales",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432278",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Palamkubura Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432279",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Manikinn Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432280",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Thanuja Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432281",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Super Market Pvt Ltd",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432282",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Buddik Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432283",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Gayani Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432284",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Madu Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432285",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mallawa Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432286",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mha Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432287",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Hazan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432288",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Frech Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432289",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Tanaka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432290",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Saman Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432291",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Herath Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432292",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Roshan Fruit - Rabukkana",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432293",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Bandara Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432294",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ms Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432295",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rathnayaka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432296",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Food Centar",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432297",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rajapaksha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432298",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Np Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432299",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nimesha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432300",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Hmb Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432301",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sajith Vegitable",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432302",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ometh Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432303",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Thamimi Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432304",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rasakawili Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432305",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Siri Sala Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432306",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jayarathna Treders",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432307",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ahna Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432308",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Happy Land Vegitable",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432309",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wijenayaka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432310",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jayantha Fruit Center",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432311",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Trp Vegitable",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432312",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ikma Vegitables",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432313",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rathnayaka Vegitables",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432314",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Fruit - Alawwa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432315",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sm Fruit - Mathale",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432316",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Samaji Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432317",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rs Fruit - Mathale",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432318",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Picks",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432319",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Lakshitha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432320",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Naila Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432321",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Janction Tredars",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432322",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Green Apple",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432323",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "New Premi Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432324",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Irfan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432325",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sunil Fruit - Matale",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432326",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Royal Mini Mart",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432327",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Presanna Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432328",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Mart",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432329",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ajith Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432330",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Janaka Pannala Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432331",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Roshan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432332",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Good & Fresh Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432333",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pangolla Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432334",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Mart",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432335",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Shachi Juice Bar",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432336",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sanchala Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432337",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Hiruni Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432338",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Susil Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432339",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jayalath Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432340",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Black And White Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432341",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Noolds And Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432342",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Halcyon Resturant & Juice Bar",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432343",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Specid Heallhy Fresh",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432344",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kapila Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432345",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sf Anasi Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432346",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sasa Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432347",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wasantha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432348",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Thushantha Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432349",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nawarathna Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432350",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wijeyananda Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432351",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Malani Vejitable Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432352",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mihira Vegitable",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432353",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Lankeah Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432354",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Saliya Fruit - Ududeniya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432355",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sashi Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432356",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Bothanna Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432357",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dineth Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432358",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ms Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432359",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ashik Shop Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432360",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Tharushi Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432361",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Bagya Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432362",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dinuki Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432363",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sankar Super",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432364",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dineth Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432365",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nishantha Fruit - Dabulla",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432366",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Priyantha Fruit -  Dabulla",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432367",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sk Tharush Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432368",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sunil Fruit - Market",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432369",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Priyantha Fruit - Market",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432370",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wijitha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432371",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jc Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432372",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rb Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432373",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wp Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432374",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Disanayak Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432375",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ks Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432376",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dilan Cool Room",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432377",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Daily Fresh -gampola",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432378",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chamara Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432379",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Muthaf Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432380",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mlm Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432381",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "New Mr Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432382",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mahajana Super Market",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432383",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mgc Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432384",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "R.k Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432385",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jayarathana Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432386",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Arm Lanka",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432387",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Amm Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432388",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Fruit Gelioya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432389",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fruit Point - Gelioya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432390",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Fruit - Gannoruwa",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432391",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Gap Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432392",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Premarathna Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432393",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ranasinha Haal",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432394",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nadudi Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432395",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Msg Vegitable And Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432396",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Salinda Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432397",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nilupul Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432398",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Samarajeewa Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432399",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Koratuwa Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432400",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ananda Fruit - Peradeniya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432401",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jewana Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432402",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wijerathna Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432403",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Namal Fresh Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432404",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mrw Malathi Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432405",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nimali Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432406",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Bidunugama Haritha Udyanaya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432407",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "New Kandy Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432408",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Dinuka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432409",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nande Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432410",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nimsara Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432411",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Duminda Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432412",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Raja Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432413",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jayasiri Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432414",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Vidura V Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432415",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Vimal Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432416",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Skr Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432417",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sd Stories",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432418",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Salitha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432419",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sajith Fruit - Nuwara Eliya",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432420",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ganemulla Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432421",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Azlam Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432422",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Nissan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432423",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pushparaj Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432424",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sathish Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432425",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Lal Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432426",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wazeen Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432427",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kumara Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432428",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jayasinha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432429",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Hansi Juice Bar",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432430",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pathmasiri Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432431",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Aberathna Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432432",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Deshan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432433",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Jeewanthi Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432434",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kotumale Fruit Shop",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432435",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sd Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432436",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Pushpakumara Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432437",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Lakshitha Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432438",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Danushka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432439",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Hadagoda Stors",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432440",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Thushara Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432441",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sanka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432442",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Palith Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432443",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sadun Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432444",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sb Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432445",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sahil Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432446",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Udaya Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432447",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Rathnayaka Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432448",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Abdeen Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432449",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ruwan Fruit",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432450",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Earl\"\"s Regency Hotel",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432451",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Asanka Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432452",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Chandana Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432453",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sarudini Fresh Fruits Supplier",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432454",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Refresh Juice Bar And Cafe",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432455",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Mangala Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432456",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Mart Hanwella",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432457",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Wasala Fresh Fruit & Fresh Juice",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432458",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ashan Fruits Kaduwela",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432459",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Ravindra Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432460",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Kannp Holdings",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432461",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Landa Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432462",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "M.k & Sons Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432463",
+        "__v": 0,
+        "address": "92/1C, magurawila road, gonawala kelaniya",
+        "currentBalance": 38,
+        "initialBalance": 0,
+        "name": "A.d.w. 35 Fruits ( Manin)",
+        "phone": "0750889713"
+      },
+      {
+        "_id": "1787142432464",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Sithumina ( Ffu 114 ) Fruits",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432465",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Fresh Station",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432466",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Daily Needs",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432467",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Prisca Stores",
+        "phone": ""
+      },
+      {
+        "_id": "1787142432468",
+        "__v": 0,
+        "address": "",
+        "currentBalance": 0,
+        "initialBalance": 0,
+        "name": "Global Sea Food Pvt Ltd",
+        "phone": ""
+      }
+    ],
+    "transactions": [
+      {
+        "_id": "1787571355578",
+        "customerId": "1787142432463",
+        "customerName": "A.d.w. 35 Fruits ( Manin)",
+        "type": "OUT",
+        "count": 10,
+        "depositPerTray": 2000,
+        "expectedDeposit": 20000,
+        "totalDeposit": 20000,
+        "depositOption": "FULL",
+        "vehicleNo": "N/A",
+        "remarks": "",
+        "date": "2026-08-24T17:05",
+        "user": "admin",
+        "receiptNo": 1,
+        "__v": 0
+      },
+      {
+        "_id": "1787573511125",
+        "customerId": "1787142432463",
+        "customerName": "A.d.w. 35 Fruits ( Manin)",
+        "type": "OUT",
+        "count": 5,
+        "depositPerTray": 2000,
+        "expectedDeposit": 10000,
+        "totalDeposit": 10000,
+        "depositOption": "FULL",
+        "vehicleNo": "PU-4451",
+        "remarks": "",
+        "date": "2026-08-24T17:41",
+        "user": "admin",
+        "receiptNo": 2,
+        "__v": 0
+      },
+      {
+        "_id": "1787573523814",
+        "customerId": "1787142432463",
+        "customerName": "A.d.w. 35 Fruits ( Manin)",
+        "type": "IN",
+        "count": 10,
+        "depositPerTray": 2000,
+        "expectedDeposit": 20000,
+        "totalDeposit": 20000,
+        "depositOption": "FULL",
+        "vehicleNo": "PU-4451",
+        "remarks": "",
+        "date": "2026-08-24T17:41",
+        "user": "admin",
+        "receiptNo": 3,
+        "__v": 0
+      },
+      {
+        "_id": "1787573537905",
+        "customerId": "1787142432463",
+        "customerName": "A.d.w. 35 Fruits ( Manin)",
+        "type": "OUT",
+        "count": 22,
+        "depositPerTray": 2000,
+        "expectedDeposit": 44000,
+        "totalDeposit": 2200,
+        "depositOption": "CUSTOM",
+        "vehicleNo": "PU-4451",
+        "remarks": "",
+        "date": "2026-08-24T17:41",
+        "user": "admin",
+        "receiptNo": 4,
+        "__v": 0
+      },
+      {
+        "_id": "1787574050433",
+        "customerId": "1787142432463",
+        "customerName": "A.d.w. 35 Fruits ( Manin)",
+        "type": "OUT",
+        "count": 10,
+        "depositPerTray": 2000,
+        "expectedDeposit": 20000,
+        "totalDeposit": 20000,
+        "depositOption": "FULL",
+        "vehicleNo": "LN-4124",
+        "remarks": "",
+        "date": "2026-08-24T17:50",
+        "user": "admin",
+        "receiptNo": 5,
+        "__v": 0
+      },
+      {
+        "_id": "1787574066002",
+        "customerId": "1787142432463",
+        "customerName": "A.d.w. 35 Fruits ( Manin)",
+        "type": "IN",
+        "count": 10,
+        "depositPerTray": 2000,
+        "expectedDeposit": 20000,
+        "totalDeposit": 20000,
+        "depositOption": "FULL",
+        "vehicleNo": "LN-4124",
+        "remarks": "",
+        "date": "2026-08-24T17:50",
+        "user": "admin",
+        "receiptNo": 6,
+        "__v": 0
+      },
+      {
+        "_id": "1787630278676",
+        "customerId": "1787142432463",
+        "customerName": "A.d.w. 35 Fruits ( Manin)",
+        "type": "OUT",
+        "count": 11,
+        "depositPerTray": 2000,
+        "expectedDeposit": 22000,
+        "totalDeposit": 22000,
+        "depositOption": "FULL",
+        "vehicleNo": "N/A",
+        "remarks": "",
+        "date": "2026-08-25T09:27",
+        "user": "admin",
+        "receiptNo": 7,
+        "__v": 0
+      }
+    ],
+    "activityLogs": [
+      {
+        "_id": "6a8838d2448f354f98a778f2",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "User",
+        "details": "Created user account: Devinda",
+        "timestamp": "2026-08-21T11:38:58.832Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8838de448f354f98a778f3",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "User",
+        "details": "Created user account: Madusanka",
+        "timestamp": "2026-08-21T11:39:10.815Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8bd7e3af0aa755ef5fd23b",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 10 trays",
+        "timestamp": "2026-08-24T05:34:27.889Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8bd851af0aa755ef5fd23c",
+        "user": "admin",
+        "action": "UPDATE",
+        "target": "Customer",
+        "details": "Updated details for customer: Aba Sevana",
+        "timestamp": "2026-08-24T05:36:17.084Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8be31e03ff8088ab300adf",
+        "user": "admin",
+        "action": "UPDATE",
+        "target": "Customer",
+        "details": "Updated details for customer: Aba Sevana",
+        "timestamp": "2026-08-24T06:22:22.147Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c08aa03ff8088ab300ae0",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created IN transaction for 10 trays",
+        "timestamp": "2026-08-24T09:02:34.770Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c09a292a34b698144665d",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted OUT transaction of 10 trays for customer Aba Sevana",
+        "timestamp": "2026-08-24T09:06:42.842Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c09a592a34b698144665e",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted IN transaction of 10 trays for customer Aba Sevana",
+        "timestamp": "2026-08-24T09:06:45.053Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c09b192a34b698144665f",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 10 trays",
+        "timestamp": "2026-08-24T09:06:57.201Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c0af15b939800ef01c861",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 20 trays",
+        "timestamp": "2026-08-24T09:12:17.399Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c0c664741a05ea9bc8ac6",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 20 trays",
+        "timestamp": "2026-08-24T09:18:30.169Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c0cb74741a05ea9bc8ac7",
+        "user": "admin",
+        "action": "UPDATE",
+        "target": "Customer",
+        "details": "Updated details for customer: Aba Sevana",
+        "timestamp": "2026-08-24T09:19:51.712Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c10254741a05ea9bc8ac8",
+        "user": "admin",
+        "action": "UPDATE",
+        "target": "Customer",
+        "details": "Updated details for customer: Aba Sevana",
+        "timestamp": "2026-08-24T09:34:29.049Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1ae04741a05ea9bc8ac9",
+        "user": "admin",
+        "action": "UPDATE",
+        "target": "Customer",
+        "details": "Updated details for customer: Aba Sevana",
+        "timestamp": "2026-08-24T10:20:16.183Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1c324741a05ea9bc8aca",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 10 trays",
+        "timestamp": "2026-08-24T10:25:54.259Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1c9a4741a05ea9bc8acb",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created IN transaction for 5 trays",
+        "timestamp": "2026-08-24T10:27:38.630Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1e144741a05ea9bc8acc",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted IN transaction of 5 trays for customer Aba Sevana",
+        "timestamp": "2026-08-24T10:33:56.268Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1e174741a05ea9bc8acd",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted OUT transaction of 10 trays for customer Aba Sevana",
+        "timestamp": "2026-08-24T10:33:59.363Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1e1a4741a05ea9bc8ace",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted OUT transaction of 20 trays for customer Aba Sevana",
+        "timestamp": "2026-08-24T10:34:02.370Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1e1e4741a05ea9bc8acf",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted OUT transaction of 20 trays for customer Abdeen Fruit",
+        "timestamp": "2026-08-24T10:34:06.285Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c1e214741a05ea9bc8ad0",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted OUT transaction of 10 trays for customer Aba Sevana",
+        "timestamp": "2026-08-24T10:34:09.966Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c22d84741a05ea9bc8ad1",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 45 trays",
+        "timestamp": "2026-08-24T10:54:16.028Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c22f74741a05ea9bc8ad2",
+        "user": "admin",
+        "action": "UPDATE",
+        "target": "Customer",
+        "details": "Updated details for customer: A.d.w. 35 Fruits ( Manin)",
+        "timestamp": "2026-08-24T10:54:47.328Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c23d84741a05ea9bc8ad3",
+        "user": "admin",
+        "action": "UPDATE",
+        "target": "Customer",
+        "details": "Updated details for customer: A.d.w. 35 Fruits ( Manin)",
+        "timestamp": "2026-08-24T10:58:32.961Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c25a5bbf8a4e160a2fa3f",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 20 trays",
+        "timestamp": "2026-08-24T11:06:13.199Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c25d1bbf8a4e160a2fa40",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created IN transaction for 10 trays",
+        "timestamp": "2026-08-24T11:06:57.652Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c2ba668ea59570fb1e99a",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted IN transaction of 10 trays for customer A.d.w. 35 Fruits ( Manin)",
+        "timestamp": "2026-08-24T11:31:50.679Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c2ba868ea59570fb1e99b",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted OUT transaction of 20 trays for customer A.d.w. 35 Fruits ( Manin)",
+        "timestamp": "2026-08-24T11:31:52.897Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c2bab68ea59570fb1e99c",
+        "user": "admin",
+        "action": "DELETE",
+        "target": "Transaction",
+        "details": "Deleted OUT transaction of 45 trays for customer A.d.w. 35 Fruits ( Manin)",
+        "timestamp": "2026-08-24T11:31:55.493Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c2c9c673ced66bb3b0100",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 10 trays",
+        "timestamp": "2026-08-24T11:35:56.263Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c3507673ced66bb3b0101",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 5 trays",
+        "timestamp": "2026-08-24T12:11:51.757Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c3514673ced66bb3b0102",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created IN transaction for 10 trays",
+        "timestamp": "2026-08-24T12:12:04.272Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c3522673ced66bb3b0103",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 22 trays",
+        "timestamp": "2026-08-24T12:12:18.382Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c3722be0c6693bbf95107",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 10 trays",
+        "timestamp": "2026-08-24T12:20:50.946Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8c3732be0c6693bbf95108",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created IN transaction for 10 trays",
+        "timestamp": "2026-08-24T12:21:06.508Z",
+        "__v": 0
+      },
+      {
+        "_id": "6a8d12c7710ddac4ee1d33d8",
+        "user": "admin",
+        "action": "CREATE",
+        "target": "Transaction",
+        "details": "Created OUT transaction for 11 trays",
+        "timestamp": "2026-08-25T03:57:59.166Z",
+        "__v": 0
+      }
+    ]
+  }
+}

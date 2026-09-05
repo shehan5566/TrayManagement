@@ -1,0 +1,124 @@
+<%- include('partials/header') %>
+
+    <main>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2><i class="fa-solid fa-clock-rotate-left"></i> System Activity Logs</h2>
+        </div>
+
+        <div class="content-box">
+            <div class="box-header">
+                <span class="box-title">Recent Actions</span>
+            </div>
+
+            <div class="table-responsive">
+                <table id="logsTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">Date & Time</th>
+                            <th style="width: 140px;">Ref No</th>
+                            <th style="width: 120px;">User</th>
+                            <th style="width: 120px;">Action</th>
+                            <th style="width: 120px;">Target</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (logs && logs.length> 0) { %>
+                            <% logs.forEach(log=> { 
+                                let detailsText = log.details || '';
+                                let refNo = '-';
+                                const refMatch = detailsText.match(/\(Ref: (.*?)\)$/);
+                                if (refMatch) {
+                                    refNo = refMatch[1];
+                                    detailsText = detailsText.replace(refMatch[0], '').trim();
+                                }
+                            %>
+                                <tr>
+                                    <td>
+                                        <%= new Date(log.timestamp).toLocaleString() %>
+                                    </td>
+                                    <td><strong><span style="color: var(--primary-green-dark);"><%= refNo %></span></strong></td>
+                                    <td><strong>
+                                            <%= log.user %>
+                                        </strong></td>
+                                    <td>
+                                        <% if (log.action==='CREATE' ) { %>
+                                            <span class="badge"
+                                                style="background:#2e7d32; color:white; padding:4px 8px; font-size:11px;"><i
+                                                    class="fa-solid fa-plus"></i> CREATE</span>
+                                            <% } else if (log.action==='UPDATE' ) { %>
+                                                <span class="badge"
+                                                    style="background:#f57c00; color:white; padding:4px 8px; font-size:11px;"><i
+                                                        class="fa-solid fa-pen"></i> UPDATE</span>
+                                                <% } else if (log.action==='DELETE' ) { %>
+                                                    <span class="badge"
+                                                        style="background:#d32f2f; color:white; padding:4px 8px; font-size:11px;"><i
+                                                            class="fa-solid fa-trash"></i> DELETE</span>
+                                                    <% } else { %>
+                                                        <span class="badge">
+                                                            <%= log.action %>
+                                                        </span>
+                                                        <% } %>
+                                    </td>
+                                    <td><span class="badge"
+                                            style="background:#455a64; color:white; padding:4px 8px; font-size:11px;">
+                                            <%= log.target %>
+                                        </span></td>
+                                    <td>
+                                        <% if (log.target === 'Transaction' && refNo !== '-') { %>
+                                            <a href="/transactions/receiptByRef/<%= refNo %>" target="_blank" class="btn btn-sm" style="background-color: #2196F3; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; text-decoration: none; display: inline-block;"><i class="fa-solid fa-file-invoice"></i> View Doc</a>
+                                        <% } else if (log.target === 'Transfer' && refNo !== '-') { %>
+                                            <a href="/transfers/printByRef/<%= refNo %>" target="_blank" class="btn btn-sm" style="background-color: #2196F3; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; text-decoration: none; display: inline-block;"><i class="fa-solid fa-file-invoice"></i> View Doc</a>
+                                        <% } else { %>
+                                            <button class="btn btn-sm" style="background-color: var(--primary-green); color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px;" onclick="showDetailsModal('<%= encodeURIComponent(detailsText) %>')"><i class="fa-solid fa-eye"></i> View</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="6" style="text-align: center; padding: 30px;">
+                                                <i class="fa-solid fa-folder-open"
+                                                    style="font-size: 24px; color: #ccc; margin-bottom: 10px; display: block;"></i>
+                                                No activity logs recorded yet.
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#logsTable').DataTable({
+                "pageLength": 25,
+                "ordering": false,
+                "language": {
+                    "search": "Search Logs:",
+                    "paginate": {
+                        "previous": "Previous",
+                        "next": "Next"
+                    }
+                }
+            });
+        });
+
+        function showDetailsModal(encodedDetails) {
+            const details = decodeURIComponent(encodedDetails);
+            Swal.fire({
+                title: 'Activity Details',
+                html: `<div style="text-align: left; font-size: 14px; white-space: pre-wrap; line-height: 1.5; color: #333; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee;">${details}</div>`,
+                icon: 'info',
+                confirmButtonColor: '#2e7d32'
+            });
+        }
+    </script>
+    <script src="/js/main.js"></script>
+    </body>
+
+    </html>

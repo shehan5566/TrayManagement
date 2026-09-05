@@ -1,0 +1,612 @@
+<%- include('partials/header') %>
+
+    <div style="margin-bottom: 25px;">
+        <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-right-left"></i> Tray In & Out Entry</h2>
+    </div>
+
+    <% if (error) { %>
+        <div class="error-banner">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <%= error %>
+        </div>
+        <% } %>
+
+            <% if (typeof hasPerm !== 'function' || hasPerm('transactions_create')) { %>
+                <!-- Entry Form -->
+                <div class="content-box" style="border-top: 4px solid var(--accent-yellow);">
+                    <div class="box-header">
+                        <span class="box-title"><i class="fa-solid fa-pen-nib"></i> New Transaction Entry</span>
+                    </div>
+
+                    <form action="/transactions" method="POST"
+                        onsubmit="submitAjaxForm(event, this, 'Transaction added successfully')">
+                        <div class="form-grid">
+                            <div class="form-group" style="position: relative;">
+                                <label for="customerSearchInput">Search Customer</label>
+                                <input type="text" id="customerSearchInput"
+                                    placeholder="Type or click to search customer..." required autocomplete="off">
+                                <div id="autocomplete-list"
+                                    style="position: absolute; border: 1px solid #d4d4d4; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; background-color: #fff; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;">
+                                </div>
+                                <input type="hidden" id="customerId" name="customerId" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="type">Transaction Type</label>
+                                <select id="type" name="type" required>
+                                    <option value="OUT">TRAY OUT (Issue to Customer)</option>
+                                    <option value="IN">TRAY IN (Return from Customer)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="count">Tray Quantity</label>
+                                <input type="number" id="count" name="count" min="1" placeholder="Enter tray count..."
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vehicleNo">Vehicle Number</label>
+                                <select id="vehicleNo" name="vehicleNo">
+                                    <option value="N/A">Select Vehicle</option>
+                                    <option value="LK-3945">LK-3945</option>
+                                    <option value="LN-4124">LN-4124</option>
+                                    <option value="PX-1430">PX-1430</option>
+                                    <option value="PU-4451">PU-4451</option>
+                                    <option value="LP-3506">LP-3506</option>
+                                    <option value="LG-1095">LG-1095</option>
+                                    <option value="LK-8422">LK-8422</option>
+                                    <option value="LM-6632">LM-6632</option>
+                                    <option value="DAG-2712">DAG-2712</option>
+                                    <option value="RENTED">RENTED</option>
+                                    <option value="OWNOUTLET">OWNOUTLET</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="depositPerTray">Standard Deposit per Tray (Rs.)</label>
+                                <input type="number" id="depositPerTray" name="depositPerTray" min="0" step="0.01"
+                                    value="<%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="depositOption">Deposit / Refund Option</label>
+                                <select id="depositOption" name="depositOption" required>
+                                    <option value="FULL">Full Deposit / Refund (100%)</option>
+                                    <option value="HALF">Half Payment / Half Refund (50%)</option>
+                                    <option value="ZERO">No Deposit / No Refund (0%)</option>
+                                    <option value="CUSTOM">Custom Amount (Manually Enter)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="actualDeposit" id="actualDepositLabel">Actual Deposit Collected
+                                    (Rs.)</label>
+                                <input type="number" id="actualDeposit" name="actualDeposit" min="0" step="0.01"
+                                    placeholder="Enter amount..." required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="date">Transaction Date & Time</label>
+                                <input type="datetime-local" id="date" name="date" required>
+                            </div>
+                        </div>
+
+                        <!-- Live Deposit Total Display -->
+                        <div id="depositSummaryBox"
+                            style="margin-bottom: 20px; padding: 14px 18px; border-radius: 8px; background-color: #fffbea; border: 2px solid var(--accent-yellow); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span id="depositLabel"
+                                    style="font-size: 14px; font-weight: 600; color: var(--primary-green-dark);">
+                                    <i class="fa-solid fa-coins"></i> Deposit Summary (OUT):
+                                </span>
+                                <div id="expectedDepositText" style="font-size: 12px; color: #666; margin-top: 2px;">
+                                    Expected: Rs. 0.00</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #777;">
+                                    Actual Amount</div>
+                                <span style="font-size: 22px; font-weight: 800; color: var(--primary-green-dark);">Rs.
+                                    <span id="totalDepositDisplay">0.00</span></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="remarks">Remarks / Special Notes</label>
+                            <textarea id="remarks" name="remarks" rows="2" placeholder="Any comments..."></textarea>
+                        </div>
+
+
+
+                                <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+                                    <i class="fa-solid fa-receipt"></i> Save & Print Receipt
+                                </button>
+                    </form>
+                </div>
+                <% } %>
+
+                    <div class="content-box">
+                        <div class="box-header">
+                            <span class="box-title"><i class="fa-solid fa-list-check"></i> Transaction History
+                                Log</span>
+                        </div>
+
+                        <form method="GET" action="/transactions" class="search-container"
+                            style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="text" name="search" class="search-input"
+                                value="<%= locals.searchQuery || '' %>" placeholder="Search logs by customer name..."
+                                style="flex-grow: 1;">
+                            <button type="submit" class="btn btn-primary" style="padding: 10px 20px;"><i
+                                    class="fa-solid fa-search"></i> Search</button>
+                            <% if (locals.searchQuery) { %>
+                                <a href="/transactions" class="btn btn-secondary"
+                                    style="padding: 10px 20px; display: flex; align-items: center; justify-content: center; text-decoration: none;">Clear</a>
+                                <% } %>
+                        </form>
+
+                        <% if (transactions.length===0) { %>
+                            <p style="text-align: center; color: var(--text-light); padding: 30px 0;">No transactions
+                                registered
+                                yet.</p>
+                            <% } else { %>
+                                <div class="table-responsive">
+                                    <table id="transactionsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Date & Time</th>
+                                                <th>Customer</th>
+                                                <th>Type</th>
+                                                <th>Quantity</th>
+                                                <th>Deposit (Rs.)</th>
+                                                <th>Vehicle No</th>
+                                                <th>Operator</th>
+                                                <th>Remarks</th>
+                                                <th style="text-align: center;">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% transactions.forEach(tx=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= new Date(tx.date).toLocaleString() %>
+                                                    </td>
+                                                    <td><strong>
+                                                            <%= tx.customerName %>
+                                                        </strong></td>
+                                                    <td>
+                                                        <span
+                                                            class="badge badge-<%= tx.type === 'IN' ? 'in' : 'out' %>">
+                                                            <%= tx.type==='IN' ? 'IN' : 'OUT' %>
+                                                        </span>
+                                                    </td>
+                                                    <td style="font-weight: bold;">
+                                                        <%= tx.count %>
+                                                    </td>
+                                                    <td
+                                                        style="font-weight: bold; color: <%= tx.type === 'OUT' ? 'var(--danger)' : 'var(--success)' %>;">
+                                                        <%= tx.type==='OUT' ? '+' : '-' %> Rs. <%= (tx.totalDeposit ||
+                                                                0).toLocaleString() %>
+                                                                <div
+                                                                    style="font-size: 11px; color: var(--text-light); font-weight: normal;">
+                                                                    <% if (tx.depositOption==='ZERO' ) { %>
+                                                                        <span class="badge"
+                                                                            style="background:#6c757d; color:#fff; font-size:10px; padding:2px 5px;">No
+                                                                            Deposit</span>
+                                                                        <% } else if (tx.depositOption==='HALF' ) { %>
+                                                                            <span class="badge"
+                                                                                style="background:#fd7e14; color:#fff; font-size:10px; padding:2px 5px;">Half
+                                                                                Payment</span>
+                                                                            <% } else if (tx.depositOption==='CUSTOM' )
+                                                                                { %>
+                                                                                <span class="badge"
+                                                                                    style="background:#17a2b8; color:#fff; font-size:10px; padding:2px 5px;">Custom
+                                                                                    Amount</span>
+                                                                                <% } else { %>
+                                                                                    Rs.<%= (tx.depositPerTray || (typeof settings !== 'undefined' && settings && settings.depositPerTray ? settings.depositPerTray : 2000)).toLocaleString() %>/tray
+                                                                                        <% } %>
+                                                                </div>
+                                                    </td>
+                                                    <td><code><%= tx.vehicleNo %></code></td>
+                                                    <td>
+                                                        <%= tx.user %>
+                                                    </td>
+                                                    <td><span style="font-size: 13px; color: var(--text-light);">
+                                                            <%= tx.remarks || '-' %>
+                                                        </span></td>
+                                                    <td>
+                                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                                            <a href="/transactions/<%= tx.id %>/receipt"
+                                                                class="btn btn-secondary"
+                                                                style="padding: 6px 10px; font-size: 12px;"
+                                                                title="Print Receipt">
+                                                                <i class="fa-solid fa-print"></i> Receipt
+                                                            </a>
+                                                             <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('transactions_edit'))) { %>
+                                                                 <button
+                                                                     onclick='openEditModal(<%- JSON.stringify(tx).replace(/'/g, "\\'") %>)' class="btn btn-primary"
+                                                                     style="padding: 6px 10px; font-size: 12px;"
+                                                                     title="Edit Record">
+                                                                     <i class="fa-solid fa-pen"></i>
+                                                                 </button>
+                                                             <% } %>
+                                                             <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('transactions_delete') || hasPerm('delete_records')))) { %>
+                                                                 <form action="/transactions/<%= tx.id %>/delete"
+                                                                     method="POST"
+                                                                     onsubmit="confirmAjaxDelete(event, this, 'transaction record')">
+                                                                     <button type="submit" class="btn btn-danger"
+                                                                         style="padding: 6px 10px; font-size: 12px;"
+                                                                         title="Delete Record">
+                                                                         <i class="fa-solid fa-trash-can"></i>
+                                                                     </button>
+                                                                 </form>
+                                                             <% } %>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <% }) %>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <% if (locals.totalPages> 1) { %>
+                                    <div
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 15px 0 5px 0; border-top: 1px solid #eee;">
+                                        <span style="color: var(--text-light); font-size: 14px;">Page <strong>
+                                                <%= currentPage %>
+                                            </strong> of <strong>
+                                                <%= totalPages %>
+                                            </strong></span>
+                                        <div style="display: flex; gap: 8px;">
+                                            <% if (currentPage> 1) { %>
+                                                <a href="/transactions?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>"
+                                                    class="btn btn-secondary"
+                                                    style="padding: 6px 15px; font-size: 13px; text-decoration: none;"><i
+                                                        class="fa-solid fa-chevron-left"></i> Prev</a>
+                                                <% } %>
+
+                                                    <% if (currentPage < totalPages) { %>
+                                                        <a href="/transactions?page=<%= currentPage + 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>"
+                                                            class="btn btn-primary"
+                                                            style="padding: 6px 15px; font-size: 13px; text-decoration: none;">Next
+                                                            <i class="fa-solid fa-chevron-right"></i></a>
+                                                        <% } %>
+                                        </div>
+                                    </div>
+                                    <% } %>
+
+                                        <% } %>
+                    </div>
+
+                    <!-- Edit Transaction Modal -->
+                    <div id="editTxModal" class="modal"
+                        style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                        <div class="modal-content"
+                            style="background-color: #fefefe; margin: 5% auto; padding: 25px; border-radius: 8px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
+                                <h3 style="margin: 0; color: var(--primary-green-dark);"><i
+                                        class="fa-solid fa-pen-to-square"></i> Edit Transaction</h3>
+                                <span onclick="closeEditModal()"
+                                    style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                            </div>
+
+                            <form id="editTxForm" method="POST"
+                                onsubmit="submitAjaxForm(event, this, 'Transaction updated successfully')">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>Customer</label>
+                                        <select id="editCustomerId" name="customerId" required>
+                                            <% customers.forEach(c=> { %>
+                                                <option value="<%= c.id %>">
+                                                    <%= c.name %> - <%= c.phone %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Transaction Type</label>
+                                        <select id="editType" name="type" required>
+                                            <option value="OUT">TRAY OUT (Issue to Customer)</option>
+                                            <option value="IN">TRAY IN (Return from Customer)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Tray Quantity</label>
+                                        <input type="number" id="editCount" name="count" min="1" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Vehicle Number</label>
+                                        <select id="editVehicleNo" name="vehicleNo">
+                                            <option value="N/A">Select Vehicle</option>
+                                            <option value="LK-3945">LK-3945</option>
+                                            <option value="LN-4124">LN-4124</option>
+                                            <option value="PX-1430">PX-1430</option>
+                                            <option value="PU-4451">PU-4451</option>
+                                            <option value="LP-3506">LP-3506</option>
+                                            <option value="LG-1095">LG-1095</option>
+                                            <option value="LK-8422">LK-8422</option>
+                                            <option value="LM-6632">LM-6632</option>
+                                            <option value="DAG-2712">DAG-2712</option>
+                                            <option value="RENTED">RENTED</option>
+                                            <option value="OWNOUTLET">OWNOUTLET</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Deposit per Tray (Rs.)</label>
+                                        <input type="number" id="editDepositPerTray" name="depositPerTray" min="0"
+                                            step="0.01" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Deposit Option</label>
+                                        <select id="editDepositOption" name="depositOption" required>
+                                            <option value="FULL">Full Deposit / Refund (100%)</option>
+                                            <option value="HALF">Half Payment / Half Refund (50%)</option>
+                                            <option value="ZERO">No Deposit / No Refund (0%)</option>
+                                            <option value="CUSTOM">Custom Amount (Manually Enter)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Actual Deposit Collected (Rs.)</label>
+                                        <input type="number" id="editActualDeposit" name="actualDeposit" min="0"
+                                            step="0.01" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Date & Time</label>
+                                        <input type="datetime-local" id="editDate" name="date" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label>Remarks</label>
+                                    <textarea id="editRemarks" name="remarks" rows="2"></textarea>
+                                </div>
+
+                                <% if (user.role==='admin' || user.username==='admin' ) { %>
+                                    <% } %>
+
+
+                                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                            <button type="button" onclick="closeEditModal()" class="btn btn-secondary"
+                                                style="padding: 10px 20px;">Cancel</button>
+                                            <button type="submit" class="btn btn-primary" style="padding: 10px 20px;"><i
+                                                    class="fa-solid fa-save"></i> Save Changes</button>
+                                        </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            // Auto-fill transaction datetime picker with local time
+                            const dateInput = document.getElementById('date');
+                            if (dateInput) {
+                                const now = new Date();
+                                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                                dateInput.value = now.toISOString().slice(0, 16);
+                            }
+
+                            // Elements for deposit logic
+                            const countInput = document.getElementById('count');
+                            const depositRateInput = document.getElementById('depositPerTray');
+                            const depositOptionSelect = document.getElementById('depositOption');
+                            const actualDepositInput = document.getElementById('actualDeposit');
+                            const actualDepositLabel = document.getElementById('actualDepositLabel');
+                            const totalDisplay = document.getElementById('totalDepositDisplay');
+                            const expectedDisplay = document.getElementById('expectedDepositText');
+                            const depositLabel = document.getElementById('depositLabel');
+                            const typeSelect = document.getElementById('type');
+
+                            let isManualEdit = false;
+
+                            function updateDepositDisplay() {
+                                const qty = parseFloat(countInput ? countInput.value : 0) || 0;
+                                const defaultRate = <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
+                                const rate = parseFloat(depositRateInput ? depositRateInput.value : defaultRate) || 0;
+                                const expectedTotal = qty * rate;
+                                const isOut = typeSelect ? (typeSelect.value === 'OUT') : true;
+
+                                // Update Labels based on IN / OUT
+                                if (depositLabel) {
+                                    if (isOut) {
+                                        depositLabel.innerHTML = '<i class="fa-solid fa-coins"></i> Deposit Summary (OUT - Collected):';
+                                        depositLabel.style.color = 'var(--danger)';
+                                        if (actualDepositLabel) actualDepositLabel.textContent = 'Actual Deposit Collected (Rs.)';
+                                    } else {
+                                        depositLabel.innerHTML = '<i class="fa-solid fa-coins"></i> Refund Summary (IN - Returned):';
+                                        depositLabel.style.color = 'var(--success)';
+                                        if (actualDepositLabel) actualDepositLabel.textContent = 'Actual Deposit Refunded (Rs.)';
+                                    }
+                                }
+
+                                // Update deposit options labels depending on OUT/IN
+                                if (depositOptionSelect) {
+                                    const optFull = depositOptionSelect.options[0];
+                                    const optHalf = depositOptionSelect.options[1];
+                                    const optZero = depositOptionSelect.options[2];
+
+                                    if (isOut) {
+                                        optFull.text = "Full Deposit (100%)";
+                                        optHalf.text = "Half Payment (50%)";
+                                        optZero.text = "No Deposit (0% - Free Issue)";
+                                    } else {
+                                        optFull.text = "Full Refund (100%)";
+                                        optHalf.text = "Half Refund (50%)";
+                                        optZero.text = "No Refund (0% - Deposit Kept)";
+                                    }
+                                }
+
+                                // Calculate auto value for option if not manually editing actualDeposit directly
+                                if (!isManualEdit && actualDepositInput) {
+                                    const option = depositOptionSelect ? depositOptionSelect.value : 'FULL';
+                                    if (option === 'FULL') {
+                                        actualDepositInput.value = expectedTotal.toFixed(2);
+                                    } else if (option === 'HALF') {
+                                        actualDepositInput.value = (expectedTotal / 2).toFixed(2);
+                                    } else if (option === 'ZERO') {
+                                        actualDepositInput.value = (0).toFixed(2);
+                                    }
+                                }
+
+                                const actualVal = parseFloat(actualDepositInput ? actualDepositInput.value : 0) || 0;
+
+                                if (totalDisplay) {
+                                    totalDisplay.textContent = actualVal.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+
+                                if (expectedDisplay) {
+                                    expectedDisplay.textContent = 'Expected Standard Deposit (' + qty + ' Trays × Rs.' + rate.toLocaleString() + '): Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 });
+                                }
+                            }
+
+                            if (countInput) countInput.addEventListener('input', () => { isManualEdit = false; updateDepositDisplay(); });
+                            if (depositRateInput) depositRateInput.addEventListener('input', () => { isManualEdit = false; updateDepositDisplay(); });
+                            if (typeSelect) typeSelect.addEventListener('change', () => { isManualEdit = false; updateDepositDisplay(); });
+                            if (depositOptionSelect) depositOptionSelect.addEventListener('change', () => {
+                                if (depositOptionSelect.value !== 'CUSTOM') {
+                                    isManualEdit = false;
+                                }
+                                updateDepositDisplay();
+                            });
+                            ['input', 'change', 'keyup'].forEach(evt => {
+                                if (actualDepositInput) {
+                                    actualDepositInput.addEventListener(evt, () => {
+                                        isManualEdit = true;
+                                        if (depositOptionSelect) {
+                                            const val = parseFloat(actualDepositInput.value) || 0;
+                                            const qty = parseFloat(countInput ? countInput.value : 0) || 0;
+                                            const defaultRate = <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
+                                            const rate = parseFloat(depositRateInput ? depositRateInput.value : defaultRate) || 0;
+                                            const expectedTotal = qty * rate;
+
+                                            if (val === expectedTotal) {
+                                                depositOptionSelect.value = 'FULL';
+                                            } else if (val === expectedTotal / 2 && val > 0) {
+                                                depositOptionSelect.value = 'HALF';
+                                            } else if (val === 0) {
+                                                depositOptionSelect.value = 'ZERO';
+                                            } else {
+                                                depositOptionSelect.value = 'CUSTOM';
+                                            }
+                                        }
+                                        updateDepositDisplay();
+                                    });
+                                }
+                            });
+
+                            updateDepositDisplay(); // Initial call
+
+                            // Custom Autocomplete for Customer Search
+                            const searchInput = document.getElementById('customerSearchInput');
+                            const hiddenId = document.getElementById('customerId');
+                            const autocompleteList = document.getElementById('autocomplete-list');
+
+                            const customersData = [
+                        <% customers.forEach(c => { %>
+                                { name: "<%= c.name.replace(/\"/g, '&quot;') %>", id: "<%= c.id %>" },
+                                <% }) %>
+                    ];
+
+                        function renderAutocomplete(val, showAll = false) {
+                            autocompleteList.innerHTML = '';
+                            if (!val && !showAll) {
+                                autocompleteList.style.display = 'none';
+                                return;
+                            }
+
+                            autocompleteList.style.display = 'block';
+                            let matches = 0;
+
+                            customersData.forEach(c => {
+                                if (showAll || c.name.toUpperCase().includes(val.toUpperCase())) {
+                                    matches++;
+                                    let div = document.createElement("div");
+                                    div.style.padding = "10px";
+                                    div.style.cursor = "pointer";
+                                    div.style.backgroundColor = "#fff";
+                                    div.style.borderBottom = "1px solid #d4d4d4";
+                                    div.style.color = "#333";
+                                    div.style.fontSize = "14px";
+                                    div.innerHTML = c.name;
+
+                                    div.addEventListener("mouseover", () => {
+                                        div.style.backgroundColor = "#007bff";
+                                        div.style.color = "#fff";
+                                    });
+                                    div.addEventListener("mouseout", () => {
+                                        div.style.backgroundColor = "#fff";
+                                        div.style.color = "#333";
+                                    });
+
+                                    div.addEventListener("click", function (e) {
+                                        searchInput.value = c.name;
+                                        hiddenId.value = c.id;
+                                        autocompleteList.style.display = 'none';
+                                    });
+                                    autocompleteList.appendChild(div);
+                                }
+                            });
+
+                            if (matches === 0) {
+                                autocompleteList.style.display = 'none';
+                            }
+                        }
+
+                        if (searchInput && hiddenId && autocompleteList) {
+                            searchInput.addEventListener('input', function () {
+                                hiddenId.value = ''; // reset on typing
+                                renderAutocomplete(this.value);
+                            });
+
+                            searchInput.addEventListener('click', function () {
+                                if (this.value === '') {
+                                    renderAutocomplete('', true); // show all on empty click
+                                } else {
+                                    renderAutocomplete(this.value);
+                                }
+                            });
+
+                            document.addEventListener("click", function (e) {
+                                if (e.target !== searchInput) {
+                                    autocompleteList.style.display = 'none';
+                                }
+                            });
+                        }
+                });
+
+                        // Edit Modal Logic
+                        function openEditModal(tx) {
+                            document.getElementById('editTxForm').action = '/transactions/' + tx.id + '/update';
+                            document.getElementById('editCustomerId').value = tx.customerId;
+                            document.getElementById('editType').value = tx.type;
+                            document.getElementById('editCount').value = tx.count;
+                            document.getElementById('editVehicleNo').value = tx.vehicleNo || 'N/A';
+                            document.getElementById('editDepositPerTray').value = tx.depositPerTray || <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
+                            document.getElementById('editDepositOption').value = tx.depositOption || 'FULL';
+                            document.getElementById('editActualDeposit').value = tx.totalDeposit || 0;
+
+
+
+                            document.getElementById('editRemarks').value = tx.remarks || '';
+                            document.getElementById('editTxModal').style.display = 'block';
+                        }
+
+                        function closeEditModal() {
+                            document.getElementById('editTxModal').style.display = 'none';
+                        }
+
+                        window.addEventListener('click', function (event) {
+                            const modal = document.getElementById('editTxModal');
+                            if (event.target === modal) {
+                                closeEditModal();
+                            }
+                        });
+                    </script>
+
+                    <%- include('partials/footer') %>

@@ -1,0 +1,8 @@
+node_modules/
+.env
+database.json
+.DS_Store
+*.log
+scratch/
+.tempmediaStorage/
+.user_uploaded/

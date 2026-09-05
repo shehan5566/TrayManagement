@@ -1,0 +1,41 @@
+<%- include('partials/header') %>
+
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="login-header">
+                <img src="/images/logo.png" alt="Nelna Logo" style="height: 60px; margin-bottom: 15px; border-radius: 12px; background-color: #ffffff; padding: 4px 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
+                <h2 style="font-size: clamp(15px, 4vw, 18px); white-space: nowrap; font-weight: 700; margin: 0;">NELNA AGRI DEVELOPMENT (PVT) LTD</h2>
+                <p>Tray Management System</p>
+            </div>
+            <div class="login-body">
+                <% if (error) { %>
+                    <div class="error-banner">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <%= error %>
+                    </div>
+                    <% } %>
+
+                        <form action="/login" method="POST">
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label for="username">Username</label>
+                                <input type="text" id="username" name="username" placeholder="Enter username..."
+                                    required autofocus>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 25px;">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Enter password..."
+                                    required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 15px;">
+                                <i class="fa-solid fa-right-to-bracket"></i> Login
+                            </button>
+                        </form>
+
+                        <div style="margin-top: 15px; text-align: center; font-size: 13px; color: var(--text-light);">
+
+                        </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>

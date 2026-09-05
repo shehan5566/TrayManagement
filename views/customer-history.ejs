@@ -1,0 +1,152 @@
+<%- include('partials/header') %>
+
+<div class="top-bar-for-print" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div>
+        <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-clock-rotate-left"></i> Customer Transaction History</h2>
+        <p style="color: var(--text-light); font-size: 14px;">Detailed statement of tray issues and returns</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="/customers" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Back to Customers
+        </a>
+        <button onclick="window.print()" class="btn btn-primary" style="background-color: var(--accent-yellow); color: var(--primary-green-dark); border: none;">
+            <i class="fa-solid fa-print"></i> Print Statement
+        </button>
+    </div>
+</div>
+
+<div class="content-box print-friendly">
+    <div class="box-header" style="border-bottom: 1px solid var(--border-light); padding-bottom: 20px; margin-bottom: 20px;">
+        <div>
+            <h3 style="font-size: 22px; font-weight: 700; margin: 0; color: var(--primary-green-dark);"><%= customer.name %></h3>
+            <div style="margin-top: 8px; color: var(--text-dark); font-size: 14px; display: flex; flex-direction: column; gap: 4px;">
+                <span><i class="fa-solid fa-phone" style="width: 20px; color: var(--text-light);"></i> <%= customer.phone || 'N/A' %></span>
+                <span><i class="fa-solid fa-location-dot" style="width: 20px; color: var(--text-light);"></i> <%= customer.address || 'N/A' %></span>
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 13px; color: var(--text-light); text-transform: uppercase; font-weight: 600;">Current Balance</div>
+            <div style="font-size: 32px; font-weight: 800; color: <%= customer.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>;">
+                <%= customer.currentBalance %> <span style="font-size: 14px; font-weight: 600;">Trays</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Date & Time</th>
+                    <th style="width: 12%;">Receipt No</th>
+                    <th style="width: 12%;">Vehicle No</th>
+                    <th style="width: 10%;">Type</th>
+                    <th style="text-align: right; width: 10%;">Count</th>
+                    <th style="text-align: right; width: 15%;">Running Balance</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Initial Balance Row -->
+                <tr style="background-color: var(--tr-hover-bg);">
+                    <td><em>Initial Setup</em></td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td style="text-align: right;">-</td>
+                    <td style="text-align: right; font-weight: bold;"><%= customer.initialBalance || 0 %></td>
+                    <td><span style="font-size: 12px; color: var(--text-light);">Opening Balance</span></td>
+                </tr>
+
+                <% if (transactions.length === 0) { %>
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-light); padding: 30px;">
+                        No transactions recorded for this customer yet.
+                    </td>
+                </tr>
+                <% } else { %>
+                    <% transactions.forEach(tx => { %>
+                    <tr>
+                        <td style="font-size: 13px;">
+                            <%= new Date(tx.date).toLocaleDateString('en-GB') %> 
+                            <span style="color: var(--text-light); font-size: 11px; margin-left: 5px;"><%= new Date(tx.date).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'}) %></span>
+                        </td>
+                        <td><strong>RE-<%= String(tx.receiptNo || 0).padStart(6, '0') %></strong></td>
+                        <td><code style="font-size: 12px;"><%= tx.vehicleNo %></code></td>
+                        <td>
+                            <span class="badge badge-<%= tx.type === 'IN' ? 'in' : 'out' %>" style="font-size: 11px;">
+                                <%= tx.type === 'IN' ? 'RETURN (IN)' : 'ISSUE (OUT)' %>
+                            </span>
+                        </td>
+                        <td style="text-align: right; font-weight: 600; color: <%= tx.type === 'IN' ? 'var(--success)' : 'var(--danger)' %>;">
+                            <%= tx.type === 'IN' ? '-' : '+' %><%= tx.count %>
+                        </td>
+                        <td style="text-align: right; font-weight: bold; font-size: 15px; color: var(--primary-green-dark);">
+                            <%= tx.runningBalance %>
+                        </td>
+                        <td><span style="font-size: 12px; color: var(--text-light);"><%= tx.remarks || '-' %></span></td>
+                    </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 15mm;
+    }
+    body {
+        background-color: #fff !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact;
+    }
+    /* Hide header and buttons */
+    nav, header, footer, .btn, .top-bar-for-print {
+        display: none !important;
+    }
+    .print-friendly {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    .badge {
+        border: 1px solid #000;
+        background: transparent !important;
+        color: #000 !important;
+    }
+    .table-responsive {
+        overflow: visible !important;
+        border: none !important;
+    }
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: auto;
+    }
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    th, td {
+        font-size: 10pt !important;
+        padding: 6px !important;
+    }
+    th {
+        background-color: #f5f5f5 !important;
+        color: #000 !important;
+    }
+    main {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+    }
+}
+</style>
+
+<%- include('partials/footer') %>

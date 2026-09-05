@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nelna Agri - Tray Tracking System</title>
+    <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 for modern popups -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Flatpickr for better date/time inputs -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Chart.js for Interactive Dashboard Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .flatpickr-calendar {
+            z-index: 99999999 !important;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange,
+        .flatpickr-day.selected.inRange,
+        .flatpickr-day.startRange.inRange,
+        .flatpickr-day.endRange.inRange,
+        .flatpickr-day.selected:focus,
+        .flatpickr-day.startRange:focus,
+        .flatpickr-day.endRange:focus,
+        .flatpickr-day.selected:hover,
+        .flatpickr-day.startRange:hover,
+        .flatpickr-day.endRange:hover,
+        .flatpickr-day.selected.prevMonthDay,
+        .flatpickr-day.startRange.prevMonthDay,
+        .flatpickr-day.endRange.prevMonthDay,
+        .flatpickr-day.selected.nextMonthDay,
+        .flatpickr-day.startRange.nextMonthDay,
+        .flatpickr-day.endRange.nextMonthDay {
+            background: #ffd54f !important;
+            border-color: #ffd54f !important;
+            color: #333 !important;
+        }
+    </style>
+    <script>
+        // Apply theme immediately to prevent screen flashing
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+
+<body>
+
+    <% if (user) { %>
+        <div class="app-layout">
+
+            <header class="top-header">
+                <div class="nav-container">
+                    <div class="brand">
+                        <img src="/images/logo.png" alt="Nelna Logo" class="brand-logo-img">
+                        <div class="brand-text">
+                            <h1>NELNA AGRI DEVELOPMENT (PVT) LTD</h1>
+                            <p>Tray Management System &nbsp; <span class="header-location-badge"><i
+                                        class="fa-solid fa-location-dot"></i>
+                                    <%= user.locationName || (user.locationId==='main' ? 'Head Office' : 'Branch' ) %>
+                                </span></p>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <!-- Multilingual AI Voice Assistant Button -->
+                        <button class="header-icon-btn" onclick="openVoiceModal()"
+                            title="AI Voice Assistant (Sinhala, Tamil, English)">
+                            <i class="fa-solid fa-microphone" style="color: #10b981;"></i>
+                        </button>
+                        <!-- Command Palette Trigger Button -->
+                        <button class="header-icon-btn" onclick="toggleCommandPalette()"
+                            title="Search & Quick Actions (Ctrl + K)">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                        <!-- Theme Toggle -->
+                        <button id="theme-toggle" class="header-icon-btn" title="Toggle Theme">
+                            <i id="theme-icon" class="fa-solid fa-moon"></i>
+                        </button>
+                        <!-- Notifications Dropdown -->
+                        <div class="notification-dropdown-wrapper">
+                            <button class="header-icon-btn" id="notificationBtn" title="Notifications"
+                                onclick="toggleNotificationDropdown(event)">
+                                <i class="fa-solid fa-bell"></i>
+                                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                            </button>
+                            <div class="notification-dropdown-menu" id="notificationDropdownMenu">
+                                <div class="notification-dropdown-header">
+                                    <span>Notifications</span>
+                                    <span class="notification-count-tag" id="notificationCountTag">0 new</span>
+                                </div>
+                                <div class="notification-dropdown-body" id="notificationList">
+                                    <div class="notification-empty">
+                                        <i class="fa-solid fa-bell-slash"
+                                            style="font-size: 24px; color: var(--text-light); margin-bottom: 8px;"></i>
+                                        <p>No new notifications</p>
+                                    </div>
+                                </div>
+                                <div class="notification-dropdown-footer">
+                                    <a href="/receive-stock"><i class="fa-solid fa-boxes-packing"></i> View Pending
+                                        Stock Transfers</a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- User Welcome Dropdown -->
+                        <div class="user-dropdown-wrapper">
+                            <button class="user-dropdown-btn"
+                                onclick="document.querySelector('.user-dropdown-menu').classList.toggle('show')">
+                                <i class="fa-solid fa-user-circle" style="font-size: 22px;"></i>
+                                <span>Welcome, <%= user.username %></span>
+                                <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
+                            </button>
+                            <div class="user-dropdown-menu">
+                                <a href="/profile"><i class="fa-solid fa-user-gear"></i> Profile</a>
+                                <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                            </div>
+                        </div>
+                        <!-- Mobile Hamburger -->
+                        <button class="menu-toggle-btn mobile-only" onclick="toggleSidebar()">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="main-body">
+                <button class="sidebar-expand-btn" id="sidebarExpandBtn" onclick="toggleDesktopSidebar()"
+                    title="Show Sidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <!-- Sidebar -->
+                <aside class="sidebar" id="sidebar">
+                    <ul class="sidebar-menu">
+                        <!-- 1. Dashboard -->
+                        <% if (typeof hasPerm !=='function' || hasPerm('dashboard_main')) { %>
+                            <li class="<%= activePath === '/dashboard' ? 'active' : '' %>">
+                                <a href="/dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+                            </li>
+                            <% } %>
+
+                                <!-- 2. Customers -->
+                                <% if (typeof hasPerm !=='function' || hasPerm('customer_view')) { %>
+                                    <li class="<%= activePath.startsWith('/customers') ? 'active' : '' %>">
+                                        <a href="/customers"><i class="fa-solid fa-users"></i> Customers</a>
+                                    </li>
+                                    <% } %>
+
+                                        <!-- 3. In & Out Entry -->
+                                        <% if (typeof hasPerm !=='function' || hasPerm('transactions_view')) { %>
+                                            <li class="<%= activePath.startsWith('/transactions') ? 'active' : '' %>">
+                                                <a href="/transactions"><i class="fa-solid fa-right-left"></i> In & Out
+                                                    Entry</a>
+                                            </li>
+                                            <% } %>
+
+                                                <!-- 4. Stock Transfers -->
+                                                <% if (typeof hasPerm !=='function' || hasPerm('stock_transfers_view'))
+                                                    { %>
+                                                    <li
+                                                        class="<%= activePath.startsWith('/transfers') ? 'active' : '' %>">
+                                                        <a href="/transfers"><i class="fa-solid fa-truck-fast"></i>
+                                                            Stock Transfers</a>
+                                                    </li>
+                                                    <% } %>
+
+                                                        <!-- 5. Receive Stock -->
+                                                        <% if (typeof hasPerm !=='function' ||
+                                                            hasPerm('receive_stock_view')) { %>
+                                                            <li
+                                                                class="<%= activePath.startsWith('/receive-stock') ? 'active' : '' %>">
+                                                                <a href="/receive-stock"><i
+                                                                        class="fa-solid fa-boxes-packing"></i> Receive
+                                                                    Stock</a>
+                                                            </li>
+                                                            <% } %>
+
+                                                                <!-- 6. Damage & Audit Log -->
+                                                                <li
+                                                                    class="<%= activePath === '/damages' ? 'active' : '' %>">
+                                                                    <a href="/damages"><i
+                                                                            class="fa-solid fa-boxes-stacked"></i>
+                                                                        Damage & Audit</a>
+                                                                </li>
+
+                                                                <!-- 7. Reports -->
+                                                                <% if (typeof hasPerm !=='function' ||
+                                                                    hasPerm('reports_view')) { %>
+                                                                    <li
+                                                                        class="<%= activePath === '/reports' ? 'active' : '' %>">
+                                                                        <a href="/reports"><i
+                                                                                class="fa-solid fa-file-invoice"></i>
+                                                                            Reports</a>
+                                                                    </li>
+                                                                    <% } %>
+
+                                                                        <!-- 8. Analytics -->
+                                                                        <li
+                                                                            class="<%= activePath === '/analytics' ? 'active' : '' %>">
+                                                                            <a href="/analytics"><i
+                                                                                    class="fa-solid fa-chart-pie"></i>
+                                                                                Analytics</a>
+                                                                        </li>
+
+                                                                        <!-- 9. Administration -->
+                                                                        <% const canSeeAdmin=user.username==='admin' ||
+                                                                            user.role==='admin' || (typeof
+                                                                            hasPerm==='function' &&
+                                                                            (hasPerm('admin_branches_users') ||
+                                                                            hasPerm('admin_roles') ||
+                                                                            hasPerm('admin_view_logs'))); %>
+                                                                            <% if (canSeeAdmin) { %>
+                                                                                <li
+                                                                                    class="has-submenu <%= ['/users', '/roles', '/logs', '/settings'].includes(activePath) ? 'open' : '' %>">
+                                                                                    <a href="#"
+                                                                                        onclick="toggleSubmenu(event, this)">
+                                                                                        <div
+                                                                                            style="display: flex; align-items: center; gap: 12px;">
+                                                                                            <i
+                                                                                                class="fa-solid fa-cogs"></i>
+                                                                                            Administration
+                                                                                        </div>
+                                                                                        <i
+                                                                                            class="fa-solid fa-chevron-down submenu-icon"></i>
+                                                                                    </a>
+                                                                                    <ul class="submenu">
+                                                                                        <% if (user.username==='admin'
+                                                                                            || user.role==='admin' ||
+                                                                                            (typeof hasPerm==='function'
+                                                                                            &&
+                                                                                            hasPerm('admin_branches_users')))
+                                                                                            { %>
+                                                                                            <li
+                                                                                                class="<%= activePath === '/users' ? 'active' : '' %>">
+                                                                                                <a href="/users">Branches
+                                                                                                    & Users</a>
+                                                                                            </li>
+                                                                                            <% } %>
+                                                                                                <% if
+                                                                                                    (user.username==='admin'
+                                                                                                    ||
+                                                                                                    user.role==='admin'
+                                                                                                    || (typeof
+                                                                                                    hasPerm==='function'
+                                                                                                    &&
+                                                                                                    hasPerm('admin_roles')))
+                                                                                                    { %>
+                                                                                                    <li
+                                                                                                        class="<%= activePath === '/roles' ? 'active' : '' %>">
+                                                                                                        <a
+                                                                                                            href="/roles">Roles</a>
+                                                                                                    </li>
+                                                                                                    <% } %>
+                                                                                                        <% if
+                                                                                                            (user.username==='admin'
+                                                                                                            ||
+                                                                                                            user.role==='admin'
+                                                                                                            || (typeof
+                                                                                                            hasPerm==='function'
+                                                                                                            &&
+                                                                                                            hasPerm('admin_view_logs')))
+                                                                                                            { %>
+                                                                                                            <li
+                                                                                                                class="<%= activePath === '/logs' ? 'active' : '' %>">
+                                                                                                                <a
+                                                                                                                    href="/logs">Logs</a>
+                                                                                                            </li>
+                                                                                                            <% } %>
+                                                                                                                <% if
+                                                                                                                    (user.username==='admin'
+                                                                                                                    ||
+                                                                                                                    user.role==='admin'
+                                                                                                                    ) {
+                                                                                                                    %>
+                                                                                                                    <li
+                                                                                                                        class="<%= activePath === '/settings' ? 'active' : '' %>">
+                                                                                                                        <a
+                                                                                                                            href="/settings">Settings</a>
+                                                                                                                    </li>
+                                                                                                                    <% }
+                                                                                                                        %>
+                                                                                    </ul>
+                                                                                </li>
+                                                                                <% } %>
+
+                                                                                    <!-- 10. Profile -->
+                                                                                    <li
+                                                                                        class="<%= activePath === '/profile' ? 'active' : '' %>">
+                                                                                        <a href="/profile"><i
+                                                                                                class="fa-solid fa-user-gear"></i>
+                                                                                            Profile</a>
+                                                                                    </li>
+                    </ul>
+                    <div class="sidebar-collapse-area">
+                        <button class="sidebar-collapse-btn" onclick="toggleDesktopSidebar()" title="Collapse Sidebar">
+                            <i class="fa-solid fa-angles-left sidebar-collapse-icon"></i>
+                        </button>
+                    </div>
+                </aside>
+                <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+                <!-- Main Content Area -->
+                <div class="main-wrapper">
+                    <% } %>
+
+                        <%- include('command-palette') %>
+                            <%- include('voice-assistant') %>
+                                <main>

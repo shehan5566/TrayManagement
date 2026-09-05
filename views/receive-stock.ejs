@@ -1,0 +1,362 @@
+<%- include('partials/header') %>
+
+
+    <div style="margin-bottom: 25px;">
+        <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-boxes-packing"></i> Receive Stock</h2>
+        <p style="color: var(--text-light); font-size: 14px;">Process incoming Goods Receipt Notes (GRN) from other
+            branches.</p>
+    </div>
+
+    <% if (error) { %>
+        <div class="error-banner">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <%= error %>
+        </div>
+        <% } %>
+
+            <!-- Incoming Transfers List -->
+            <div class="content-box">
+                <div class="box-header">
+                    <span class="box-title"><i class="fa-solid fa-inbox"></i> Incoming Transfers</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="incomingTransfersTable" class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Doc No</th>
+                                <th>From Branch</th>
+                                <th>Vehicle No</th>
+                                <th>Dispatched Qty</th>
+                                <th>Remarks</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% const incoming=transfers.filter(t=> t.toLocationId === user.locationId && t.status
+                                === 'PENDING'); %>
+                                        <% incoming.forEach(t=> { %>
+                                            <tr>
+                                                <td>
+                                                    <%= new Date(t.dispatchedDate).toLocaleString() %>
+                                                </td>
+                                                <td><span class="badge"
+                                                        style="background-color: var(--accent-yellow); color: #333;">
+                                                        <%= t.transferDocNo || 'N/A' %>
+                                                    </span></td>
+                                                <td>
+                                                    <%= t.fromLocationName %>
+                                                </td>
+                                                <td>
+                                                    <%= t.vehicleNo || '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= t.dispatchedQty %>
+                                                </td>
+                                                <td>
+                                                    <%= t.remarks || '-' %>
+                                                </td>
+                                                <td>
+                                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                                        <button
+                                                            onclick="openGRNModal('<%= t.id %>', <%= t.dispatchedQty %>, '<%= t.fromLocationName %>', '<%= t.transferDocNo %>')"
+                                                            class="btn btn-primary"
+                                                            style="padding: 6px 10px; font-size: 12px;">
+                                                            Process GRN
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="content-box" style="margin-top: 25px; display: flex; flex-direction: column; gap: 15px;">
+                <div class="box-header">
+                    <span class="box-title"><i class="fa-solid fa-clock-rotate-left"></i> Received Transfer
+                        History</span>
+                </div>
+
+                <!-- Date Filter Form -->
+                <form action="/receive-stock" method="GET"
+                    style="display: flex; gap: 15px; align-items: flex-end; background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light);">
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label for="startDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">Start
+                            Date</label>
+                        <input type="date" id="startDate" name="startDate" value="<%= startDate %>"
+                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label for="endDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">End
+                            Date</label>
+                        <input type="date" id="endDate" name="endDate" value="<%= endDate %>"
+                            style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 16px; height: 38px;">
+                        <i class="fa-solid fa-filter"></i> Search
+                    </button>
+                    <a href="/receive-stock" class="btn btn-secondary"
+                        style="padding: 8px 16px; height: 38px; text-decoration: none; display: flex; align-items: center; justify-content: center; background-color: #f1f3f5; color: #333;">
+                        Clear
+                    </a>
+                </form>
+
+                <div class="table-responsive">
+                    <table id="receivedHistoryTable" class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transfer No</th>
+                                <th>GRN No</th>
+                                <th>From</th>
+                                <th>Vehicle No</th>
+                                <th>Dispatched Qty</th>
+                                <th>Received Qty</th>
+                                <th>Variance</th>
+                                <th>Status</th>
+                                <th style="text-align: center; width: 130px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% const history=transfers.filter(t=> t.status !== 'PENDING' && t.toLocationId ===
+                                user.locationId); %>
+                                <% history.forEach(t=> { %>
+                                            <tr>
+                                                <td>
+                                                    <%= t.receivedDate ? new Date(t.receivedDate).toLocaleDateString() : new Date(t.dispatchedDate).toLocaleDateString() %>
+                                                </td>
+                                                <td>
+                                                    <%= t.transferDocNo || '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= t.grnNo || '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= t.fromLocationName %>
+                                                </td>
+                                                <td>
+                                                    <%= t.vehicleNo || '-' %>
+                                                </td>
+                                                <td>
+                                                    <%= t.dispatchedQty %>
+                                                </td>
+                                                <td>
+                                                    <%= t.status==='REJECTED' ? '-' : t.receivedQty %>
+                                                </td>
+                                                <td>
+                                                    <% if(t.variance < 0) { %>
+                                                        <span style="color: #d32f2f; font-weight: bold;">
+                                                            <%= t.variance %>
+                                                        </span>
+                                                        <% } else { %>
+                                                            0
+                                                            <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (t.status==='ACCEPTED' ) { %>
+                                                        <span class="badge"
+                                                            style="background:#1b5e20; color:white; padding:4px 8px; font-size:11px;">ACCEPTED</span>
+                                                        <% } else if (t.status==='REJECTED' ) { %>
+                                                            <span class="badge"
+                                                                style="background:#d32f2f; color:white; padding:4px 8px; font-size:11px;">REJECTED</span>
+                                                            <% } else { %>
+                                                                <span class="badge"
+                                                                    style="background:var(--accent-yellow); color:#333; padding:4px 8px; font-size:11px;">PENDING</span>
+                                                                <% } %>
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    <div style="display: grid; grid-template-columns: 28px 28px 28px; gap: 5px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
+                                                        <a href="/transfers/<%= t._id || t.id %>/print-grn" target="_blank" class="btn" style="background-color: #1b5e20; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Print Goods Received Note (GRN)"><i class="fa-solid fa-print"></i></a>
+                                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_backdate') || hasPerm('receive_stock_delete')))) { %>
+                                                            <% if (t.status === 'ACCEPTED' && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_backdate') || hasPerm('backdate_records'))))) { %>
+                                                                <button class="btn" style="background-color: var(--accent-yellow); color: #333; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" onclick="openBackdateGRNModal('<%= t._id || t.id %>', '<%= t.receivedDate || '' %>')" title="Backdate GRN"><i class="fa-solid fa-calendar-day"></i></button>
+                                                            <% } else { %>
+                                                                <div></div>
+                                                            <% } %>
+                                                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_delete') || hasPerm('delete_records')))) { %>
+                                                                <button class="btn" style="background-color: #f44336; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" onclick="deleteTransfer('<%= t.id %>')" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
+                                                            <% } else { %>
+                                                                <div></div>
+                                                            <% } %>
+                                                        <% } %>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- GRN Modal -->
+            <div id="grnModal" class="modal"
+                style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                <div class="modal-content"
+                    style="background-color: #fefefe; margin: 10% auto; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
+                        <h3 style="margin: 0; color: var(--primary-green-dark);"><i
+                                class="fa-solid fa-boxes-packing"></i> Process GRN</h3>
+                        <span onclick="document.getElementById('grnModal').style.display='none'"
+                            style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                    </div>
+
+                    <form id="grnForm" method="POST"
+                        onsubmit="submitAjaxForm(event, this, 'GRN Processed Successfully')">
+                        <p>Receiving from: <strong id="grnFromBranch"></strong></p>
+                        <p>Transfer Ref No: <strong id="grnTransferRef"></strong></p>
+                        <p>Dispatched Quantity: <strong id="grnExpectedQty"></strong></p>
+                        <hr style="border:0; border-top: 1px solid #eee; margin: 15px 0;">
+
+                        <div class="form-group">
+                            <label>Actual Received Quantity</label>
+                            <input type="number" id="grnReceivedQty" name="receivedQty" min="0" required>
+                        </div>
+
+                        <input type="hidden" name="action" value="ACCEPT">
+
+                        <% if (user.role==='admin' || user.username==='admin' ) { %>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>Received Date & Time</label>
+                                <input type="datetime-local" id="receivedDate" name="receivedDate" class="form-control">
+                                <small style="color: var(--text-light); font-size: 11px;">Leave empty for current
+                                    time</small>
+                            </div>
+                            <% } %>
+
+                                <button type="submit" class="btn btn-primary"
+                                    style="width: 100%; margin-top: 15px;">Submit
+                                    GRN</button>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                function openGRNModal(transferId, expectedQty, fromBranch, transferDocNo) {
+                    document.getElementById('grnFromBranch').innerText = fromBranch;
+                    document.getElementById('grnExpectedQty').innerText = expectedQty;
+                    document.getElementById('grnTransferRef').innerText = transferDocNo || 'N/A';
+                    document.getElementById('grnReceivedQty').value = expectedQty;
+                    document.getElementById('grnForm').action = '/transfers/' + transferId + '/grn';
+                    document.getElementById('grnModal').style.display = 'block';
+                }
+
+                  function deleteTransfer(id) {
+                      Swal.fire({
+                          title: 'Are you sure?',
+                          text: "This will permanently delete the transfer and revert stock balances. This cannot be undone!",
+                          icon: 'warning',
+                          showCancelButton: true,
+                          confirmButtonColor: '#d32f2f',
+                          cancelButtonColor: '#757575',
+                          confirmButtonText: 'Yes, delete it!'
+                      }).then(async (result) => {
+                          if (result.isConfirmed) {
+                              try {
+                                  const res = await fetch('/transfers/' + id, { method: 'DELETE' });
+                                  const data = await res.json();
+                                  if (data.success) {
+                                      Swal.fire('Deleted!', 'Transfer has been deleted.', 'success').then(() => {
+                                          window.location.reload();
+                                      });
+                                  } else {
+                                      Swal.fire('Error!', data.error || 'Failed to delete transfer', 'error');
+                                  }
+                              } catch (err) {
+                                  Swal.fire('Error!', 'Network error occurred.', 'error');
+                              }
+                          }
+                      });
+                  }
+
+                  function openBackdateGRNModal(id, receivedDateStr) {
+                      let formattedReceive = '';
+
+                      try {
+                          if (receivedDateStr && receivedDateStr !== 'undefined' && receivedDateStr !== 'null') {
+                              const r = new Date(receivedDateStr);
+                              if (!isNaN(r.getTime())) {
+                                  formattedReceive = (new Date(r.getTime() - r.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                              }
+                          }
+                      } catch (e) {}
+
+                      Swal.fire({
+                          title: 'Backdate Received (GRN) Date',
+                          html: `
+                              <div style="text-align: left; display: flex; flex-direction: column; gap: 10px; font-size: 14px;">
+                                  <div>
+                                      <label style="font-weight: bold; color: var(--primary-green-dark);">Received (GRN) Date & Time</label>
+                                      <input type="datetime-local" id="swal-receive-date" class="swal2-input" value="${formattedReceive}" style="width: 90%; margin: 5px 0;">
+                                  </div>
+                              </div>
+                          `,
+                          showCancelButton: true,
+                          confirmButtonText: '<i class="fa-solid fa-save"></i> Save Date',
+                          confirmButtonColor: '#1b4d3e',
+                          didOpen: () => {
+                              const dateInput = document.getElementById('swal-receive-date');
+                              if (dateInput && typeof flatpickr !== 'undefined') {
+                                  try {
+                                      const fp = flatpickr(dateInput, {
+                                          enableTime: true,
+                                          dateFormat: "Y-m-d\\TH:i",
+                                          altInput: true,
+                                          altFormat: "Y-m-d h:i K",
+                                          time_24hr: false,
+                                          allowInput: true,
+                                          clickOpens: true
+                                      });
+                                      if (fp && fp.calendarContainer) {
+                                          fp.calendarContainer.style.zIndex = '99999999';
+                                      }
+                                  } catch (e) {}
+                              }
+                          },
+                          preConfirm: () => {
+                              const rDate = document.getElementById('swal-receive-date').value;
+                              return { receivedDate: rDate };
+                          }
+                      }).then(async (result) => {
+                          if (result.isConfirmed) {
+                              try {
+                                  const res = await fetch('/transfers/' + id + '/backdate', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify(result.value)
+                                  });
+                                  const responseData = await res.json();
+                                  if (responseData.success) {
+                                      Swal.fire('Success', 'GRN date updated successfully', 'success').then(() => {
+                                          window.location.reload();
+                                      });
+                                  } else {
+                                      Swal.fire('Error', responseData.error || 'Update failed', 'error');
+                                  }
+                              } catch (err) {
+                                  Swal.fire('Error', 'Network error', 'error');
+                              }
+                          }
+                      });
+                  }
+            </script>
+
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+            <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+            <script>
+                $(document).ready(function () {
+                    $('#incomingTransfersTable').DataTable({
+                        pageLength: 25,
+                        order: [[0, 'desc']]
+                    });
+                    $('#receivedHistoryTable').DataTable({
+                        pageLength: 25,
+                        order: [[0, 'desc']]
+                    });
+                });
+            </script>
+
+            <%- include('partials/footer') %>

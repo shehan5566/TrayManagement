@@ -1,0 +1,660 @@
+<%- include('partials/header') %>
+
+    <div style="margin-bottom: 25px;">
+        <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck-fast"></i> Stock Transfers</h2>
+        <p style="color: var(--text-light); font-size: 14px;">Manage tray transfers between branches and process Goods
+            Receipt Notes.</p>
+    </div>
+
+    <% if (error) { %>
+        <div class="error-banner">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <%= error %>
+        </div>
+        <% } %>
+
+            <div class="users-layout">
+                <!-- Dispatch Transfer Form -->
+                <div class="content-box" style="border-top: 4px solid var(--primary-green);">
+                    <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="box-title">Dispatch Trays</span>
+                        <button type="button" onclick="triggerAiOcrScan()" class="btn btn-secondary"
+                            style="font-size: 12px; padding: 6px 12px; background: linear-gradient(135deg, #10b981 0%, #065f46 100%); color: white; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Scan Document
+                        </button>
+                    </div>
+                    <input type="file" id="aiOcrFileInput" accept="image/*" style="display: none;"
+                        onchange="uploadAndScanReceipt(this)">
+
+                    <form action="/transfers/dispatch" method="POST" id="dispatchForm">
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                            <div class="form-group">
+                                <label>To Branch</label>
+                                <select name="toLocationId" required>
+                                    <option value="">Select Destination</option>
+                                    <% locations.forEach(l=> { %>
+                                        <% if(l.id !==user.locationId) { %>
+                                            <option value="<%= l.id %>">
+                                                <%= l.name %>
+                                            </option>
+                                            <% } %>
+                                                <% }) %>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <% const myLoc=locations.find(l=> l.id === user.locationId); %>
+                                    <label>Tray Quantity (Avl.<%= myLoc ? myLoc.currentStock : 0 %>)</label>
+                                    <input type="number" name="dispatchedQty" min="1" placeholder="Enter tray count..."
+                                        required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Vehicle Number</label>
+                                <select name="vehicleNo" required>
+                                    <option value="N/A">Select Vehicle</option>
+                                    <option value="LK-3945">LK-3945</option>
+                                    <option value="LN-4124">LN-4124</option>
+                                    <option value="PX-1430">PX-1430</option>
+                                    <option value="PU-4451">PU-4451</option>
+                                    <option value="LP-3506">LP-3506</option>
+                                    <option value="LG-1095">LG-1095</option>
+                                    <option value="LK-8422">LK-8422</option>
+                                    <option value="LM-6632">LM-6632</option>
+                                    <option value="DAG-2712">DAG-2712</option>
+                                    <option value="RENTED">RENTED</option>
+                                    <option value="OWNOUTLET">OWNOUTLET</option>
+                                </select>
+                            </div>
+
+
+
+                            <div class="form-group">
+                                <label>Remarks</label>
+                                <input type="text" name="remarks" placeholder="Optional notes">
+                            </div>
+
+                            <% if (user.role==='admin' || user.username==='admin' ) { %>
+                                <div class="form-group" style="margin-bottom: 20px;">
+                                    <label>Dispatch Date & Time</label>
+                                    <input type="datetime-local" id="dispatchedDate" name="dispatchedDate"
+                                        class="form-control">
+                                    <small style="color: var(--text-light); font-size: 11px;">Leave empty for current
+                                        time</small>
+                                </div>
+                                <% } %>
+
+                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                        <button type="submit" class="btn btn-primary" style="flex-grow: 1;">
+                                            <i class="fa-solid fa-paper-plane"></i> Send Trays
+                                        </button>
+                                    </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Transfer History Table -->
+                <div class="content-box" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="box-header">
+                        <span class="box-title"><i class="fa-solid fa-clock-rotate-left"></i> Transfer History</span>
+                    </div>
+
+                    <!-- Date Filter Form -->
+                    <form action="/transfers" method="GET"
+                        style="display: flex; gap: 15px; align-items: flex-end; background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light);">
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <label for="startDate"
+                                style="font-size: 12px; font-weight: 600; color: var(--text-dark);">Start Date</label>
+                            <input type="date" id="startDate" name="startDate" value="<%= startDate %>"
+                                style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 5px;">
+                            <label for="endDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">End
+                                Date</label>
+                            <input type="date" id="endDate" name="endDate" value="<%= endDate %>"
+                                style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="padding: 8px 16px; height: 38px;">
+                            <i class="fa-solid fa-filter"></i> Search
+                        </button>
+                        <a href="/transfers" class="btn btn-secondary"
+                            style="padding: 8px 16px; height: 38px; text-decoration: none; display: flex; align-items: center; justify-content: center; background-color: #f1f3f5; color: #333;">
+                            Clear
+                        </a>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table id="transferHistoryTable" class="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Transfer No</th>
+                                    <th>From</th>
+                                    <th>To</th>
+                                    <th>Vehicle No</th>
+                                    <th>Dispatched Qty</th>
+                                    <th>Created By</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% const history=transfers.filter(t=> t.fromLocationId === user.locationId); %>
+                                    <% history.forEach(t=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= new Date(t.dispatchedDate).toLocaleDateString() %>
+                                            </td>
+                                            <td>
+                                                <%= t.transferDocNo || '-' %>
+                                            </td>
+                                            <td>
+                                                <%= t.fromLocationName %>
+                                            </td>
+                                            <td>
+                                                <%= t.toLocationName %>
+                                            </td>
+                                            <td>
+                                                <%= t.vehicleNo || '-' %>
+                                            </td>
+                                            <td>
+                                                <%= t.dispatchedQty %>
+                                            </td>
+                                            <td>
+                                                <%= t.dispatchedBy || '-' %>
+                                            </td>
+                                            <td>
+                                                <% if (t.status==='ACCEPTED' ) { %>
+                                                    <span class="badge"
+                                                        style="background:#1b5e20; color:white; padding:4px 8px; font-size:11px;">ACCEPTED</span>
+                                                    <% } else if (t.status==='REJECTED' ) { %>
+                                                        <span class="badge"
+                                                            style="background:#d32f2f; color:white; padding:4px 8px; font-size:11px;">REJECTED</span>
+                                                        <% } else { %>
+                                                            <span class="badge"
+                                                                style="background:var(--accent-yellow); color:#333; padding:4px 8px; font-size:11px;">PENDING</span>
+                                                            <% } %>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <div style="display: grid; grid-template-columns: 28px 28px 28px; gap: 5px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
+                                                     <% const isAdminOrPermitted = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_edit') || hasPerm('stock_transfers_backdate') || hasPerm('manage_stock')))); %>
+                                                     <% if (isAdminOrPermitted) { %>
+                                                         <button type="button" class="btn edit-transfer-btn" 
+                                                             data-id="<%= t._id || t.id %>"
+                                                             data-qty="<%= t.dispatchedQty %>"
+                                                             data-vehicle="<%= t.vehicleNo || '' %>"
+                                                             data-remarks="<%= (t.remarks || '').replace(/"/g, '&quot;') %>"
+                                                             data-date="<%= t.dispatchedDate || '' %>"
+                                                             data-tolocation="<%= t.toLocationId || '' %>"
+                                                             onclick="handleEditTransferClick(this)"
+                                                             style="background-color: var(--accent-yellow); color: #333; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Edit Transfer">
+                                                             <i class="fa-solid fa-pen"></i>
+                                                         </button>
+                                                     <% } else { %>
+                                                         <div></div>
+                                                     <% } %>
+
+                                                     <a href="/transfers/<%= t._id || t.id %>/print" target="_blank" class="btn" style="background-color: #2196F3; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Print Transfer Note & Gate Pass">
+                                                         <i class="fa-solid fa-print"></i>
+                                                     </a>
+
+                                                     <% const canDelete = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_delete') || hasPerm('delete_records')))); %>
+                                                     <% if (canDelete && (user.username === 'admin' || user.role === 'admin' || t.status !== 'ACCEPTED')) { %>
+                                                         <button type="button" class="btn delete-transfer-btn" 
+                                                             data-id="<%= t._id || t.id %>"
+                                                             onclick="deleteTransfer('<%= t._id || t.id %>')"
+                                                             style="background-color: #f44336; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Delete Transfer">
+                                                             <i class="fa-solid fa-trash"></i>
+                                                         </button>
+                                                     <% } else { %>
+                                                         <div></div>
+                                                     <% } %>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <%- include('partials/footer') %>
+
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+                <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+                <script>
+                    function handleEditTransferClick(btn) {
+                        if (!btn) return;
+                        const id = btn.getAttribute('data-id');
+                        const qty = btn.getAttribute('data-qty');
+                        const vehicle = btn.getAttribute('data-vehicle');
+                        const remarks = btn.getAttribute('data-remarks');
+                        const dateStr = btn.getAttribute('data-date');
+                        const toLocationId = btn.getAttribute('data-tolocation');
+                        openEditTransferModal(id, qty, vehicle, remarks, dateStr, toLocationId);
+                    }
+                    window.handleEditTransferClick = handleEditTransferClick;
+
+                    function deleteTransfer(id) {
+                        Swal.fire({
+                            title: 'Delete Stock Transfer?',
+                            text: "This will permanently delete the transfer and revert stock balances. This cannot be undone!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#f44336',
+                            cancelButtonColor: '#9e9e9e',
+                            confirmButtonText: 'Yes, Delete Transfer'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                fetch('/transfers/' + id, {
+                                    method: 'DELETE'
+                                }).then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            Swal.fire('Deleted!', 'The stock transfer has been deleted.', 'success')
+                                                .then(() => window.location.reload());
+                                        } else {
+                                            Swal.fire('Error', data.error || 'Failed to delete transfer', 'error');
+                                        }
+                                    }).catch(err => {
+                                        Swal.fire('Error', 'An unexpected error occurred', 'error');
+                                    });
+                            }
+                        });
+                    }
+                    window.deleteTransfer = deleteTransfer;
+
+                    function openEditTransferModal(id, qty, vehicle, remarks, dateStr, toLocationId) {
+                        let formattedDate = '';
+                        if (dateStr && dateStr !== 'undefined' && dateStr !== 'null') {
+                            try {
+                                const d = new Date(dateStr);
+                                if (!isNaN(d.getTime())) {
+                                    const tzoffset = d.getTimezoneOffset() * 60000;
+                                    formattedDate = (new Date(d.getTime() - tzoffset)).toISOString().slice(0, 16);
+                                }
+                            } catch (e) { }
+                        }
+
+                        const vehicleOptions = `
+                            <option value="N/A" ${vehicle === 'N/A' ? 'selected' : ''}>Select Vehicle</option>
+                            <option value="LK-3945" ${vehicle === 'LK-3945' ? 'selected' : ''}>LK-3945</option>
+                            <option value="LN-4124" ${vehicle === 'LN-4124' ? 'selected' : ''}>LN-4124</option>
+                            <option value="PX-1430" ${vehicle === 'PX-1430' ? 'selected' : ''}>PX-1430</option>
+                            <option value="PU-4451" ${vehicle === 'PU-4451' ? 'selected' : ''}>PU-4451</option>
+                            <option value="LP-3506" ${vehicle === 'LP-3506' ? 'selected' : ''}>LP-3506</option>
+                            <option value="LG-1095" ${vehicle === 'LG-1095' ? 'selected' : ''}>LG-1095</option>
+                            <option value="LK-8422" ${vehicle === 'LK-8422' ? 'selected' : ''}>LK-8422</option>
+                            <option value="LM-6632" ${vehicle === 'LM-6632' ? 'selected' : ''}>LM-6632</option>
+                            <option value="DAG-2712" ${vehicle === 'DAG-2712' ? 'selected' : ''}>DAG-2712</option>
+                            <option value="RENTED" ${vehicle === 'RENTED' ? 'selected' : ''}>RENTED</option>
+                            <option value="OWNOUTLET" ${vehicle === 'OWNOUTLET' ? 'selected' : ''}>OWNOUTLET</option>
+                        `;
+
+                        const locationsData = <%- JSON.stringify(locations) %>;
+                        const userLocId = "<%= user.locationId %>";
+                        let locationOptions = '<option value="">Select Destination</option>';
+                        locationsData.forEach(l => {
+                            if (l.id !== userLocId) {
+                                const isSelected = (toLocationId === String(l.id) || toLocationId === String(l._id)) ? 'selected' : '';
+                                locationOptions += `<option value="${l.id || l._id}" ${isSelected}>${l.name}</option>`;
+                            }
+                        });
+
+                        Swal.fire({
+                            title: 'Edit Transfer',
+                            html: `
+                                <div style="text-align: left; display: flex; flex-direction: column; gap: 10px; font-size: 14px;">
+                                    <div>
+                                        <label style="font-weight: bold; color: var(--primary-green-dark);"><i class="fa-solid fa-calendar-day" style="color: var(--primary-green);"></i> Dispatch Date & Time</label>
+                                        <input type="datetime-local" id="swal-date" class="swal2-input" value="${formattedDate}" style="width: 90%; margin: 5px 0; cursor: pointer;" onclick="try{this.showPicker()}catch(e){}">
+                                    </div>
+                                    <% if (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_edit') || hasPerm('stock_transfers_backdate')))) { %>
+                                    <div>
+                                        <label style="font-weight: bold; color: var(--primary-green-dark);"><i class="fa-solid fa-code-branch" style="color: var(--primary-green);"></i> To Branch</label>
+                                        <select id="swal-to-location" class="swal2-select" style="width: 90%; margin: 5px 0;">
+                                            ${locationOptions}
+                                        </select>
+                                    </div>
+                                    <% } %>
+                                    <div>
+                                        <label style="font-weight: bold; color: var(--primary-green-dark);">Dispatched Qty</label>
+                                        <input type="number" id="swal-qty" class="swal2-input" value="${qty}" min="1" style="width: 90%; margin: 5px 0;">
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: bold; color: var(--primary-green-dark);">Vehicle Number</label>
+                                        <select id="swal-vehicle" class="swal2-select" style="width: 90%; margin: 5px 0;">
+                                            ${vehicleOptions}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-weight: bold; color: var(--primary-green-dark);">Remarks</label>
+                                        <input type="text" id="swal-remarks" class="swal2-input" value="${remarks}" style="width: 90%; margin: 5px 0;">
+                                    </div>
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fa-solid fa-save"></i> Save Changes',
+                            confirmButtonColor: '#1b4d3e',
+                            didOpen: () => {
+                                const dateInput = document.getElementById('swal-date');
+                                if (dateInput) {
+                                    if (typeof flatpickr !== 'undefined') {
+                                        try {
+                                            const fp = flatpickr(dateInput, {
+                                                enableTime: true,
+                                                dateFormat: "Y-m-d\\TH:i",
+                                                altInput: true,
+                                                altFormat: "Y-m-d h:i K",
+                                                time_24hr: false,
+                                                allowInput: true,
+                                                clickOpens: true
+                                            });
+                                            if (fp && fp.calendarContainer) {
+                                                fp.calendarContainer.style.zIndex = '9999999';
+                                            }
+                                        } catch (e) {}
+                                    } else {
+                                        dateInput.addEventListener('click', () => { try { dateInput.showPicker(); } catch(e){} });
+                                        dateInput.addEventListener('focus', () => { try { dateInput.showPicker(); } catch(e){} });
+                                    }
+                                }
+                            },
+                            preConfirm: () => {
+                                const newQty = document.getElementById('swal-qty').value;
+                                const newVehicle = document.getElementById('swal-vehicle').value;
+                                const newRemarks = document.getElementById('swal-remarks').value;
+
+                                let newDate = null;
+                                let newToLocation = null;
+                                const dateEl = document.getElementById('swal-date');
+                                const toLocEl = document.getElementById('swal-to-location');
+                                if (dateEl) newDate = dateEl.value;
+                                if (toLocEl) newToLocation = toLocEl.value;
+
+                                if (!newQty || newQty < 1) {
+                                    Swal.showValidationMessage('Please enter a valid quantity');
+                                    return false;
+                                }
+
+                                return { qty: newQty, vehicle: newVehicle, remarks: newRemarks, date: newDate, toLocationId: newToLocation };
+                            }
+                        }).then(async (result) => {
+                            if (result.isConfirmed) {
+                                const data = result.value;
+                                const reqBody = { dispatchedQty: data.qty, vehicleNo: data.vehicle, remarks: data.remarks };
+                                if (data.date) reqBody.dispatchedDate = data.date;
+                                if (data.toLocationId) reqBody.toLocationId = data.toLocationId;
+
+                                try {
+                                    const res = await fetch('/transfers/' + id + '/edit', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(reqBody)
+                                    });
+                                    const responseData = await res.json();
+                                    if (responseData.success) {
+                                        Swal.fire('Success', 'Transfer updated successfully', 'success').then(() => {
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        Swal.fire('Error', responseData.error || 'Update failed', 'error');
+                                    }
+                                } catch (err) {
+                                    Swal.fire('Error', 'Network error', 'error');
+                                }
+                            }
+                        });
+                    }
+                    window.openEditTransferModal = openEditTransferModal;
+
+                    function openBackdateModal(id, dispatchedDateStr, receivedDateStr) {
+                        let formattedDispatch = '';
+                        let formattedReceive = '';
+
+                        try {
+                            if (dispatchedDateStr && dispatchedDateStr !== 'undefined' && dispatchedDateStr !== 'null') {
+                                const d = new Date(dispatchedDateStr);
+                                if (!isNaN(d.getTime())) {
+                                    formattedDispatch = (new Date(d.getTime() - d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                                }
+                            }
+                            if (receivedDateStr && receivedDateStr !== 'undefined' && receivedDateStr !== 'null') {
+                                const r = new Date(receivedDateStr);
+                                if (!isNaN(r.getTime())) {
+                                    formattedReceive = (new Date(r.getTime() - r.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                                }
+                            }
+                        } catch (e) { }
+
+                        Swal.fire({
+                            title: 'Backdate Accepted Transfer',
+                            html: `
+                                <div style="text-align: left; display: flex; flex-direction: column; gap: 10px; font-size: 14px;">
+                                    <div>
+                                        <label style="font-weight: bold; color: var(--primary-green-dark);">Dispatched Date & Time</label>
+                                        <input type="datetime-local" id="swal-dispatch-date" class="swal2-input" value="${formattedDispatch}" style="width: 90%; margin: 5px 0; cursor: pointer;" onclick="try{this.showPicker()}catch(e){}">
+                                    </div>
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fa-solid fa-save"></i> Save Dates',
+                            confirmButtonColor: '#1b4d3e',
+                            didOpen: () => {
+                                const dateInput = document.getElementById('swal-dispatch-date');
+                                if (dateInput) {
+                                    if (typeof flatpickr !== 'undefined') {
+                                        try {
+                                            const fp = flatpickr(dateInput, {
+                                                enableTime: true,
+                                                dateFormat: "Y-m-d\\TH:i",
+                                                altInput: true,
+                                                altFormat: "Y-m-d h:i K",
+                                                time_24hr: false,
+                                                allowInput: true,
+                                                clickOpens: true
+                                            });
+                                            if (fp && fp.calendarContainer) {
+                                                fp.calendarContainer.style.zIndex = '9999999';
+                                            }
+                                        } catch (e) {}
+                                    } else {
+                                        dateInput.addEventListener('click', () => { try { dateInput.showPicker(); } catch(e){} });
+                                        dateInput.addEventListener('focus', () => { try { dateInput.showPicker(); } catch(e){} });
+                                    }
+                                }
+                            },
+                            preConfirm: () => {
+                                const dDate = document.getElementById('swal-dispatch-date').value;
+                                return { dispatchedDate: dDate };
+                            }
+                        }).then(async (result) => {
+                            if (result.isConfirmed) {
+                                try {
+                                    const res = await fetch('/transfers/' + id + '/backdate', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(result.value)
+                                    });
+                                    const responseData = await res.json();
+                                    if (responseData.success) {
+                                        Swal.fire('Success', 'Dates updated successfully', 'success').then(() => {
+                                            window.location.reload();
+                                        });
+                                    } else {
+                                        Swal.fire('Error', responseData.error || 'Update failed', 'error');
+                                    }
+                                } catch (err) {
+                                    Swal.fire('Error', 'Network error', 'error');
+                                }
+                            }
+                        });
+                    }
+
+                    function triggerAiOcrScan() {
+                        const input = document.getElementById('aiOcrFileInput');
+                        if (input) input.click();
+                    }
+
+                    async function uploadAndScanReceipt(fileInput) {
+                        if (!fileInput.files || !fileInput.files[0]) return;
+                        const file = fileInput.files[0];
+
+                        Swal.fire({
+                            title: 'AI Scanning Document...',
+                            text: 'Gemini AI is reading transfer & receipt details',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        const formData = new FormData();
+                        formData.append('receiptImage', file);
+
+                        try {
+                            const res = await fetch('/api/ai/scan-receipt', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await res.json();
+
+                            if (data.success && data.data) {
+                                const parsed = data.data;
+                                const form = document.getElementById('dispatchForm');
+
+                                if (parsed.dispatchedQty && form.querySelector('[name="dispatchedQty"]')) {
+                                    form.querySelector('[name="dispatchedQty"]').value = parsed.dispatchedQty;
+                                }
+                                if (parsed.vehicleNo && form.querySelector('[name="vehicleNo"]')) {
+                                    const vehicleSelect = form.querySelector('[name="vehicleNo"]');
+                                    let match = false;
+                                    for (let opt of vehicleSelect.options) {
+                                        if (opt.value.toLowerCase().includes(parsed.vehicleNo.toLowerCase())) {
+                                            opt.selected = true;
+                                            match = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!match) vehicleSelect.value = parsed.vehicleNo;
+                                }
+                                if (parsed.remarks && form.querySelector('[name="remarks"]')) {
+                                    form.querySelector('[name="remarks"]').value = parsed.remarks;
+                                }
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'AI Scan Successful!',
+                                    text: 'Extracted details populated into the dispatch form.',
+                                    timer: 3500,
+                                    toast: true,
+                                    position: 'top-end'
+                                });
+                            } else {
+                                Swal.fire('OCR Scan', data.error || 'Could not auto-extract details from this document.', 'info');
+                            }
+                        } catch (err) {
+                            Swal.fire('Scan Failed', err.message, 'error');
+                        } finally {
+                            fileInput.value = '';
+                        }
+                    }
+
+                    $(document).ready(function () {
+                        if ($('#transferHistoryTable').length) {
+                            $('#transferHistoryTable').DataTable({
+                                pageLength: 25,
+                                order: [[0, 'desc']]
+                            });
+                        }
+
+                        const dispatchForm = document.getElementById('dispatchForm');
+                        if (dispatchForm) {
+                            dispatchForm.addEventListener('submit', function (e) {
+                                e.preventDefault();
+
+                                const form = this;
+                                form.classList.remove('is-submitting');
+                                const submitBtn = form.querySelector('button[type="submit"]');
+                                if (submitBtn && submitBtn.dataset.originalContent) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.style.opacity = '1';
+                                    submitBtn.style.cursor = 'pointer';
+                                    submitBtn.innerHTML = submitBtn.dataset.originalContent;
+                                }
+
+                                Swal.fire({
+                                    title: 'Send Trays',
+                                    text: "Do you want to Save Only or Save & Print?",
+                                    icon: 'question',
+                                    showDenyButton: true,
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#28a745',
+                                    denyButtonColor: '#17a2b8',
+                                    confirmButtonText: '<i class="fa-solid fa-save"></i> Save Only',
+                                    denyButtonText: '<i class="fa-solid fa-print"></i> Save & Print',
+                                    cancelButtonText: 'Cancel'
+                                }).then(async (result) => {
+                                    if (result.isConfirmed || result.isDenied) {
+                                        const shouldPrint = result.isDenied;
+
+                                        if (submitBtn) {
+                                            submitBtn.disabled = true;
+                                            submitBtn.style.opacity = '0.8';
+                                            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+                                        }
+
+                                        try {
+                                            const formData = new FormData(form);
+                                            const data = Object.fromEntries(formData.entries());
+
+                                            const response = await fetch(form.action, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json'
+                                                },
+                                                body: JSON.stringify(data)
+                                            });
+
+                                            const resultData = await response.json();
+
+                                            if (response.ok && resultData.success) {
+                                                if (shouldPrint) {
+                                                    const printUrl = '/transfers/' + (resultData.transferId || resultData.id || '') + '/print';
+                                                    window.location.href = printUrl;
+                                                } else {
+                                                    Swal.fire({
+                                                        toast: true,
+                                                        position: 'top-end',
+                                                        icon: 'success',
+                                                        title: resultData.message || 'Trays dispatched successfully!',
+                                                        showConfirmButton: false,
+                                                        timer: 2000
+                                                    }).then(() => {
+                                                        window.location.reload();
+                                                    });
+                                                }
+                                            } else {
+                                                Swal.fire('Error!', resultData.error || 'Failed to dispatch trays', 'error');
+                                                if (submitBtn) {
+                                                    submitBtn.disabled = false;
+                                                    submitBtn.style.opacity = '1';
+                                                    submitBtn.innerHTML = submitBtn.dataset.originalContent;
+                                                }
+                                            }
+                                        } catch (err) {
+                                            Swal.fire('Error!', 'Network error occurred.', 'error');
+                                            if (submitBtn) {
+                                                submitBtn.disabled = false;
+                                                submitBtn.style.opacity = '1';
+                                                submitBtn.innerHTML = submitBtn.dataset.originalContent;
+                                            }
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    });
+                </script>

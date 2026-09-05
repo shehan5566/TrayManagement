@@ -1,0 +1,146 @@
+</main>
+
+    <% if (typeof user !== 'undefined' && user) { %>
+        </div> <!-- /main-wrapper -->
+        </div> <!-- /main-body -->
+    </div> <!-- /app-layout -->
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function toggleDesktopSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const expandBtn = document.getElementById('sidebarExpandBtn');
+            sidebar.classList.toggle('collapsed');
+            if (sidebar.classList.contains('collapsed')) {
+                expandBtn.style.display = 'flex';
+            } else {
+                expandBtn.style.display = 'none';
+            }
+        }
+
+        function toggleSubmenu(event, element) {
+            event.preventDefault();
+            const parentLi = element.closest('.has-submenu');
+            parentLi.classList.toggle('open');
+        }
+
+        function toggleNotificationDropdown(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('notificationDropdownMenu');
+            if (menu) menu.classList.toggle('show');
+        }
+
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/notifications', {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data || !data.success) return;
+
+                const badge = document.getElementById('notificationBadge');
+                const countTag = document.getElementById('notificationCountTag');
+                const list = document.getElementById('notificationList');
+
+                if (badge) {
+                    if (data.unreadCount > 0) {
+                        badge.innerText = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                if (countTag) {
+                    countTag.innerText = `${data.unreadCount} new`;
+                }
+
+                if (list) {
+                    if (!data.notifications || data.notifications.length === 0) {
+                        list.innerHTML = `
+                            <div class="notification-empty">
+                                <i class="fa-solid fa-bell-slash" style="font-size: 24px; color: var(--text-light); margin-bottom: 8px;"></i>
+                                <p>No new notifications</p>
+                            </div>`;
+                    } else {
+                        list.innerHTML = data.notifications.map(item => {
+                            const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '';
+                            return `
+                                <a href="${item.link}" class="notification-item">
+                                    <div class="notification-item-icon ${item.level || 'warning'}">
+                                        <i class="fa-solid ${item.icon || 'fa-bell'}"></i>
+                                    </div>
+                                    <div class="notification-item-content">
+                                        <div class="notification-item-title">${item.title}</div>
+                                        <div class="notification-item-msg">${item.message}</div>
+                                        <div class="notification-item-time">${dateStr}</div>
+                                    </div>
+                                </a>`;
+                        }).join('');
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching notifications:', err);
+            }
+        }
+
+        // Fetch notifications on load & every 60 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchNotifications();
+            setInterval(fetchNotifications, 60000);
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            const userDropdown = document.querySelector('.user-dropdown-menu');
+            const userBtn = document.querySelector('.user-dropdown-btn');
+            if (userDropdown && userBtn && !userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+
+            const notifDropdown = document.getElementById('notificationDropdownMenu');
+            const notifBtn = document.getElementById('notificationBtn');
+            if (notifDropdown && notifBtn && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
+                notifDropdown.classList.remove('show');
+            }
+        });
+    </script>
+    <% } %>
+
+<footer>
+    <div class="footer-container">
+        <p>&copy; <%= new Date().getFullYear() %> <strong>Nelna Agri Development (Pvt) Ltd</strong>. All Rights Reserved.</p>
+    </div>
+</footer>
+
+<% if (typeof user !== 'undefined' && user) { %>
+    <%- include('chatbot') %>
+<% } %>
+
+<script src="/js/main.js?v=<%= Date.now() %>"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof flatpickr !== 'undefined') {
+            flatpickr("input[type='date']", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "Y-m-d",
+                defaultDate: new Date()
+            });
+            flatpickr("input[type='datetime-local']", {
+                enableTime: true,
+                dateFormat: "Y-m-d\\TH:i",
+                altInput: true,
+                altFormat: "Y-m-d h:i K", // e.g. 2026-09-02 03:42 PM
+                time_24hr: false,
+                defaultDate: new Date()
+            });
+        }
+    });
+</script>
+</body>
+</html>

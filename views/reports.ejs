@@ -1,0 +1,1057 @@
+<%- include('partials/header') %>
+
+    <div style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-file-invoice"></i> Reports Dashboard
+                </h2>
+                <p style="color: var(--text-light); font-size: 14px;">Access full reports of tray issuing, returning,
+                    and net balances for all customers.</p>
+            </div>
+            <button onclick="window.print()" class="btn btn-secondary"
+                style="background-color: var(--accent-yellow); color: var(--primary-green-dark); font-weight: 700;">
+                <i class="fa-solid fa-print"></i> Print Report Sheet
+            </button>
+        </div>
+
+        <!-- Date Filter Form -->
+        <form action="/reports" method="GET"
+            style="display: flex; gap: 15px; align-items: flex-end; background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light);">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label for="startDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">Start
+                    Date</label>
+                <input type="date" id="startDate" name="startDate" value="<%= startDate %>"
+                    style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label for="endDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">End Date (As
+                    At)</label>
+                <input type="date" id="endDate" name="endDate" value="<%= endDate %>"
+                    style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="padding: 8px 16px; height: 38px;">
+                <i class="fa-solid fa-filter"></i> Apply Filter
+            </button>
+            <a href="/reports" class="btn btn-secondary"
+                style="padding: 8px 16px; height: 38px; text-decoration: none; display: flex; align-items: center; justify-content: center; background-color: #f1f3f5; color: #333;">
+                Clear
+            </a>
+        </form>
+
+        <% if (user.role==='admin' || user.username==='admin' ) { %>
+            <!-- Manual Email Report Form -->
+            <form id="manualEmailForm" action="/admin/email/send" method="POST"
+                onsubmit="submitAjaxForm(event, this, 'Report is being sent!')"
+                style="display: flex; gap: 15px; align-items: flex-end; background: #fffbea; padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-yellow); margin-top: -5px;">
+                <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
+                    <label for="emails" style="font-size: 12px; font-weight: 600; color: var(--text-dark);"><i
+                            class="fa-solid fa-envelope"></i> Send Report Manually (Comma separated emails)</label>
+                    <input type="text" id="emails" name="emails" placeholder="e.g. manager@nelna.lk, admin2@gmail.com"
+                        required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%;">
+
+                    <!-- Recent Emails Container -->
+                    <div id="recentEmailsContainer" style="display:none; margin-top: 4px;">
+                        <span style="font-size: 11px; color: var(--text-light);">Recent: </span>
+                        <div id="recentEmailsList" style="display: inline-flex; gap: 5px; flex-wrap: wrap;"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                    style="padding: 8px 16px; height: 38px; background-color: #107c41; color: white;">
+                    <i class="fa-solid fa-paper-plane"></i> Send Now
+                </button>
+            </form>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const emailsInput = document.getElementById('emails');
+                    const recentEmailsContainer = document.getElementById('recentEmailsContainer');
+                    const recentEmailsList = document.getElementById('recentEmailsList');
+
+                    // Load from localStorage
+                    let savedEmails = [];
+                    try {
+                        savedEmails = JSON.parse(localStorage.getItem('nelnaRecentEmails') || '[]');
+                    } catch (e) { }
+
+                    if (savedEmails.length > 0) {
+                        recentEmailsContainer.style.display = 'block';
+                        savedEmails.forEach(email => {
+                            const pill = document.createElement('span');
+                            pill.textContent = email;
+                            pill.style.cssText = 'background: #e0f2f1; color: #00695c; padding: 2px 8px; border-radius: 12px; font-size: 11px; cursor: pointer; border: 1px solid #b2dfdb; transition: all 0.2s;';
+                            pill.onmouseover = () => pill.style.background = '#b2dfdb';
+                            pill.onmouseout = () => pill.style.background = '#e0f2f1';
+                            pill.onclick = () => {
+                                const currentVal = emailsInput.value.trim();
+                                if (currentVal === '') {
+                                    emailsInput.value = email;
+                                } else if (!currentVal.includes(email)) {
+                                    emailsInput.value = currentVal.endsWith(',') ? currentVal + ' ' + email : currentVal + ', ' + email;
+                                }
+                            };
+                            recentEmailsList.appendChild(pill);
+                        });
+                    }
+
+                    // Save on form submit
+                    const emailForm = document.getElementById('manualEmailForm');
+                    if (emailForm) {
+                        emailForm.addEventListener('submit', () => {
+                            // Pass current date filters to the backend
+                            const sd = document.getElementById('startDate').value;
+                            const ed = document.getElementById('endDate').value;
+
+                            let hiddenSd = document.getElementById('hiddenStartDate');
+                            if (!hiddenSd) {
+                                hiddenSd = document.createElement('input');
+                                hiddenSd.type = 'hidden';
+                                hiddenSd.name = 'startDate';
+                                hiddenSd.id = 'hiddenStartDate';
+                                emailForm.appendChild(hiddenSd);
+                            }
+
+                            let hiddenEd = document.getElementById('hiddenEndDate');
+                            if (!hiddenEd) {
+                                hiddenEd = document.createElement('input');
+                                hiddenEd.type = 'hidden';
+                                hiddenEd.name = 'endDate';
+                                hiddenEd.id = 'hiddenEndDate';
+                                emailForm.appendChild(hiddenEd);
+                            }
+
+                            hiddenSd.value = sd;
+                            hiddenEd.value = ed;
+
+                            // Save recent email
+                            const newEmails = emailsInput.value.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));
+                            let updatedEmails = [...new Set([...newEmails, ...savedEmails])].slice(0, 8); // Keep last 8 unique
+                            localStorage.setItem('nelnaRecentEmails', JSON.stringify(updatedEmails));
+                        });
+                    }
+                });
+            </script>
+            <% } %>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="balanceReport"><i class="fa-solid fa-scale-balanced"></i> Customer Tray
+            Balances</button>
+        <button class="tab-btn" data-tab="outReport"><i class="fa-solid fa-arrow-up-from-bracket"></i> Tray Issues
+            (Out)</button>
+        <button class="tab-btn" data-tab="inReport"><i class="fa-solid fa-arrow-down-to-bracket"></i> Tray Returns
+            (In)</button>
+        <button class="tab-btn" data-tab="stockTransferReport"><i class="fa-solid fa-truck-fast"></i> Stock
+            Transfer</button>
+        <button class="tab-btn" data-tab="receiveStockReport"><i class="fa-solid fa-boxes-packing"></i> Receive
+            Stock</button>
+    </div>
+
+    <!-- 1. Customer Balance Report Tab -->
+    <div id="balanceReport" class="tab-content active">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="box-title"><i class="fa-solid fa-clipboard-list"></i> Customer Tray Balance Summary</span>
+                <div>
+                    <button
+                        onclick="printReportToPDF(`Customer Tray Balance Summary (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'balanceTable')"
+                        class="btn btn-sm"
+                        style="background-color: #d32f2f; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button onclick="exportCustomerBalancesDetailedExcel()" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                    <a href="/api/reports/master-export?startDate=<%= startDate %>&endDate=<%= endDate %>"
+                        class="btn btn-sm"
+                        style="background-color: #ffbd09; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                        <i class="fa-solid fa-download"></i> Download Full Master Report
+                    </a>
+                </div>
+            </div>
+
+
+
+            <div class="table-responsive">
+                <table id="balanceTable">
+                    <thead>
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>Phone</th>
+                            <th style="text-align: right;">Opening Balance</th>
+                            <th style="text-align: right;">Total Issued (Out)</th>
+                            <th style="text-align: right;">Total Returned (In)</th>
+                            <th style="text-align: right;">Closing Balance</th>
+                            <th style="text-align: right; color: var(--danger);">Deposit Collected (Rs.)</th>
+                            <th style="text-align: right; color: var(--success);">Deposit Refunded (Rs.)</th>
+                            <th style="text-align: right;">Refundable Outstanding (Rs.)</th>
+                            <th style="text-align: center;">View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% customerBalances.forEach(cb=> { %>
+                            <tr>
+                                <td><strong>
+                                        <%= cb.name %>
+                                    </strong></td>
+                                <td>
+                                    <%= cb.phone %>
+                                </td>
+                                <td style="text-align: right; font-family: monospace;">
+                                    <%= cb.initialBalance %>
+                                </td>
+                                <td style="text-align: right; color: var(--danger); font-family: monospace;">
+                                    <%= cb.totalOut %>
+                                </td>
+                                <td style="text-align: right; color: var(--success); font-family: monospace;">
+                                    <%= cb.totalIn %>
+                                </td>
+                                <td
+                                    style="text-align: right; font-weight: bold; font-family: monospace; color: <%= cb.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    <%= cb.currentBalance %>
+                                </td>
+                                <td style="text-align: right; color: var(--danger); font-family: monospace;">
+                                    <%= (cb.depositCollected || 0).toLocaleString() %>
+                                </td>
+                                <td style="text-align: right; color: var(--success); font-family: monospace;">
+                                    <%= (cb.depositRefunded || 0).toLocaleString() %>
+                                </td>
+                                <td
+                                    style="text-align: right; font-weight: bold; font-family: monospace; color: <%= (cb.depositOutstanding || 0) > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    <%= (cb.depositOutstanding || 0).toLocaleString() %>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button onclick="viewCustomerBreakup('<%= cb.id %>')" class="btn btn-sm"
+                                        style="background-color: var(--primary-green); color: white; border: none; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                                        <i class="fa-solid fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                    <% let totalInitial=0; let totalOut=0; let totalIn=0; let totalCurrent=0; let totalDepColl=0; let
+                        totalDepRef=0; let totalDepOut=0; if (customerBalances.length> 0) {
+                        customerBalances.forEach(cb => {
+                        totalInitial += (cb.initialBalance || 0);
+                        totalOut += (cb.totalOut || 0);
+                        totalIn += (cb.totalIn || 0);
+                        totalCurrent += (cb.currentBalance || 0);
+                        totalDepColl += (cb.depositCollected || 0);
+                        totalDepRef += (cb.depositRefunded || 0);
+                        totalDepOut += (cb.depositOutstanding || 0);
+                        });
+                        }
+                        %>
+                        <tfoot
+                            style="background-color: #e8f5e9; font-weight: bold; border-top: 2px solid var(--primary-green);">
+                            <tr>
+                                <td colspan="2"
+                                    style="text-align: right; color: var(--primary-green-dark); font-size: 13px;">
+                                    OUTSTANDING TRAY BALANCE & GRAND TOTAL:</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 14px;">
+                                    <%= totalInitial %>
+                                </td>
+                                <td
+                                    style="text-align: right; color: var(--danger); font-family: monospace; font-size: 14px;">
+                                    <%= totalOut %>
+                                </td>
+                                <td
+                                    style="text-align: right; color: var(--success); font-family: monospace; font-size: 14px;">
+                                    <%= totalIn %>
+                                </td>
+                                <td
+                                    style="text-align: right; font-family: monospace; font-size: 15px; color: <%= totalCurrent > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    <%= totalCurrent %>
+                                </td>
+                                <td
+                                    style="text-align: right; color: var(--danger); font-family: monospace; font-size: 14px;">
+                                    <%= totalDepColl.toLocaleString() %>
+                                </td>
+                                <td
+                                    style="text-align: right; color: var(--success); font-family: monospace; font-size: 14px;">
+                                    <%= totalDepRef.toLocaleString() %>
+                                </td>
+                                <td
+                                    style="text-align: right; font-family: monospace; font-size: 15px; color: <%= totalDepOut > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    <%= totalDepOut.toLocaleString() %>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Tray Out Report Tab -->
+    <div id="outReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="box-title"><i class="fa-solid fa-arrow-up-from-bracket"></i> Detailed Tray Issues (Out)
+                    Log</span>
+                <div>
+                    <button
+                        onclick="printReportToPDF(`Detailed Tray Issues (Out) Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportOutTable')"
+                        class="btn btn-sm"
+                        style="background-color: #d32f2f; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button onclick="exportTableToExcel('reportOutTable', 'Tray_Issues_OUT')" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                </div>
+            </div>
+
+
+
+            <div class="table-responsive">
+                <table id="reportOutTable">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Receipt No</th>
+                            <th>Customer Name</th>
+                            <th>Vehicle Number</th>
+                            <th>Operator</th>
+                            <th>Remarks</th>
+                            <th style="text-align: right;">Quantity Issued</th>
+                            <th style="text-align: right;">Deposit Collected (Rs.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% trayOutList.forEach(t=> { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(t.date).toLocaleString() %>
+                                </td>
+                                <td><code>RE-<%= String(t.receiptNo || 0).padStart(6, '0') %></code></td>
+                                <td><strong>
+                                        <%= t.customerName %>
+                                    </strong></td>
+                                <td><code><%= t.vehicleNo %></code></td>
+                                <td>
+                                    <%= t.user %>
+                                </td>
+                                <td><span style="font-size: 13px; color: var(--text-light);">
+                                        <%= t.remarks || '-' %>
+                                    </span></td>
+                                <td
+                                    style="text-align: right; font-weight: bold; color: var(--danger); font-family: monospace;">
+                                    <%= t.count %>
+                                </td>
+                                <td
+                                    style="text-align: right; font-weight: bold; color: var(--danger); font-family: monospace;">
+                                    <%= (t.totalDeposit || 0).toLocaleString() %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Tray In Report Tab -->
+    <div id="inReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="box-title"><i class="fa-solid fa-arrow-down-to-bracket"></i> Detailed Tray Returns (In)
+                    Log</span>
+                <div>
+                    <button
+                        onclick="printReportToPDF(`Detailed Tray Returns (In) Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportInTable')"
+                        class="btn btn-sm"
+                        style="background-color: #d32f2f; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button onclick="exportTableToExcel('reportInTable', 'Tray_Returns_IN')" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                </div>
+            </div>
+
+
+
+            <div class="table-responsive">
+                <table id="reportInTable">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Receipt No</th>
+                            <th>Customer Name</th>
+                            <th>Vehicle Number</th>
+                            <th>Created By</th>
+                            <th>Remarks</th>
+                            <th style="text-align: right;">Quantity Returned</th>
+                            <th style="text-align: right;">Deposit Refunded (Rs.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% trayInList.forEach(t=> { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(t.date).toLocaleString() %>
+                                </td>
+                                <td><code>RE-<%= String(t.receiptNo || 0).padStart(6, '0') %></code></td>
+                                <td><strong>
+                                        <%= t.customerName %>
+                                    </strong></td>
+                                <td><code><%= t.vehicleNo %></code></td>
+                                <td>
+                                    <%= t.user %>
+                                </td>
+                                <td><span style="font-size: 13px; color: var(--text-light);">
+                                        <%= t.remarks || '-' %>
+                                    </span></td>
+                                <td
+                                    style="text-align: right; font-weight: bold; color: var(--success); font-family: monospace;">
+                                    <%= t.count %>
+                                </td>
+                                <td
+                                    style="text-align: right; font-weight: bold; color: var(--success); font-family: monospace;">
+                                    <%= (t.totalDeposit || 0).toLocaleString() %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Stock Transfer Report Tab -->
+    <div id="stockTransferReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="box-title"><i class="fa-solid fa-truck-fast"></i> Detailed Stock Transfer Log</span>
+                <div>
+                    <a href="/reports/export/transfers-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
+                        class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="stockTransferTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Transfer No</th>
+                            <th>Source</th>
+                            <th>Destination</th>
+                            <th>Vehicle No</th>
+                            <th>Created By</th>
+                            <th style="text-align: right;">Dispatched Qty</th>
+                            <th>Status</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% dispatchedTransfers.forEach(t=> { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(t.dispatchedDate).toLocaleString() %>
+                                </td>
+                                <td>
+                                    <%= t.transferDocNo %>
+                                </td>
+                                <td>
+                                    <%= t.fromLocationName %>
+                                </td>
+                                <td>
+                                    <%= t.toLocationName %>
+                                </td>
+                                <td>
+                                    <%= t.vehicleNo || '-' %>
+                                </td>
+                                <td>
+                                    <%= t.dispatchedBy %>
+                                </td>
+                                <td style="text-align: right; font-weight: bold;">
+                                    <%= t.dispatchedQty %>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge badge-<%= t.status === 'ACCEPTED' ? 'in' : (t.status === 'REJECTED' ? 'out' : 'warning') %>"
+                                        style="font-size: 11px;">
+                                        <%= t.status %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= t.remarks || '-' %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Receive Stock Report Tab -->
+    <div id="receiveStockReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="box-title"><i class="fa-solid fa-boxes-packing"></i> Detailed Receive Stock Log</span>
+                <div>
+                    <a href="/reports/export/received-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
+                        class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="receiveStockTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Received Date</th>
+                            <th>GRN No</th>
+                            <th>Transfer No</th>
+                            <th>Source</th>
+                            <th>Vehicle No</th>
+                            <th>Created By</th>
+                            <th style="text-align: right;">Dispatch Qty</th>
+                            <th style="text-align: right;">Received Qty</th>
+                            <th style="text-align: right;">Variance</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% receivedTransfers.forEach(t=> { %>
+                            <tr>
+                                <td>
+                                    <%= new Date(t.receivedDate).toLocaleString() %>
+                                </td>
+                                <td>
+                                    <%= t.grnNo || '-' %>
+                                </td>
+                                <td>
+                                    <%= t.transferDocNo %>
+                                </td>
+                                <td>
+                                    <%= t.fromLocationName %>
+                                </td>
+                                <td>
+                                    <%= t.vehicleNo || '-' %>
+                                </td>
+                                <td>
+                                    <%= t.receivedBy || '-' %>
+                                </td>
+                                <td style="text-align: right; font-weight: bold;">
+                                    <%= t.dispatchedQty %>
+                                </td>
+                                <td style="text-align: right; font-weight: bold;">
+                                    <%= t.receivedQty || 0 %>
+                                </td>
+                                <td
+                                    style="text-align: right; color: <%= (t.variance < 0) ? 'var(--danger)' : ((t.variance > 0) ? 'var(--warning)' : 'inherit') %>;">
+                                    <%= t.variance || 0 %>
+                                </td>
+                                <td>
+                                    <%= t.remarks || '-' %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Date Breakup Modal -->
+    <div id="breakupModal" class="modal"
+        style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); overflow: auto;">
+        <div
+            style="background-color: #fff; margin: 30px auto; padding: 25px; border-radius: 12px; width: 92%; max-width: 1050px; box-shadow: 0 5px 25px rgba(0,0,0,0.3);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3 id="breakupCustomerName" style="color: var(--primary-green-dark); margin: 0;"><i
+                            class="fa-solid fa-user"></i> Customer Transaction Details View</h3>
+                    <p id="breakupCustomerMeta" style="color: var(--text-light); margin: 4px 0 0 0; font-size: 13px;">
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="exportCustomerBreakupExcel()" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: white; padding: 8px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Statement (.xlsx)
+                    </button>
+                    <button onclick="printCustomerBreakup()" class="btn btn-sm"
+                        style="background-color: #d32f2f; color: #fff; padding: 8px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button onclick="closeBreakupModal()"
+                        style="background: none; border: none; font-size: 24px; cursor: pointer; color: #888; margin-left: 10px;">&times;</button>
+                </div>
+            </div>
+
+            <div id="breakupPrintArea" class="table-responsive">
+                <table
+                    style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
+                    <tr>
+                        <td style="padding: 10px 15px;"><strong>Opening Tray Balance:</strong> <span
+                                id="breakupInitialBal" style="font-weight: 700; color: #333;">0</span> Trays</td>
+                        <td style="padding: 10px 15px;"><strong>Current Net Balance:</strong> <span
+                                id="breakupCurrentBal" style="font-weight: 700;">0</span> Trays</td>
+                        <td style="padding: 10px 15px;"><strong>Refundable Outstanding (Rs.):</strong> <span
+                                id="breakupDepositOut" style="font-weight: 700;">Rs. 0.00</span></td>
+                    </tr>
+                </table>
+
+                <table id="breakupTable" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: var(--primary-green); color: white;">
+                            <th style="padding: 10px; text-align: left;">Date & Time</th>
+                            <th style="padding: 10px; text-align: left;">Receipt No</th>
+                            <th style="padding: 10px; text-align: center;">Type</th>
+                            <th style="padding: 10px; text-align: left;">Vehicle No</th>
+                            <th style="padding: 10px; text-align: right; background-color: #b71c1c; color: white;">
+                                Issued (Out)</th>
+                            <th style="padding: 10px; text-align: right; background-color: #1b5e20; color: white;">
+                                Returned (In)</th>
+                            <th style="padding: 10px; text-align: right;">Running Tray Balance</th>
+                            <th style="padding: 10px; text-align: right; background-color: #b71c1c; color: white;">
+                                Deposit Collected (Rs.)</th>
+                            <th style="padding: 10px; text-align: right; background-color: #1b5e20; color: white;">
+                                Deposit Refunded (Rs.)</th>
+                            <th style="padding: 10px; text-align: left;">Created by</th>
+                        </tr>
+                    </thead>
+                    <tbody id="breakupTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON Data Containers for Client-side JS -->
+    <script id="allTransactionsJson"
+        type="application/json"><%- JSON.stringify(typeof allTransactions !== 'undefined' ? allTransactions : []) %></script>
+    <script id="customerBalancesJson" type="application/json"><%- JSON.stringify(customerBalances) %></script>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- SheetJS Library for Client-side Excel (.xlsx) Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const tableConfig = {
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                language: {
+                    search: "Quick Search:"
+                }
+            };
+            $('#balanceTable').DataTable(tableConfig);
+            $('#reportOutTable').DataTable(tableConfig);
+            $('#reportInTable').DataTable(tableConfig);
+            $('#stockTransferTable').DataTable(tableConfig);
+            $('#receiveStockTable').DataTable(tableConfig);
+        });
+    </script>
+
+    <script>
+        const allTransactionsData = JSON.parse(document.getElementById('allTransactionsJson').textContent || '[]');
+        const customerBalancesData = JSON.parse(document.getElementById('customerBalancesJson').textContent || '[]');
+        let currentBreakupCustomer = null;
+
+        async function viewCustomerBreakup(customerId) {
+            const cust = customerBalancesData.find(c => c.id === customerId);
+            if (!cust) return;
+
+            currentBreakupCustomer = cust;
+            document.getElementById('breakupCustomerName').innerHTML = '<i class="fa-solid fa-user"></i> Date Breakup Statement: ' + cust.name;
+            document.getElementById('breakupCustomerMeta').textContent = 'Phone: ' + (cust.phone || 'N/A') + ' | Customer ID: #' + cust.id;
+            document.getElementById('breakupInitialBal').textContent = cust.initialBalance;
+            document.getElementById('breakupCurrentBal').textContent = cust.currentBalance + ' Trays';
+            document.getElementById('breakupCurrentBal').style.color = cust.currentBalance > 0 ? 'var(--danger)' : 'var(--success)';
+            document.getElementById('breakupDepositOut').textContent = 'Rs. ' + (cust.depositOutstanding || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
+            document.getElementById('breakupDepositOut').style.color = (cust.depositOutstanding || 0) > 0 ? 'var(--danger)' : 'var(--success)';
+
+            const tbody = document.getElementById('breakupTableBody');
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading statement data...</td></tr>';
+
+            document.getElementById('breakupModal').style.display = 'flex';
+
+            try {
+                const response = await fetch(`/api/customers/${customerId}/transactions`);
+                const custTxs = await response.json();
+
+                tbody.innerHTML = '';
+                let runningTrayBal = cust.initialBalance;
+
+                if (custTxs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:25px; color:#777;">No transaction records found for this customer. (Opening Balance: ${cust.initialBalance} Trays)</td></tr>`;
+                } else {
+                    custTxs.forEach(t => {
+                        const isOut = (t.type === 'OUT');
+                        if (isOut) {
+                            runningTrayBal += t.count;
+                        } else {
+                            runningTrayBal -= t.count;
+                        }
+
+                        const receiptNo = 'RE-' + String(t.receiptNo || 0).padStart(6, '0');
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid #eee';
+                        tr.style.backgroundColor = isOut ? '#fffcf5' : '#f6fff8';
+
+                        tr.innerHTML = `
+                            <td style="padding: 10px; font-size: 13px;">${new Date(t.date).toLocaleString()}</td>
+                            <td style="padding: 10px;"><code>${receiptNo}</code></td>
+                            <td style="padding: 10px; text-align: center;">
+                                <span class="badge badge-${isOut ? 'out' : 'in'}" style="font-size: 11px; padding: 4px 8px; font-weight: 700;">
+                                    ${isOut ? 'TRAY ISSUE (OUT)' : 'TRAY RETURN (IN)'}
+                                </span>
+                            </td>
+                            <td style="padding: 10px;"><code>${t.vehicleNo || '-'}</code></td>
+                            <td style="padding: 10px; text-align: right; color: #c62828; font-weight: bold; background-color: ${isOut ? '#ffebee' : 'transparent'};">${isOut ? t.count : '-'}</td>
+                            <td style="padding: 10px; text-align: right; color: #2e7d32; font-weight: bold; background-color: ${!isOut ? '#e8f5e9' : 'transparent'};">${!isOut ? t.count : '-'}</td>
+                            <td style="padding: 10px; text-align: right; font-weight: bold; color: ${runningTrayBal > 0 ? '#c62828' : '#2e7d32'};">${runningTrayBal}</td>
+                            <td style="padding: 10px; text-align: right; font-weight: bold; color: #c62828; background-color: ${isOut && t.totalDeposit ? '#ffebee' : 'transparent'};">${isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
+                            <td style="padding: 10px; text-align: right; font-weight: bold; color: #2e7d32; background-color: ${!isOut && t.totalDeposit ? '#e8f5e9' : 'transparent'};">${!isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
+                            <td style="padding: 10px; font-size: 13px;"><strong>${t.user || 'admin'}</strong> ${t.remarks ? '<br><small style="color:#666;">' + t.remarks + '</small>' : ''}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px; color:red;">Failed to load statement. Please try again.</td></tr>';
+            }
+        }
+
+        function closeBreakupModal() {
+            document.getElementById('breakupModal').style.display = 'none';
+        }
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('breakupModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function exportCustomerBreakupExcel() {
+            if (!currentBreakupCustomer) return;
+            const table = document.getElementById('breakupTable');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Date Breakup" });
+            XLSX.writeFile(wb, `${currentBreakupCustomer.name.replace(/[^a-zA-Z0-9]/g, '_')}_Date_Breakup_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        function printReportToPDF(title, tableId) {
+            const tableElement = document.getElementById(tableId);
+            if (!tableElement) return;
+            const content = tableElement.outerHTML;
+            triggerPrintWindow(title, content);
+        }
+
+        function triggerPrintWindow(title, content) {
+            const win = window.open('', '', 'height=800,width=1000');
+            const today = new Date().toLocaleDateString('en-CA');
+            win.document.write(`
+                <html>
+                    <head>
+                        <title>${title} - ${today}</title>
+                        <style>
+                            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+                            body { 
+                                font-family: 'Inter', sans-serif; 
+                                padding: 40px; 
+                                color: #333;
+                                background: #fff;
+                            }
+                            .letterhead {
+                                display: flex;
+                                align-items: center;
+                                border-bottom: 3px solid #1b5e20;
+                                padding-bottom: 20px;
+                                margin-bottom: 30px;
+                            }
+                            .letterhead-img {
+                                width: 80px;
+                                height: 80px;
+                                object-fit: contain;
+                                margin-right: 20px;
+                            }
+                            .letterhead-text h1 {
+                                margin: 0;
+                                color: #1b5e20;
+                                font-size: 26px;
+                                text-transform: uppercase;
+                                font-weight: 700;
+                            }
+                            .letterhead-text p {
+                                margin: 5px 0 0 0;
+                                font-size: 14px;
+                                color: #555;
+                            }
+                            .report-title {
+                                font-size: 20px;
+                                font-weight: 600;
+                                margin-bottom: 5px;
+                                color: #222;
+                            }
+                            .report-meta {
+                                font-size: 13px;
+                                color: #666;
+                                margin-bottom: 25px;
+                            }
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                font-size: 12px; 
+                            }
+                            th, td { 
+                                border: 1px solid #ddd; 
+                                padding: 10px; 
+                                text-align: left; 
+                            }
+                            th { 
+                                background-color: #1b5e20 !important; /* Force print color */
+                                color: white !important;
+                                -webkit-print-color-adjust: exact; 
+                                print-color-adjust: exact;
+                            }
+                            tr:nth-child(even) { background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; }
+                            
+                            /* Clean up UI elements from tables during print */
+                            button, .btn, form { display: none !important; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="letterhead">
+                            <!-- Try relative path for print window context -->
+                            <img src="${window.location.origin}/images/logo.png" class="letterhead-img" alt="Nelna Logo" onerror="this.style.display='none'">
+                            <div class="letterhead-text">
+                                <h1>Nelna Agri Development (Pvt) Ltd</h1>
+                                <p>No. 70, Nelna Farm, Ogodapola, Sri Lanka | Phone: 077 345 6789</p>
+                                <p>Tray Management System - Official Report</p>
+                            </div>
+                        </div>
+                        <h2 class="report-title">${title}</h2>
+                        <div class="report-meta">Printed on: ${new Date().toLocaleString()}</div>
+                        ${content}
+                    </body>
+                </html>
+            `);
+            win.document.close();
+            win.focus();
+            // Wait for image to load before printing
+            setTimeout(() => {
+                win.print();
+                // Close after a brief delay so user can interact with print dialog
+                setTimeout(() => { win.close(); }, 1000);
+            }, 800);
+        }
+
+        function printCustomerBreakup() {
+            const content = document.getElementById('breakupPrintArea').innerHTML;
+            const name = currentBreakupCustomer ? currentBreakupCustomer.name : 'Customer';
+            triggerPrintWindow(`Date Breakup Statement: ${name}`, content);
+        }
+
+        function exportCustomerBalancesDetailedExcel() {
+            const wb = XLSX.utils.book_new();
+
+            // 1. Balance Summary Sheet
+            const summaryData = [
+                ["Customer Name", "Phone", "Opening Balance", "Total Issued (Out)", "Total Returned (In)", "Closing Balance", "Deposit Collected (Rs.)", "Deposit Refunded (Rs.)", "Deposit Outstanding (Rs.)"]
+            ];
+
+            customerBalancesData.forEach(cb => {
+                summaryData.push([
+                    cb.name,
+                    cb.phone || '',
+                    cb.initialBalance,
+                    cb.totalOut,
+                    cb.totalIn,
+                    cb.currentBalance,
+                    cb.depositCollected || 0,
+                    cb.depositRefunded || 0,
+                    cb.depositOutstanding || 0
+                ]);
+            });
+
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Balance Summary");
+
+            // 2. Detailed Transactions Breakup per Customer Sheet
+            const breakdownData = [
+                ["Customer Name", "Receipt No", "Date & Time", "Type", "Vehicle No", "Quantity Issued (Out)", "Quantity Returned (In)", "Running Tray Balance", "Deposit Collected (Rs.)", "Deposit Refunded (Rs.)", "Deposit Option Mode", "Operator", "Remarks"]
+            ];
+
+            customerBalancesData.forEach(cb => {
+                const custTxs = allTransactionsData
+                    .filter(t => t.customerId === cb.id)
+                    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                let runningTrayBal = cb.initialBalance;
+
+                if (custTxs.length === 0) {
+                    breakdownData.push([
+                        cb.name,
+                        "-",
+                        "-",
+                        "NO TRANSACTIONS",
+                        "-",
+                        0,
+                        0,
+                        runningTrayBal,
+                        0,
+                        0,
+                        "-",
+                        "-",
+                        `Opening Balance: ${cb.initialBalance} Trays`
+                    ]);
+                } else {
+                    custTxs.forEach(t => {
+                        const isOut = (t.type === 'OUT');
+                        if (isOut) {
+                            runningTrayBal += t.count;
+                        } else {
+                            runningTrayBal -= t.count;
+                        }
+
+                        const receiptNo = 'RE-' + String(t.receiptNo || 0).padStart(6, '0');
+
+                        breakdownData.push([
+                            cb.name,
+                            receiptNo,
+                            new Date(t.date).toLocaleString(),
+                            isOut ? 'TRAY ISSUE (OUT)' : 'TRAY RETURN (IN)',
+                            t.vehicleNo || '-',
+                            isOut ? t.count : 0,
+                            !isOut ? t.count : 0,
+                            runningTrayBal,
+                            isOut ? (t.totalDeposit || 0) : 0,
+                            !isOut ? (t.totalDeposit || 0) : 0,
+                            t.depositOption || 'FULL',
+                            t.user || 'admin',
+                            t.remarks || ''
+                        ]);
+                    });
+                }
+            });
+
+            const wsBreakdown = XLSX.utils.aoa_to_sheet(breakdownData);
+
+            // Apply Excel Cell Highlights for IN / OUT and Deposit Collected / Refunded
+            if (wsBreakdown['!ref']) {
+                const range = XLSX.utils.decode_range(wsBreakdown['!ref']);
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    const typeCell = wsBreakdown[XLSX.utils.encode_cell({ r: R, c: 3 })];
+                    const typeVal = typeCell ? String(typeCell.v) : '';
+                    const isOutRow = typeVal.includes('OUT');
+                    const isInRow = typeVal.includes('IN');
+
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!wsBreakdown[cellRef]) continue;
+
+                        if (R === 0) {
+                            // Header Row
+                            if (C === 3 || C === 5 || C === 8) {
+                                wsBreakdown[cellRef].s = {
+                                    fill: { fgColor: { rgb: "B71C1C" } },
+                                    font: { color: { rgb: "FFFFFF" }, bold: true }
+                                };
+                            } else if (C === 6 || C === 9) {
+                                wsBreakdown[cellRef].s = {
+                                    fill: { fgColor: { rgb: "1B5E20" } },
+                                    font: { color: { rgb: "FFFFFF" }, bold: true }
+                                };
+                            } else {
+                                wsBreakdown[cellRef].s = {
+                                    fill: { fgColor: { rgb: "2E7D32" } },
+                                    font: { color: { rgb: "FFFFFF" }, bold: true }
+                                };
+                            }
+                        } else {
+                            // Data Rows
+                            if (C === 3) { // Type Column
+                                if (isOutRow) {
+                                    wsBreakdown[cellRef].s = {
+                                        fill: { fgColor: { rgb: "FFCDD2" } },
+                                        font: { color: { rgb: "B71C1C" }, bold: true }
+                                    };
+                                } else if (isInRow) {
+                                    wsBreakdown[cellRef].s = {
+                                        fill: { fgColor: { rgb: "C8E6C9" } },
+                                        font: { color: { rgb: "1B5E20" }, bold: true }
+                                    };
+                                }
+                            } else if (C === 5 || C === 8) { // Issued (Out) & Deposit Collected
+                                if (isOutRow && Number(wsBreakdown[cellRef].v) > 0) {
+                                    wsBreakdown[cellRef].s = {
+                                        fill: { fgColor: { rgb: "FFEBEE" } },
+                                        font: { color: { rgb: "C62828" }, bold: true }
+                                    };
+                                }
+                            } else if (C === 6 || C === 9) { // Returned (In) & Deposit Refunded
+                                if (isInRow && Number(wsBreakdown[cellRef].v) > 0) {
+                                    wsBreakdown[cellRef].s = {
+                                        fill: { fgColor: { rgb: "E8F5E9" } },
+                                        font: { color: { rgb: "2E7D32" }, bold: true }
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            XLSX.utils.book_append_sheet(wb, wsBreakdown, "Detailed Customer Transactions");
+
+            XLSX.writeFile(wb, `Customer_Balances_With_Detailed_Transactions_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        function exportTableToExcel(tableID, filename) {
+            const table = document.getElementById(tableID);
+            if (!table) return;
+            const wb = XLSX.utils.table_to_book(table, { sheet: filename });
+            XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        function exportAllReportsToExcel() {
+            const wb = XLSX.utils.book_new();
+
+            const balanceTable = document.getElementById('balanceTable');
+            if (balanceTable) {
+                const ws1 = XLSX.utils.table_to_sheet(balanceTable);
+                XLSX.utils.book_append_sheet(wb, ws1, "Customer Balances");
+            }
+
+            const outTable = document.getElementById('reportOutTable');
+            if (outTable) {
+                const ws2 = XLSX.utils.table_to_sheet(outTable);
+                XLSX.utils.book_append_sheet(wb, ws2, "Tray Issues (OUT)");
+            }
+
+            const inTable = document.getElementById('reportInTable');
+            if (inTable) {
+                const ws3 = XLSX.utils.table_to_sheet(inTable);
+                XLSX.utils.book_append_sheet(wb, ws3, "Tray Returns (IN)");
+            }
+
+            XLSX.writeFile(wb, `Nelna_Agri_Tray_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const showBreakupId = urlParams.get('showBreakup');
+            if (showBreakupId) {
+                viewCustomerBreakup(showBreakupId);
+            }
+        });
+    </script>
+
+    <%- include('partials/footer') %>

@@ -1,0 +1,306 @@
+<!-- Multilingual AI Voice Assistant Component (Sinhala, Tamil, English) -->
+<style>
+    .voice-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(6, 10, 20, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 999999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        animation: voiceFadeIn 0.25s ease;
+    }
+    .voice-modal-overlay.active {
+        display: flex;
+    }
+    @keyframes voiceFadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .voice-card {
+        width: 90%;
+        max-width: 480px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        color: var(--text-dark);
+        position: relative;
+    }
+    .voice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .voice-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--primary-green);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .voice-lang-select {
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-dark);
+        font-size: 13px;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+    }
+    .voice-mic-orb {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-light) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        margin: 20px auto;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+    }
+    .voice-mic-orb.listening {
+        animation: pulseWave 1.5s infinite;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5);
+    }
+    @keyframes pulseWave {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+        70% { transform: scale(1.1); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .voice-status-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-light);
+        margin-top: 10px;
+        min-height: 24px;
+    }
+    .voice-transcript-box {
+        margin-top: 15px;
+        padding: 14px;
+        background: rgba(0, 0, 0, 0.04);
+        border: 1px dashed var(--border-color);
+        border-radius: 12px;
+        font-size: 14px;
+        font-style: italic;
+        color: var(--text-dark);
+        min-height: 50px;
+        word-wrap: break-word;
+    }
+    .voice-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 18px;
+        font-size: 20px;
+        color: var(--text-light);
+        cursor: pointer;
+    }
+</style>
+
+<div class="voice-modal-overlay" id="voiceModal">
+    <div class="voice-card">
+        <span class="voice-close-btn" onclick="closeVoiceModal()">&times;</span>
+        <div class="voice-header">
+            <div class="voice-title">
+                <i class="fa-solid fa-microphone-lines"></i>
+                <span>Nelna AI Voice Assistant</span>
+            </div>
+            <select id="voiceLangSelect" class="voice-lang-select" onchange="changeVoiceLanguage(this.value)">
+                <option value="si-LK">🇱🇰 සිංහල (Sinhala)</option>
+                <option value="ta-LK">🇱🇰 தமிழ் (Tamil)</option>
+                <option value="en-US">🇬🇧 English</option>
+            </select>
+        </div>
+
+        <div class="voice-mic-orb" id="voiceMicOrb" onclick="toggleVoiceRecognition()">
+            <i class="fa-solid fa-microphone" id="voiceMicIcon"></i>
+        </div>
+
+        <div class="voice-status-text" id="voiceStatusText">Tap microphone and speak your command...</div>
+        <div class="voice-transcript-box" id="voiceTranscriptBox">Spoken text will appear here...</div>
+    </div>
+</div>
+
+<script>
+    let recognition = null;
+    let isListening = false;
+    let selectedLang = 'si-LK';
+
+    function initSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            return false;
+        }
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = selectedLang;
+
+        recognition.onstart = () => {
+            isListening = true;
+            document.getElementById('voiceMicOrb').classList.add('listening');
+            document.getElementById('voiceStatusText').innerText = getStatusTextMsg('listening');
+        };
+
+        recognition.onresult = (event) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            document.getElementById('voiceTranscriptBox').innerText = `"${transcript}"`;
+            if (event.results[0].isFinal) {
+                processVoiceCommand(transcript);
+            }
+        };
+
+        recognition.onerror = (event) => {
+            stopListeningState();
+            document.getElementById('voiceStatusText').innerText = getStatusTextMsg('error') + ': ' + event.error;
+        };
+
+        recognition.onend = () => {
+            stopListeningState();
+        };
+
+        return true;
+    }
+
+    function changeVoiceLanguage(lang) {
+        selectedLang = lang;
+        if (recognition) recognition.lang = selectedLang;
+    }
+
+    function openVoiceModal() {
+        const modal = document.getElementById('voiceModal');
+        if (modal) {
+            modal.classList.add('active');
+            if (!recognition) {
+                const supported = initSpeechRecognition();
+                if (!supported) {
+                    Swal.fire('Browser Notice', 'Speech Recognition is not supported on this browser. Please use Google Chrome or Edge.', 'info');
+                    return;
+                }
+            }
+            startListening();
+        }
+    }
+
+    function closeVoiceModal() {
+        if (recognition && isListening) recognition.stop();
+        stopListeningState();
+        const modal = document.getElementById('voiceModal');
+        if (modal) modal.classList.remove('active');
+    }
+
+    function toggleVoiceRecognition() {
+        if (isListening) {
+            if (recognition) recognition.stop();
+            stopListeningState();
+        } else {
+            startListening();
+        }
+    }
+
+    function startListening() {
+        if (!recognition) initSpeechRecognition();
+        if (recognition) {
+            try {
+                recognition.lang = selectedLang;
+                recognition.start();
+            } catch (e) {
+                console.warn('Recognition start error:', e);
+            }
+        }
+    }
+
+    function stopListeningState() {
+        isListening = false;
+        const orb = document.getElementById('voiceMicOrb');
+        if (orb) orb.classList.remove('listening');
+    }
+
+    function getStatusTextMsg(type) {
+        if (selectedLang.startsWith('si')) {
+            return type === 'listening' ? 'සවන්දෙමින් පවතී... (කතා කරන්න)' : 'දෝෂයක් සිදු විය';
+        } else if (selectedLang.startsWith('ta')) {
+            return type === 'listening' ? 'கேட்கிறது... (பேசுங்கள்)' : 'பிழை ஏற்பட்டது';
+        } else {
+            return type === 'listening' ? 'Listening... Speak now' : 'Error occurred';
+        }
+    }
+
+    async function processVoiceCommand(speechText) {
+        document.getElementById('voiceStatusText').innerText = 'AI processing command...';
+        
+        try {
+            const res = await fetch('/api/ai/voice-command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ speechText, lang: selectedLang })
+            });
+            const data = await res.json();
+            
+            if (data.success && data.result) {
+                const r = data.result;
+                let replyMsg = r.message ? (r.message[selectedLang.substring(0,2)] || r.message.en || r.message.si) : 'Command processed successfully.';
+                
+                document.getElementById('voiceStatusText').innerText = replyMsg;
+                speakResponse(replyMsg);
+
+                setTimeout(() => {
+                    closeVoiceModal();
+                    executeVoiceAction(r);
+                }, 1800);
+            } else {
+                document.getElementById('voiceStatusText').innerText = 'Could not understand command. Please try again.';
+            }
+        } catch (err) {
+            document.getElementById('voiceStatusText').innerText = 'Connection error.';
+        }
+    }
+
+    function executeVoiceAction(resData) {
+        if (resData.intent === 'NAVIGATE' && resData.targetUrl) {
+            window.location.href = resData.targetUrl;
+        } else if (resData.intent === 'NEW_TRANSFER') {
+            if (window.location.pathname !== '/transfers') {
+                window.location.href = '/transfers?action=new';
+            } else if (typeof openTransferModal === 'function') {
+                openTransferModal();
+            }
+        } else if (resData.intent === 'NEW_TRANSACTION') {
+            if (window.location.pathname !== '/transactions') {
+                window.location.href = '/transactions?action=new';
+            } else if (typeof openTransactionModal === 'function') {
+                openTransactionModal();
+            }
+        }
+    }
+
+    function speakResponse(text) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = selectedLang;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+</script>

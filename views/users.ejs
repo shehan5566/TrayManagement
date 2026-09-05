@@ -1,0 +1,445 @@
+<%- include('partials/header') %>
+
+    <div style="margin-bottom: 25px;">
+        <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-user-shield"></i> User Management</h2>
+        <p style="color: var(--text-light); font-size: 14px;">Manage system operators and administrators.</p>
+    </div>
+
+    <% if (error) { %>
+        <div class="error-banner">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <%= error %>
+        </div>
+        <% } %>
+
+            <div class="users-layout">
+                <!-- Add User Form -->
+                <div class="content-box" style="border-top: 4px solid var(--primary-green);">
+                    <div class="box-header">
+                        <span class="box-title">
+                            Add New User
+                        </span>
+                    </div>
+
+                    <form action="/users" method="POST"
+                        onsubmit="submitAjaxForm(event, this, 'User created successfully')">
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" id="username" name="username" placeholder="e.g. jdoe" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="Enter password"
+                                    required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Role</label>
+                                <div style="max-height: 150px; overflow-y: auto; border: 1.5px solid var(--border-color); padding: 10px; border-radius: 6px; background: var(--bg-light);">
+                                    <% if (typeof roles !== 'undefined' && roles.length > 0) { %>
+                                        <% roles.forEach((r, idx) => { %>
+                                            <label style="display: block; margin-bottom: 8px; font-weight: normal; cursor: pointer;">
+                                                <input type="radio" name="roleId" value="<%= r.id %>" <%= idx === 0 ? 'required' : '' %>>
+                                                <%= r.name %> <%= r.isSuperUser ? ' (Full Access)' : '' %>
+                                            </label>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <p style="color: var(--danger); font-size: 12px; margin: 0;">No roles found. Please create a Role from the Roles menu first.</p>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="locationId">Branch (Location)</label>
+                                <select id="locationId" name="locationId" required>
+                                    <% (typeof locations !== 'undefined' ? locations : []).forEach(loc => { %>
+                                        <option value="<%= loc.id %>"><%= loc.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+
+
+
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button type="submit" class="btn btn-primary" style="flex-grow: 1;">
+                                    <i class="fa-solid fa-user-plus"></i> Create User
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    </div>
+                <!-- User List -->
+                <div class="content-box">
+                    <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="box-title"><i class="fa-solid fa-users-gear"></i> System Users</span>
+                        <div style="display: flex; gap: 10px;">
+                            <a href="/backup" class="btn btn-sm" style="background-color: #2e7d32; color: #fff; padding: 6px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
+                                <i class="fa-solid fa-download"></i> Backup Data
+                            </a>
+                            <button onclick="document.getElementById('restoreFileInput').click()" class="btn btn-sm" style="background-color: #d32f2f; color: #fff; padding: 6px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer;">
+                                <i class="fa-solid fa-upload"></i> Restore Data
+                            </button>
+                            <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th><th>Branch</th>
+                                    <th style="text-align: center; width: 150px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% users.forEach(u=> { %>
+                                    <tr>
+                                        <td><strong>
+                                                <%= u.username %>
+                                            </strong></td>
+                                        <td>
+                                            <% 
+                                                const roleObj = (typeof roles !== 'undefined' ? roles : []).find(r => r.id === u.roleId);
+                                                if (u.username === 'admin' || (roleObj && roleObj.isSuperUser) || u.role === 'admin') { 
+                                            %>
+                                                <span class="badge" style="background:#1b5e20; color:white; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'Admin' %></span>
+                                            <% } else { %>
+                                                <span class="badge" style="background:#0288d1; color:white; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'User' %></span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% const loc = (typeof locations !== 'undefined' ? locations : []).find(l => l.id === u.locationId) || {name: 'Main'}; %>
+                                            <span style="font-size: 13px; color: var(--text-dark);"><i class="fa-solid fa-location-dot" style="color: var(--primary-green); margin-right: 4px;"></i> <%= loc.name %></span>
+                                        </td>
+                                        <td>
+                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                <button onclick="openUserEditModal(this.getAttribute('data-user'))" data-user="<%= JSON.stringify(u) %>" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark);" title="Edit Password/Role">
+                                                    <i class="fa-solid fa-key"></i>
+                                                </button>
+
+                                                <% if (u.username !=='admin' ) { %>
+                                                    <form action="/users/<%= u.id %>/delete" method="POST"
+                                                        onsubmit="confirmAjaxDelete(event, this, 'user account')">
+                                                        <button type="submit" class="btn btn-danger"
+                                                            style="padding: 6px 10px; font-size: 12px;"
+                                                            title="Delete User">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                    <% } %>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locations Layout -->
+            <div style="margin-bottom: 25px; margin-top: 40px;">
+                <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-code-branch"></i> Branch Management</h2>
+                <p style="color: var(--text-light); font-size: 14px;">Manage company branches and locations.</p>
+            </div>
+
+            <div class="users-layout">
+                <!-- Add Location Form -->
+                <div class="content-box" style="border-top: 4px solid var(--primary-green);">
+                    <div class="box-header">
+                        <span class="box-title">Add New Branch</span>
+                    </div>
+
+                    <form action="/locations" method="POST"
+                        onsubmit="submitAjaxForm(event, this, 'Location created successfully')">
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div class="form-group">
+                                <label for="loc_name">Branch Name</label>
+                                <input type="text" id="loc_name" name="name" placeholder="e.g. Kandy Branch" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="loc_code">Branch Code</label>
+                                <input type="text" id="loc_code" name="code" placeholder="e.g. KDY">
+                            </div>
+                            <div class="form-group">
+                                <label for="loc_address">Address</label>
+                                <input type="text" id="loc_address" name="address" placeholder="Branch Address">
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button type="submit" class="btn btn-primary" style="flex-grow: 1;">
+                                    <i class="fa-solid fa-plus"></i> Create Branch
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Locations List -->
+                <div class="content-box">
+                    <div class="box-header">
+                        <span class="box-title"><i class="fa-solid fa-building"></i> Branches</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="locationsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Address</th>
+                                    <th>Stock</th>
+                                    <th style="text-align: center; width: 100px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% (typeof locations !== 'undefined' ? locations : []).forEach(loc => { %>
+                                    <tr>
+                                        <td><strong><%= loc.name %></strong>
+                                            <% if(loc.id === 'main') { %> <span class="badge" style="background:#1b5e20; color:white; padding:4px 8px; font-size:11px;">Main</span> <% } %>
+                                        </td>
+                                        <td><%= loc.code || '-' %></td>
+                                        <td><%= loc.address || '-' %></td>
+                                        <td><%= loc.currentStock %></td>
+                                        <td>
+                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                <button onclick="openLocationEditModal(this.getAttribute('data-loc'))" data-loc="<%= JSON.stringify(loc) %>" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark);" title="Edit Branch">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <% if (loc.id !== 'main') { %>
+                                                <form action="/locations/<%= loc.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'branch')">
+                                                    <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" title="Delete Branch">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                                <% } %>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit User Modal -->
+            <div id="editUserModal" class="modal"
+                style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                <div class="modal-content"
+                    style="background-color: #fefefe; margin: 10% auto; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
+                        <h3 style="margin: 0; color: var(--primary-green-dark);"><i class="fa-solid fa-user-pen"></i>
+                            Edit User</h3>
+                        <span onclick="closeUserEditModal()"
+                            style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                    </div>
+
+                    <form id="editUserForm" method="POST"
+                        onsubmit="submitAjaxForm(event, this, 'User updated successfully')">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="editUsername" name="username" required>
+                        </div>
+
+                        <div class="form-group" id="editRoleGroup">
+                            <label>Role</label>
+                            <div style="max-height: 150px; overflow-y: auto; border: 1.5px solid var(--border-color); padding: 10px; border-radius: 6px; background: var(--bg-light);">
+                                <% if (typeof roles !== 'undefined' && roles.length > 0) { %>
+                                    <% roles.forEach((r) => { %>
+                                        <label style="display: block; margin-bottom: 8px; font-weight: normal; cursor: pointer;">
+                                            <input type="radio" name="roleId" value="<%= r.id %>" class="editRoleRadio" required>
+                                            <%= r.name %> <%= r.isSuperUser ? ' (Full Access)' : '' %>
+                                        </label>
+                                    <% }) %>
+                                <% } else { %>
+                                    <p style="color: var(--danger); font-size: 12px; margin: 0;">No roles found.</p>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Branch (Location)</label>
+                            <select id="editLocationId" name="locationId" required>
+                                <% (typeof locations !== 'undefined' ? locations : []).forEach(loc => { %>
+                                    <option value="<%= loc.id %>"><%= loc.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+
+
+                        <div class="form-group">
+                            <label>New Password <small>(Leave blank to keep current)</small></label>
+                            <input type="password" id="editPassword" name="password" placeholder="Enter new password" autocomplete="new-password">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Update
+                            User</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Edit Location Modal -->
+            <div id="editLocationModal" class="modal"
+                style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                <div class="modal-content"
+                    style="background-color: #fefefe; margin: 10% auto; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
+                        <h3 style="margin: 0; color: var(--primary-green-dark);"><i class="fa-solid fa-pen"></i> Edit Branch</h3>
+                        <span onclick="closeLocationEditModal()" style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                    </div>
+
+                    <form id="editLocationForm" method="POST" onsubmit="submitAjaxForm(event, this, 'Branch updated successfully')">
+                        <div class="form-group">
+                            <label>Branch Name</label>
+                            <input type="text" id="editLocName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Branch Code</label>
+                            <input type="text" id="editLocCode" name="code">
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input type="text" id="editLocAddress" name="address">
+                        </div>
+                        <div class="form-group">
+                            <label>Current Tray Stock</label>
+                            <input type="number" id="editLocStock" name="currentStock" min="0" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Update Branch</button>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                function openUserEditModal(userStr) {
+                    const user = JSON.parse(userStr);
+                    document.getElementById('editUsername').value = user.username;
+                    
+                    if (user.roleId) {
+                        const radios = document.querySelectorAll('.editRoleRadio');
+                        radios.forEach(radio => {
+                            if (radio.value === user.roleId) {
+                                radio.checked = true;
+                            }
+                        });
+                    }
+                    
+                    if (document.getElementById('editLocationId')) {
+                        document.getElementById('editLocationId').value = user.locationId || 'main';
+                    }
+
+                    const editUsernameInput = document.getElementById('editUsername');
+                    if (user.username === 'admin') {
+                        editUsernameInput.readOnly = true;
+                        editUsernameInput.style.backgroundColor = '#e9ecef';
+                        editUsernameInput.style.cursor = 'not-allowed';
+                        document.getElementById('editRoleGroup').style.display = 'none';
+                        if (document.getElementById('editLocationId').parentElement) {
+                            document.getElementById('editLocationId').parentElement.style.display = 'none';
+                        }
+                    } else {
+                        editUsernameInput.readOnly = false;
+                        editUsernameInput.style.backgroundColor = '#fff';
+                        editUsernameInput.style.cursor = 'text';
+                        document.getElementById('editRoleGroup').style.display = 'block';
+                        if (document.getElementById('editLocationId').parentElement) {
+                            document.getElementById('editLocationId').parentElement.style.display = 'block';
+                        }
+                    }
+                    
+                    document.getElementById('editUserForm').action = '/users/' + user.id + '/update';
+                    document.getElementById('editUserModal').style.display = 'block';
+                }
+
+                function closeUserEditModal() {
+                    document.getElementById('editUserModal').style.display = 'none';
+                }
+
+                // Location Modal Functions
+                function openLocationEditModal(locStr) {
+                    const loc = JSON.parse(locStr);
+                    document.getElementById('editLocName').value = loc.name;
+                    document.getElementById('editLocCode').value = loc.code || '';
+                    document.getElementById('editLocAddress').value = loc.address || '';
+                    document.getElementById('editLocStock').value = loc.currentStock || 0;
+                    document.getElementById('editLocationForm').action = '/locations/' + loc.id + '/update';
+                    document.getElementById('editLocationModal').style.display = 'block';
+                }
+
+                function closeLocationEditModal() {
+                    document.getElementById('editLocationModal').style.display = 'none';
+                }
+
+                window.onmousedown = function (event) {
+                    if (event.target == document.getElementById('editUserModal')) {
+                        closeUserEditModal();
+                    }
+                    if (event.target == document.getElementById('editLocationModal')) {
+                        closeLocationEditModal();
+                    }
+                }
+
+                function handleRestoreFile(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    Swal.fire({
+                        title: '⚠️ CRITICAL WARNING',
+                        text: "Restoring a backup will COMPLETELY WIPE the current database and replace it with the backup file data. This action CANNOT be undone! Are you absolutely sure?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d32f2f',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, Wipe & Restore',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                try {
+                                    const data = JSON.parse(e.target.result);
+                                    
+                                    // Send to server
+                                    fetch('/restore', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ data: data.data || data }) 
+                                    })
+                                    .then(response => response.json())
+                                    .then(result => {
+                                        if (result.success) {
+                                            Swal.fire(
+                                                'Restored!',
+                                                result.message,
+                                                'success'
+                                            ).then(() => {
+                                                window.location.href = '/login';
+                                            });
+                                        } else {
+                                            Swal.fire('Error', result.error, 'error');
+                                        }
+                                    })
+                                    .catch(err => {
+                                        Swal.fire('Error', 'Failed to communicate with server', 'error');
+                                    });
+
+                                } catch (error) {
+                                    Swal.fire('Error', 'Invalid backup file format.', 'error');
+                                }
+                            };
+                            reader.readAsText(file);
+                        }
+                    });
+                    
+                    // Reset input
+                    event.target.value = '';
+                }
+            </script>
+
+            <%- include('partials/footer') %>

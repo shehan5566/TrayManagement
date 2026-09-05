@@ -1,0 +1,288 @@
+<!-- Global Command Palette Modal (Ctrl + K) -->
+<style>
+    .command-palette-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(4px);
+        z-index: 99999;
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 10vh;
+        animation: paletteFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .command-palette-overlay.active {
+        display: flex;
+    }
+    @keyframes paletteFadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .command-palette-container {
+        width: 100%;
+        max-width: 620px;
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .command-palette-header {
+        display: flex;
+        align-items: center;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border-light);
+        background: var(--bg-light);
+    }
+    .command-palette-header i {
+        font-size: 18px;
+        color: var(--primary-green);
+        margin-right: 12px;
+    }
+    .command-palette-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+    .command-palette-badge {
+        font-size: 11px;
+        font-weight: 700;
+        background: var(--secondary-btn-bg);
+        color: var(--text-light);
+        padding: 3px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+    }
+    .command-palette-body {
+        max-height: 380px;
+        overflow-y: auto;
+        padding: 10px 0;
+    }
+    .command-group-title {
+        padding: 8px 18px 4px 18px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-light);
+        letter-spacing: 0.5px;
+    }
+    .command-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 18px;
+        color: var(--text-dark);
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s ease;
+        font-size: 14px;
+    }
+    .command-item:hover, .command-item.selected {
+        background: var(--tr-hover-bg);
+    }
+    .command-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .command-item-left i {
+        width: 20px;
+        text-align: center;
+        color: var(--primary-green);
+    }
+    .command-item-shortcut {
+        font-size: 11px;
+        color: var(--text-light);
+    }
+    .command-palette-footer {
+        padding: 8px 18px;
+        border-top: 1px solid var(--border-light);
+        background: var(--bg-light);
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--text-light);
+    }
+</style>
+
+<div class="command-palette-overlay" id="commandPalette">
+    <div class="command-palette-container">
+        <div class="command-palette-header">
+            <i class="fa-solid fa-bolt-lightning"></i>
+            <input type="text" id="cmdInput" class="command-palette-input" placeholder="Type a command or search page (e.g. Transfers, Customer, Dark Mode)..." autocomplete="off">
+            <span class="command-palette-badge">ESC to close</span>
+        </div>
+        <div class="command-palette-body" id="cmdBody">
+            <div class="command-group-title">Quick Actions</div>
+            <div class="command-item" onclick="executeCmd('transfer')">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                    <span>New Stock Transfer</span>
+                </div>
+                <span class="command-item-shortcut">Action</span>
+            </div>
+            <div class="command-item" onclick="executeCmd('inout')">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-right-left"></i>
+                    <span>Record Customer Issue / Return</span>
+                </div>
+                <span class="command-item-shortcut">Action</span>
+            </div>
+            <div class="command-item" onclick="executeCmd('theme')">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-circle-half-stroke"></i>
+                    <span>Toggle Light / Dark Mode</span>
+                </div>
+                <span class="command-item-shortcut">Appearance</span>
+            </div>
+
+            <div class="command-group-title">Navigation</div>
+            <a href="/" class="command-item">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard Analytics</span>
+                </div>
+                <span class="command-item-shortcut">Go to page</span>
+            </a>
+            <a href="/transfers" class="command-item">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-truck-arrow-right"></i>
+                    <span>Stock Transfers</span>
+                </div>
+                <span class="command-item-shortcut">Go to page</span>
+            </a>
+            <a href="/receive-stock" class="command-item">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-boxes-packing"></i>
+                    <span>Receive Stock (GRN)</span>
+                </div>
+                <span class="command-item-shortcut">Go to page</span>
+            </a>
+            <a href="/transactions" class="command-item">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>In & Out Logs</span>
+                </div>
+                <span class="command-item-shortcut">Go to page</span>
+            </a>
+            <a href="/customers" class="command-item">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-users-gears"></i>
+                    <span>Customers Management</span>
+                </div>
+                <span class="command-item-shortcut">Go to page</span>
+            </a>
+            <a href="/reports" class="command-item">
+                <div class="command-item-left">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Reports & Export Center</span>
+                </div>
+                <span class="command-item-shortcut">Go to page</span>
+            </a>
+        </div>
+        <div class="command-palette-footer">
+            <span>Navigation: <kbd>↑</kbd> <kbd>↓</kbd> &nbsp;|&nbsp; Select: <kbd>↵ Enter</kbd></span>
+            <span>Nelna Agri AI Command System</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const palette = document.getElementById('commandPalette');
+    const cmdInput = document.getElementById('cmdInput');
+    const cmdBody = document.getElementById('cmdBody');
+
+    // Global Key Listener for Ctrl+K / Cmd+K
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            toggleCommandPalette();
+        } else if (e.key === 'Escape' && palette && palette.classList.contains('active')) {
+            toggleCommandPalette(false);
+        }
+    });
+
+    function toggleCommandPalette(show) {
+        if (!palette) return;
+        const isActive = palette.classList.contains('active');
+        const shouldShow = show !== undefined ? show : !isActive;
+        
+        if (shouldShow) {
+            palette.classList.add('active');
+            if (cmdInput) {
+                cmdInput.value = '';
+                filterCommands('');
+                setTimeout(() => cmdInput.focus(), 50);
+            }
+        } else {
+            palette.classList.remove('active');
+        }
+    }
+
+    if (cmdInput) {
+        cmdInput.addEventListener('input', (e) => {
+            filterCommands(e.target.value.toLowerCase().trim());
+        });
+    }
+
+    function filterCommands(query) {
+        if (!cmdBody) return;
+        const items = cmdBody.querySelectorAll('.command-item');
+        const titles = cmdBody.querySelectorAll('.command-group-title');
+        
+        items.forEach(item => {
+            const text = item.innerText.toLowerCase();
+            if (!query || text.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Hide empty titles
+        titles.forEach(title => {
+            let next = title.nextElementSibling;
+            let hasVisible = false;
+            while (next && next.classList.contains('command-item')) {
+                if (next.style.display !== 'none') hasVisible = true;
+                next = next.nextElementSibling;
+            }
+            title.style.display = hasVisible ? 'block' : 'none';
+        });
+    }
+
+    function executeCmd(type) {
+        toggleCommandPalette(false);
+        if (type === 'transfer') {
+            if (window.location.pathname === '/transfers') {
+                if (typeof openTransferModal === 'function') openTransferModal();
+            } else {
+                window.location.href = '/transfers?action=new';
+            }
+        } else if (type === 'inout') {
+            if (window.location.pathname === '/transactions') {
+                if (typeof openTransactionModal === 'function') openTransactionModal();
+            } else {
+                window.location.href = '/transactions?action=new';
+            }
+        } else if (type === 'theme') {
+            if (typeof toggleTheme === 'function') toggleTheme();
+        }
+    }
+
+    if (palette) {
+        palette.addEventListener('click', (e) => {
+            if (e.target === palette) toggleCommandPalette(false);
+        });
+    }
+</script>
