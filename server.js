@@ -55,6 +55,7 @@ cron.schedule('0 9 * * *', async () => {
 });
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // Ensure MongoDB connection is active for every request (Serverless safe)
