@@ -66,7 +66,7 @@
                             <h1>NELNA AGRI DEVELOPMENT (PVT) LTD</h1>
                             <p>Tray Management System &nbsp; <span class="header-location-badge"><i
                                         class="fa-solid fa-location-dot"></i>
-                                    <%= user.locationName || (user.locationId==='main' ? 'Head Office' : 'Branch' ) %>
+                                    <%= (user && user.locationName) ? user.locationName : 'Head Office' %>
                                 </span></p>
                         </div>
                     </div>

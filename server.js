@@ -2012,9 +2012,7 @@ app.get('/damages', requireAuth, async (req, res) => {
         res.render('damages', {
             logs,
             locations,
-            activePath: '/damages',
-            user: currentUser,
-            hasPerm: req.hasPerm
+            activePath: '/damages'
         });
     } catch (err) {
         console.error('Error rendering damages page:', err);
@@ -2135,9 +2133,7 @@ app.get('/settings', requireAuth, async (req, res) => {
         const settings = await SystemSetting.get();
         res.render('settings', {
             settings,
-            activePath: '/settings',
-            user: currentUser,
-            hasPerm: req.hasPerm
+            activePath: '/settings'
         });
     } catch (err) {
         console.error('Error rendering settings page:', err);
@@ -2204,9 +2200,7 @@ app.get('/analytics', requireAuth, async (req, res) => {
             totalOut,
             returnVelocity,
             branchStats,
-            activePath: '/analytics',
-            user: currentUser,
-            hasPerm: req.hasPerm
+            activePath: '/analytics'
         });
     } catch (err) {
         console.error('Error rendering analytics page:', err);
