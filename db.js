@@ -792,6 +792,19 @@ const Transaction = {
 
         await newTx.save();
         await Customer.recalculateCustomerBalance(txData.customerId);
+
+        // Update branch warehouse current stock in real-time
+        const locId = newTx.locationId || 'main';
+        const loc = await LocationModel.findById(locId);
+        if (loc) {
+            if (type === 'OUT') {
+                loc.currentStock = Math.max(0, (loc.currentStock || 0) - count);
+            } else if (type === 'IN') {
+                loc.currentStock = (loc.currentStock || 0) + count;
+            }
+            await loc.save();
+        }
+
         return mapDoc(newTx);
     },
     delete: async (id) => {
@@ -799,6 +812,19 @@ const Transaction = {
         if (tx) {
             await TransactionModel.updateOne({ _id: id }, { isDeleted: true });
             await Customer.recalculateCustomerBalance(tx.customerId);
+
+            // Reverse branch warehouse stock adjustment
+            const locId = tx.locationId || 'main';
+            const loc = await LocationModel.findById(locId);
+            if (loc) {
+                if (tx.type === 'OUT') {
+                    loc.currentStock = (loc.currentStock || 0) + (tx.count || 0);
+                } else if (tx.type === 'IN') {
+                    loc.currentStock = Math.max(0, (loc.currentStock || 0) - (tx.count || 0));
+                }
+                await loc.save();
+            }
+
             return true;
         }
         return false;
