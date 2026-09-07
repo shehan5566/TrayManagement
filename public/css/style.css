@@ -196,6 +196,31 @@ body {
     background: rgba(255, 255, 255, 0.3);
 }
 
+.mobile-only {
+    display: none !important;
+}
+
+.menu-toggle-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent-yellow) !important;
+    color: #333 !important;
+    font-size: 17px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.menu-toggle-btn:hover {
+    transform: scale(1.08);
+}
+
 /* Notification Badge */
 .notification-badge {
     position: absolute;
@@ -1400,7 +1425,11 @@ footer strong {
     }
 
     .mobile-only {
-        display: block !important;
+        display: flex !important;
+    }
+
+    .user-dropdown-btn span {
+        display: none;
     }
 
     .top-header .brand-text h1 {
