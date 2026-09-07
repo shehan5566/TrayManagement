@@ -32,13 +32,16 @@
             }
             const sidebar = document.getElementById('sidebar');
             const expandBtn = document.getElementById('sidebarExpandBtn');
+            const mainElem = document.querySelector('main');
             if (sidebar) {
                 sidebar.classList.toggle('collapsed');
                 if (expandBtn) {
                     if (sidebar.classList.contains('collapsed')) {
                         expandBtn.style.display = 'flex';
+                        if (mainElem) mainElem.style.paddingLeft = '65px';
                     } else {
                         expandBtn.style.display = 'none';
+                        if (mainElem) mainElem.style.paddingLeft = '';
                     }
                 }
             }

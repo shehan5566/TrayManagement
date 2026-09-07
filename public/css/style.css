@@ -526,6 +526,13 @@ body {
     transform: scale(1.05);
 }
 
+/* Ensure main content padding-left is reserved whenever sidebar is collapsed or expand button is visible */
+.sidebar.collapsed ~ .main-wrapper main,
+.sidebar.collapsed + .main-wrapper main,
+.main-wrapper:has(#sidebarExpandBtn:not([style*="display: none"])) main {
+    padding-left: 65px !important;
+}
+
 .sidebar-header {
     display: none;
     /* Hidden since top-header is restored */
@@ -1467,7 +1474,7 @@ footer strong {
     /* Typography & Spacing */
     main {
         padding: 15px;
-        padding-left: 60px !important;
+        padding-left: 65px !important;
     }
 
     .box-header {
