@@ -764,32 +764,57 @@
         let currentBreakupCustomer = null;
 
         async function viewCustomerBreakup(customerId) {
-            const cust = customerBalancesData.find(c => c.id === customerId);
-            if (!cust) return;
+            // Flexible string-based ID lookup
+            let cust = customerBalancesData.find(c => String(c.id || c._id) === String(customerId));
+            
+            // Immediately open modal so user sees visual feedback
+            document.getElementById('breakupModal').style.display = 'flex';
+
+            if (!cust) {
+                cust = {
+                    id: customerId,
+                    name: 'Customer #' + customerId,
+                    phone: '',
+                    initialBalance: 0,
+                    currentBalance: 0,
+                    depositOutstanding: 0
+                };
+            }
 
             currentBreakupCustomer = cust;
             document.getElementById('breakupCustomerName').innerHTML = '<i class="fa-solid fa-user"></i> Date Breakup Statement: ' + cust.name;
             document.getElementById('breakupCustomerMeta').textContent = 'Phone: ' + (cust.phone || 'N/A') + ' | Customer ID: #' + cust.id;
-            document.getElementById('breakupInitialBal').textContent = cust.initialBalance;
-            document.getElementById('breakupCurrentBal').textContent = cust.currentBalance + ' Trays';
-            document.getElementById('breakupCurrentBal').style.color = cust.currentBalance > 0 ? 'var(--danger)' : 'var(--success)';
+            document.getElementById('breakupInitialBal').textContent = cust.initialBalance || 0;
+            document.getElementById('breakupCurrentBal').textContent = (cust.currentBalance || 0) + ' Trays';
+            document.getElementById('breakupCurrentBal').style.color = (cust.currentBalance || 0) > 0 ? 'var(--danger)' : 'var(--success)';
             document.getElementById('breakupDepositOut').textContent = 'Rs. ' + (cust.depositOutstanding || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
             document.getElementById('breakupDepositOut').style.color = (cust.depositOutstanding || 0) > 0 ? 'var(--danger)' : 'var(--success)';
 
             const tbody = document.getElementById('breakupTableBody');
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading statement data...</td></tr>';
 
-            document.getElementById('breakupModal').style.display = 'flex';
-
             try {
-                const response = await fetch(`/api/customers/${customerId}/transactions`);
-                const custTxs = await response.json();
+                let custTxs = null;
+                try {
+                    const response = await fetch(`/api/customers/${customerId}/transactions`);
+                    if (response.ok) {
+                        custTxs = await response.json();
+                    }
+                } catch (fetchErr) {
+                    console.warn('API fetch failed, using allTransactionsData fallback:', fetchErr);
+                }
+
+                // Fallback: Use allTransactionsData if API fetch failed or returned nothing
+                if (!custTxs || custTxs.length === 0) {
+                    custTxs = allTransactionsData.filter(t => String(t.customerId) === String(customerId));
+                    custTxs.sort((a, b) => new Date(a.date) - new Date(b.date));
+                }
 
                 tbody.innerHTML = '';
-                let runningTrayBal = cust.initialBalance;
+                let runningTrayBal = cust.initialBalance || 0;
 
-                if (custTxs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:25px; color:#777;">No transaction records found for this customer. (Opening Balance: ${cust.initialBalance} Trays)</td></tr>`;
+                if (!custTxs || custTxs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:25px; color:#777;">No transaction records found for this customer. (Opening Balance: ${cust.initialBalance || 0} Trays)</td></tr>`;
                 } else {
                     custTxs.forEach(t => {
                         const isOut = (t.type === 'OUT');
@@ -824,6 +849,7 @@
                     });
                 }
             } catch (e) {
+                console.error('Error loading statement:', e);
                 tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px; color:red;">Failed to load statement. Please try again.</td></tr>';
             }
         }

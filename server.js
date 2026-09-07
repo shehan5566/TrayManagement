@@ -1475,6 +1475,27 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
     }
 });
 
+// API: Fetch individual customer transactions statement
+app.get('/api/customers/:id/transactions', requireAuth, async (req, res) => {
+    try {
+        const customerId = req.params.id;
+        const { TransactionModel } = require('./db');
+        
+        let txQuery = { customerId, isDeleted: { $ne: true } };
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            txQuery.locationId = req.session.user.locationId;
+        }
+
+        const rawTxs = await TransactionModel.find(txQuery).sort({ date: 1 }).lean();
+        const txs = rawTxs.map(t => ({ ...t, id: t._id }));
+        
+        res.json(txs);
+    } catch (err) {
+        console.error('Error fetching customer transactions:', err);
+        res.status(500).json({ error: 'Failed to fetch customer transactions' });
+    }
+});
+
 // Export Damages CSV Route
 app.get('/reports/export/damages-csv', requireAuth, async (req, res) => {
     try {
