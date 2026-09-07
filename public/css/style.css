@@ -502,7 +502,7 @@ body {
 
 /* Sidebar Expand Button (visible only when sidebar is collapsed) */
 .sidebar-expand-btn {
-    display: none !important;
+    display: none;
     position: absolute;
     top: 15px;
     left: 15px;
@@ -1457,12 +1457,17 @@ footer strong {
     }
 
     .sidebar-expand-btn {
-        display: none !important;
+        display: flex !important;
+        position: absolute !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 1050 !important;
     }
 
     /* Typography & Spacing */
     main {
-        padding: 15px !important;
+        padding: 15px;
+        padding-left: 60px !important;
     }
 
     .box-header {
