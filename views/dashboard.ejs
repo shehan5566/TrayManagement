@@ -394,7 +394,7 @@
             const locs = <%- JSON.stringify(allLocations || []) %>;
             const bLabels = locs.map(l => l.name);
             const bData = locs.map(l => l.totalBranchStock !== undefined ? l.totalBranchStock : (l.currentStock || 0));
-            const bgColors = ['#10b981', '#fbbf24', '#3b82f6', '#ec4899', '#8b5cf6', '#f97316', '#14b8a6'];
+            const bgColors = ['#174e3e', '#ffc300', '#2c6e49', '#f59e0b', '#0f3025', '#10b981', '#d97706', '#38b000'];
 
             new Chart(bCtx, {
                 type: 'doughnut',
