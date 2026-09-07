@@ -6,6 +6,14 @@
     </div> <!-- /app-layout -->
 
     <script>
+        function handleSidebarToggle() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            } else {
+                toggleDesktopSidebar();
+            }
+        }
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
         }

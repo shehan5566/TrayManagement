@@ -200,56 +200,6 @@ body {
     display: none !important;
 }
 
-.menu-toggle-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent-yellow) !important;
-    color: #333 !important;
-    font-size: 17px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-}
-
-.menu-toggle-btn:hover {
-    transform: scale(1.08);
-}
-
-.mobile-sidebar-toggle-btn {
-    position: fixed;
-    top: 70px;
-    left: 12px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid var(--border-color);
-    background: var(--white) !important;
-    color: var(--primary-green-dark) !important;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1050;
-    transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.mobile-sidebar-toggle-btn:hover {
-    background: var(--bg-light) !important;
-    transform: scale(1.05);
-}
-
-.mobile-sidebar-toggle-btn:active {
-    transform: scale(0.95);
-}
-
 /* Notification Badge */
 .notification-badge {
     position: absolute;
@@ -1623,11 +1573,19 @@ footer strong {
         gap: 5px !important;
     }
 
-    .header-icon-btn,
-    .menu-toggle-btn {
+    .header-icon-btn {
         width: 34px !important;
         height: 34px !important;
         font-size: 15px !important;
+    }
+
+    /* Single Mobile Sidebar Expand Button (PC Match) */
+    .sidebar-expand-btn {
+        display: flex !important;
+        position: absolute !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 1050 !important;
     }
 }
 
