@@ -225,7 +225,7 @@
                                     <%= (cb.depositOutstanding || 0).toLocaleString() %>
                                 </td>
                                 <td style="text-align: center;">
-                                    <button onclick="viewCustomerBreakup('<%= cb.id %>')" class="btn btn-sm"
+                                    <button onclick="viewCustomerBreakup('<%= cb.id %>', this)" data-customer-id="<%= cb.id %>" class="btn btn-sm btn-view-customer"
                                         style="background-color: var(--primary-green); color: white; border: none; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
                                         <i class="fa-solid fa-eye"></i> View
                                     </button>
@@ -755,20 +755,70 @@
             $('#receiveStockTable').DataTable(tableConfig);
             $('#warehouseBalanceTable').DataTable(tableConfig);
             $('#damagesReportTable').DataTable(tableConfig);
+
+            // Delegated click handler for View Customer Breakup buttons
+            $(document).on('click', '.btn-view-customer', function (e) {
+                e.preventDefault();
+                const cid = $(this).attr('data-customer-id') || $(this).data('customer-id');
+                if (cid && typeof window.viewCustomerBreakup === 'function') {
+                    window.viewCustomerBreakup(cid, this);
+                }
+            });
         });
     </script>
 
     <script>
-        const allTransactionsData = JSON.parse(document.getElementById('allTransactionsJson').textContent || '[]');
-        const customerBalancesData = JSON.parse(document.getElementById('customerBalancesJson').textContent || '[]');
+        let allTransactionsData = [];
+        let customerBalancesData = [];
+        try {
+            const el1 = document.getElementById('allTransactionsJson');
+            if (el1 && el1.textContent) allTransactionsData = JSON.parse(el1.textContent);
+        } catch (e) { console.error('Error parsing allTransactionsJson:', e); }
+
+        try {
+            const el2 = document.getElementById('customerBalancesJson');
+            if (el2 && el2.textContent) customerBalancesData = JSON.parse(el2.textContent);
+        } catch (e) { console.error('Error parsing customerBalancesJson:', e); }
+
         let currentBreakupCustomer = null;
 
-        async function viewCustomerBreakup(customerId) {
-            // Flexible string-based ID lookup
-            let cust = customerBalancesData.find(c => String(c.id || c._id) === String(customerId));
+        window.viewCustomerBreakup = async function (customerId, btnEl) {
+            console.log('window.viewCustomerBreakup called for customerId:', customerId);
             
-            // Immediately open modal so user sees visual feedback
-            document.getElementById('breakupModal').style.display = 'flex';
+            // Immediately show modal so user gets instant visual feedback
+            const modal = document.getElementById('breakupModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+
+            // Flexible string-based ID lookup
+            let cust = (customerBalancesData || []).find(c => String(c.id || c._id) === String(customerId));
+
+            // If not found in customerBalancesData array, extract details directly from the table row if btnEl provided
+            if (!cust && btnEl) {
+                try {
+                    const tr = btnEl.closest('tr');
+                    if (tr) {
+                        const tds = tr.querySelectorAll('td');
+                        const name = tds[0] ? tds[0].innerText.trim() : 'Customer #' + customerId;
+                        const phone = tds[1] ? tds[1].innerText.trim() : '';
+                        const initialBalance = tds[2] ? parseFloat(tds[2].innerText.replace(/,/g, '')) || 0 : 0;
+                        const currentBalance = tds[5] ? parseFloat(tds[5].innerText.replace(/,/g, '')) || 0 : 0;
+                        const depositOutstanding = tds[8] ? parseFloat(tds[8].innerText.replace(/,/g, '')) || 0 : 0;
+
+                        cust = {
+                            id: customerId,
+                            name,
+                            phone,
+                            initialBalance,
+                            currentBalance,
+                            depositOutstanding
+                        };
+                    }
+                } catch (domErr) {
+                    console.warn('Could not extract customer details from DOM row:', domErr);
+                }
+            }
 
             if (!cust) {
                 cust = {
@@ -791,7 +841,9 @@
             document.getElementById('breakupDepositOut').style.color = (cust.depositOutstanding || 0) > 0 ? 'var(--danger)' : 'var(--success)';
 
             const tbody = document.getElementById('breakupTableBody');
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading statement data...</td></tr>';
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading statement data...</td></tr>';
+            }
 
             try {
                 let custTxs = null;
@@ -806,53 +858,57 @@
 
                 // Fallback: Use allTransactionsData if API fetch failed or returned nothing
                 if (!custTxs || custTxs.length === 0) {
-                    custTxs = allTransactionsData.filter(t => String(t.customerId) === String(customerId));
+                    custTxs = (allTransactionsData || []).filter(t => String(t.customerId) === String(customerId));
                     custTxs.sort((a, b) => new Date(a.date) - new Date(b.date));
                 }
 
-                tbody.innerHTML = '';
-                let runningTrayBal = cust.initialBalance || 0;
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    let runningTrayBal = cust.initialBalance || 0;
 
-                if (!custTxs || custTxs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:25px; color:#777;">No transaction records found for this customer. (Opening Balance: ${cust.initialBalance || 0} Trays)</td></tr>`;
-                } else {
-                    custTxs.forEach(t => {
-                        const isOut = (t.type === 'OUT');
-                        if (isOut) {
-                            runningTrayBal += t.count;
-                        } else {
-                            runningTrayBal -= t.count;
-                        }
+                    if (!custTxs || custTxs.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:25px; color:#777;">No transaction records found for this customer. (Opening Balance: ${cust.initialBalance || 0} Trays)</td></tr>`;
+                    } else {
+                        custTxs.forEach(t => {
+                            const isOut = (t.type === 'OUT');
+                            if (isOut) {
+                                runningTrayBal += t.count;
+                            } else {
+                                runningTrayBal -= t.count;
+                            }
 
-                        const receiptNo = 'RE-' + String(t.receiptNo || 0).padStart(6, '0');
-                        const tr = document.createElement('tr');
-                        tr.style.borderBottom = '1px solid #eee';
-                        tr.style.backgroundColor = isOut ? '#fffcf5' : '#f6fff8';
+                            const receiptNo = 'RE-' + String(t.receiptNo || 0).padStart(6, '0');
+                            const tr = document.createElement('tr');
+                            tr.style.borderBottom = '1px solid #eee';
+                            tr.style.backgroundColor = isOut ? '#fffcf5' : '#f6fff8';
 
-                        tr.innerHTML = `
-                            <td style="padding: 10px; font-size: 13px;">${new Date(t.date).toLocaleString()}</td>
-                            <td style="padding: 10px;"><code>${receiptNo}</code></td>
-                            <td style="padding: 10px; text-align: center;">
-                                <span class="badge badge-${isOut ? 'out' : 'in'}" style="font-size: 11px; padding: 4px 8px; font-weight: 700;">
-                                    ${isOut ? 'TRAY ISSUE (OUT)' : 'TRAY RETURN (IN)'}
-                                </span>
-                            </td>
-                            <td style="padding: 10px;"><code>${t.vehicleNo || '-'}</code></td>
-                            <td style="padding: 10px; text-align: right; color: #c62828; font-weight: bold; background-color: ${isOut ? '#ffebee' : 'transparent'};">${isOut ? t.count : '-'}</td>
-                            <td style="padding: 10px; text-align: right; color: #2e7d32; font-weight: bold; background-color: ${!isOut ? '#e8f5e9' : 'transparent'};">${!isOut ? t.count : '-'}</td>
-                            <td style="padding: 10px; text-align: right; font-weight: bold; color: ${runningTrayBal > 0 ? '#c62828' : '#2e7d32'};">${runningTrayBal}</td>
-                            <td style="padding: 10px; text-align: right; font-weight: bold; color: #c62828; background-color: ${isOut && t.totalDeposit ? '#ffebee' : 'transparent'};">${isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
-                            <td style="padding: 10px; text-align: right; font-weight: bold; color: #2e7d32; background-color: ${!isOut && t.totalDeposit ? '#e8f5e9' : 'transparent'};">${!isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
-                            <td style="padding: 10px; font-size: 13px;"><strong>${t.user || 'admin'}</strong> ${t.remarks ? '<br><small style="color:#666;">' + t.remarks + '</small>' : ''}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                            tr.innerHTML = `
+                                <td style="padding: 10px; font-size: 13px;">${new Date(t.date).toLocaleString()}</td>
+                                <td style="padding: 10px;"><code>${receiptNo}</code></td>
+                                <td style="padding: 10px; text-align: center;">
+                                    <span class="badge badge-${isOut ? 'out' : 'in'}" style="font-size: 11px; padding: 4px 8px; font-weight: 700;">
+                                        ${isOut ? 'TRAY ISSUE (OUT)' : 'TRAY RETURN (IN)'}
+                                    </span>
+                                </td>
+                                <td style="padding: 10px;"><code>${t.vehicleNo || '-'}</code></td>
+                                <td style="padding: 10px; text-align: right; color: #c62828; font-weight: bold; background-color: ${isOut ? '#ffebee' : 'transparent'};">${isOut ? t.count : '-'}</td>
+                                <td style="padding: 10px; text-align: right; color: #2e7d32; font-weight: bold; background-color: ${!isOut ? '#e8f5e9' : 'transparent'};">${!isOut ? t.count : '-'}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: ${runningTrayBal > 0 ? '#c62828' : '#2e7d32'};">${runningTrayBal}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #c62828; background-color: ${isOut && t.totalDeposit ? '#ffebee' : 'transparent'};">${isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #2e7d32; background-color: ${!isOut && t.totalDeposit ? '#e8f5e9' : 'transparent'};">${!isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
+                                <td style="padding: 10px; font-size: 13px;"><strong>${t.user || 'admin'}</strong> ${t.remarks ? '<br><small style="color:#666;">' + t.remarks + '</small>' : ''}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
                 }
             } catch (e) {
                 console.error('Error loading statement:', e);
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px; color:red;">Failed to load statement. Please try again.</td></tr>';
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:25px; color:red;">Failed to load statement. Please try again.</td></tr>';
+                }
             }
-        }
+        };
 
         function closeBreakupModal() {
             document.getElementById('breakupModal').style.display = 'none';
