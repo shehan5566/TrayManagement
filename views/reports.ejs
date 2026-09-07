@@ -595,7 +595,21 @@
                     <tbody>
                         <% (typeof warehouseBalanceList !== 'undefined' ? warehouseBalanceList : []).forEach(wb => { %>
                             <tr>
-                                <td><%= new Date(wb.date).toLocaleString() %></td>
+                                <td>
+                                    <% 
+                                    let formattedDate = '-';
+                                    if (wb.date) {
+                                        let d = new Date(wb.date);
+                                        if (isNaN(d.getTime()) && !isNaN(Number(wb.date))) {
+                                            d = new Date(Number(wb.date));
+                                        }
+                                        if (!isNaN(d.getTime())) {
+                                            formattedDate = d.toLocaleString();
+                                        }
+                                    }
+                                    %>
+                                    <%= formattedDate %>
+                                </td>
                                 <td><code><%= wb.transferDocNo || '-' %></code></td>
                                 <td><code><%= wb.grnNo || '-' %></code></td>
                                 <td style="text-align: right; font-weight: 600;"><%= wb.openingBalance %></td>

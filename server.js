@@ -1384,10 +1384,13 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             const isFromLoc = !userLoc || t.fromLocationId === userLoc || req.session.user.role === 'admin';
             const isToLoc = !userLoc || t.toLocationId === userLoc || req.session.user.role === 'admin';
 
+            const dispatchDate = t.dispatchedDate || t.createdDate || t.date || (t._id && !isNaN(Number(t._id)) ? Number(t._id) : null);
+            const receiveDate = t.receivedDate || t.dispatchedDate || t.createdDate || t.date || (t._id && !isNaN(Number(t._id)) ? Number(t._id) : null);
+
             // Outward dispatch
             if (isFromLoc && t.dispatchedQty && t.dispatchedQty > 0) {
                 warehouseEvents.push({
-                    date: t.dispatchedDate,
+                    date: dispatchDate,
                     transferDocNo: t.transferDocNo || '-',
                     grnNo: t.grnNo || '-',
                     dispatchedQty: t.dispatchedQty || 0,
@@ -1401,7 +1404,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             // Inward GRN receipt
             if (isToLoc && t.status === 'ACCEPTED' && (t.receivedQty || t.dispatchedQty)) {
                 warehouseEvents.push({
-                    date: t.receivedDate || t.dispatchedDate,
+                    date: receiveDate,
                     transferDocNo: t.transferDocNo || '-',
                     grnNo: t.grnNo || '-',
                     dispatchedQty: 0,
@@ -1414,7 +1417,13 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         });
 
         // Sort events chronologically
-        warehouseEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+        warehouseEvents.sort((a, b) => {
+            let dA = a.date ? new Date(a.date) : new Date(0);
+            if (isNaN(dA.getTime()) && !isNaN(Number(a.date))) dA = new Date(Number(a.date));
+            let dB = b.date ? new Date(b.date) : new Date(0);
+            if (isNaN(dB.getTime()) && !isNaN(Number(b.date))) dB = new Date(Number(b.date));
+            return dA - dB;
+        });
 
         let currentRunningBal = 0;
         const fullWarehouseBalanceList = warehouseEvents.map(ev => {
@@ -1443,7 +1452,13 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             const endStr = req.query.endDate ? req.query.endDate : null;
 
             const dateFiltered = fullWarehouseBalanceList.filter(ev => {
-                const evDateStr = new Date(ev.date).toISOString().split('T')[0];
+                if (!ev.date) return true;
+                let d = new Date(ev.date);
+                if (isNaN(d.getTime()) && !isNaN(Number(ev.date))) {
+                    d = new Date(Number(ev.date));
+                }
+                if (isNaN(d.getTime())) return true;
+                const evDateStr = d.toISOString().split('T')[0];
                 if (startStr && evDateStr < startStr) return false;
                 if (endStr && evDateStr > endStr) return false;
                 return true;
