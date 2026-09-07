@@ -7,21 +7,19 @@
 
     <script>
         function handleSidebarToggle() {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
             if (window.innerWidth <= 768) {
-                toggleSidebar();
+                sidebar.classList.toggle('open');
             } else {
-                toggleDesktopSidebar();
+                sidebar.classList.toggle('collapsed');
             }
         }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const expandBtn = document.getElementById('sidebarExpandBtn');
             if (sidebar) {
                 sidebar.classList.toggle('open');
-            }
-            if (window.innerWidth <= 768 && expandBtn) {
-                expandBtn.style.display = 'flex';
             }
         }
 
@@ -31,16 +29,8 @@
                 return;
             }
             const sidebar = document.getElementById('sidebar');
-            const expandBtn = document.getElementById('sidebarExpandBtn');
             if (sidebar) {
                 sidebar.classList.toggle('collapsed');
-                if (expandBtn) {
-                    if (sidebar.classList.contains('collapsed')) {
-                        expandBtn.style.display = 'flex';
-                    } else {
-                        expandBtn.style.display = 'none';
-                    }
-                }
             }
         }
 
