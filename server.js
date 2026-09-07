@@ -499,8 +499,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             }
         });
 
-        const isUserAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
-        const damageLogs = await DamageLog.getAll(isUserAdmin ? null : myLocationId);
+        const damageLogs = await DamageLog.getAll(null); // System-wide total across all locations
         let totalDamages = 0;
         damageLogs.forEach(d => {
             totalDamages += (d.qty || 0);
