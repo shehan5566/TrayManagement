@@ -223,26 +223,31 @@ body {
 
 .mobile-sidebar-toggle-btn {
     position: fixed;
-    bottom: 25px;
-    left: 20px;
-    width: 48px;
-    height: 48px;
+    top: 70px;
+    left: 12px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--brand-green) 0%, var(--primary-green-dark) 100%);
-    color: #ffffff;
-    border: 2px solid var(--accent-yellow);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    font-size: 20px;
+    border: 1px solid var(--border-color);
+    background: var(--white) !important;
+    color: var(--primary-green-dark) !important;
+    font-size: 16px;
     cursor: pointer;
-    z-index: 1030;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1050;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-sidebar-toggle-btn:hover {
+    background: var(--bg-light) !important;
+    transform: scale(1.05);
 }
 
 .mobile-sidebar-toggle-btn:active {
-    transform: scale(0.92);
+    transform: scale(0.95);
 }
 
 /* Notification Badge */
