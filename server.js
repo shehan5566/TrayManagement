@@ -486,9 +486,11 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             }
         });
 
+        const totalBranchStock = (warehouseCurrentBalance || 0) + (currentBalance || 0);
+
         res.render('dashboard', { 
             stats: { totalCustomers, totalTrayOut, totalTrayIn, currentBalance },
-            warehouseStats: { warehouseOpeningBalance, totalTransferQty, totalGRNQty, warehouseCurrentBalance, isManualBalance, currentMonth },
+            warehouseStats: { warehouseOpeningBalance, totalTransferQty, totalGRNQty, warehouseCurrentBalance, totalBranchStock, isManualBalance, currentMonth },
             recentTransactions,
             chartData,
             alerts,
