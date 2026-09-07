@@ -15,7 +15,7 @@
         </div>
 
         <!-- Date Filter Form -->
-        <form action="/reports" method="GET"
+        <form action="/reports" method="GET" class="responsive-filter-form"
             style="display: flex; gap: 15px; align-items: flex-end; background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light);">
             <div style="display: flex; flex-direction: column; gap: 5px;">
                 <label for="startDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">Start
@@ -40,7 +40,7 @@
 
         <% if (user.role==='admin' || user.username==='admin' ) { %>
             <!-- Manual Email Report Form -->
-            <form id="manualEmailForm" action="/admin/email/send" method="POST"
+            <form id="manualEmailForm" action="/admin/email/send" method="POST" class="responsive-filter-form"
                 onsubmit="submitAjaxForm(event, this, 'Report is being sent!')"
                 style="display: flex; gap: 15px; align-items: flex-end; background: #fffbea; padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-yellow); margin-top: -5px;">
                 <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">

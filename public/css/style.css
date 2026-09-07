@@ -1552,6 +1552,54 @@ footer strong {
     .search-input {
         width: 100%;
     }
+
+    /* Mobile specific grid overrides */
+    .dashboard-layout,
+    .users-layout,
+    .customers-layout,
+    .dashboard-charts-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Mobile filter form wrapping */
+    .responsive-filter-form {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .responsive-filter-form > div {
+        width: 100% !important;
+    }
+
+    /* Floating Chatbot Window on Mobile */
+    .chat-window {
+        width: calc(100vw - 30px) !important;
+        right: 15px !important;
+        left: 15px !important;
+        bottom: 85px !important;
+        max-height: 75vh !important;
+    }
+
+    /* Table Action Buttons */
+    .table-responsive .btn,
+    .table-responsive .badge {
+        white-space: nowrap !important;
+    }
+
+    .top-header .nav-container {
+        padding: 5px 8px !important;
+    }
+
+    .header-right {
+        gap: 5px !important;
+    }
+
+    .header-icon-btn,
+    .menu-toggle-btn {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 15px !important;
+    }
 }
 
 /* DataTables Custom Styling */

@@ -11,7 +11,7 @@
     </div>
 <% } %>
 
-<div style="display: grid; grid-template-columns: <%= user.role === 'viewer' ? '1fr' : '350px 1fr' %>; gap: 30px; align-items: start;">
+<div class="customers-layout" style="display: grid; grid-template-columns: <%= user.role === 'viewer' ? '1fr' : '350px 1fr' %>; gap: 30px; align-items: start;">
     
     <% if (typeof hasPerm !== 'function' || hasPerm('customer_create') || hasPerm('customer_edit')) { %>
     <!-- Customer Form (Add / Edit) -->
