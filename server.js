@@ -1338,6 +1338,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const receivedTransfers = receivedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const damageLogs = damageLogsRaw.map(doc => { doc.id = doc._id; return doc; });
 
+        let activeTab = req.query.activeTab || 'balanceReport';
+
         res.render('reports', {
             trayOutList,
             trayInList,
@@ -1347,7 +1349,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             receivedTransfers,
             damageLogs,
             startDate,
-            endDate
+            endDate,
+            activeTab
         });
     } catch (err) {
         res.status(500).send('Error rendering reports');

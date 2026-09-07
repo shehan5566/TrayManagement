@@ -15,8 +15,9 @@
         </div>
 
         <!-- Date Filter Form -->
-        <form action="/reports" method="GET" class="responsive-filter-form"
+        <form action="/reports" method="GET" class="responsive-filter-form" id="reportsFilterForm"
             style="display: flex; gap: 15px; align-items: flex-end; background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light);">
+            <input type="hidden" name="activeTab" id="reportsActiveTabInput" value="<%= typeof activeTab !== 'undefined' ? activeTab : 'balanceReport' %>">
             <div style="display: flex; flex-direction: column; gap: 5px;">
                 <label for="startDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">Start
                     Date</label>
@@ -573,14 +574,9 @@
                 <span class="box-title"><i class="fa-solid fa-boxes-stacked" style="color: #d97706;"></i> Tray Damage & Loss Log</span>
                 <div>
                     <button onclick="exportTableToExcel('damagesReportTable', 'Tray_Damages_Report')" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
                     </button>
-                    <a href="/reports/export/damages-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
-                        class="btn btn-sm"
-                        style="background-color: #d97706; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-                        <i class="fa-solid fa-file-csv"></i> Export CSV
-                    </a>
                 </div>
             </div>
 
@@ -1110,6 +1106,35 @@
             const showBreakupId = urlParams.get('showBreakup');
             if (showBreakupId) {
                 viewCustomerBreakup(showBreakupId);
+            }
+
+            // Tab switching & date filter tab persistence
+            const serverActiveTab = "<%= typeof activeTab !== 'undefined' ? activeTab : 'balanceReport' %>";
+            const tabBtns = document.querySelectorAll('.tabs .tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const activeInput = document.getElementById('reportsActiveTabInput');
+
+            function switchReportTab(targetId) {
+                if (!targetId || !document.getElementById(targetId)) return;
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                const targetBtn = document.querySelector(`.tab-btn[data-tab="${targetId}"]`);
+                const targetContent = document.getElementById(targetId);
+                if (targetBtn) targetBtn.classList.add('active');
+                if (targetContent) targetContent.classList.add('active');
+                if (activeInput) activeInput.value = targetId;
+            }
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.dataset.tab;
+                    switchReportTab(targetId);
+                });
+            });
+
+            if (serverActiveTab && serverActiveTab !== 'balanceReport') {
+                switchReportTab(serverActiveTab);
             }
         });
     </script>

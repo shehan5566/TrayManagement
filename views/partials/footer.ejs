@@ -148,19 +148,25 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         if (typeof flatpickr !== 'undefined') {
-            flatpickr("input[type='date']", {
-                dateFormat: "Y-m-d",
-                altInput: true,
-                altFormat: "Y-m-d",
-                defaultDate: new Date()
+            document.querySelectorAll("input[type='date']").forEach(function(input) {
+                const existingVal = input.getAttribute('value') || input.value;
+                flatpickr(input, {
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "Y-m-d",
+                    defaultDate: existingVal ? existingVal : new Date()
+                });
             });
-            flatpickr("input[type='datetime-local']", {
-                enableTime: true,
-                dateFormat: "Y-m-d\\TH:i",
-                altInput: true,
-                altFormat: "Y-m-d h:i K", // e.g. 2026-09-02 03:42 PM
-                time_24hr: false,
-                defaultDate: new Date()
+            document.querySelectorAll("input[type='datetime-local']").forEach(function(input) {
+                const existingVal = input.getAttribute('value') || input.value;
+                flatpickr(input, {
+                    enableTime: true,
+                    dateFormat: "Y-m-d\\TH:i",
+                    altInput: true,
+                    altFormat: "Y-m-d h:i K",
+                    time_24hr: false,
+                    defaultDate: existingVal ? existingVal : new Date()
+                });
             });
         }
     });
