@@ -113,7 +113,10 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'nelna-agri-secret-key-12345',
     resave: false,
     saveUninitialized: false,
-    // Removed store: MongoStore.create(...) so it uses MemoryStore by default for the local test
+    store: (process.env.MONGODB_URI ? MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 24 * 60 * 60
+    }) : undefined),
     cookie: { 
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
         httpOnly: true,
@@ -508,8 +511,8 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             totalShortage
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error rendering dashboard');
+        console.error('Error rendering dashboard:', err);
+        res.status(500).send('Error rendering dashboard: ' + (err.message || err));
     }
 });
 
