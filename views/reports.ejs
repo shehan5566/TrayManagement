@@ -225,9 +225,9 @@
                                     <%= (cb.depositOutstanding || 0).toLocaleString() %>
                                 </td>
                                 <td style="text-align: center;">
-                                    <button onclick="viewCustomerBreakup('<%= cb.id %>', this)" data-customer-id="<%= cb.id %>" class="btn btn-sm btn-view-customer"
-                                        style="background-color: var(--primary-green); color: white; border: none; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
-                                        <i class="fa-solid fa-eye"></i> View
+                                    <button type="button" onclick="viewCustomerBreakup('<%= cb.id %>', this)" data-customer-id="<%= cb.id %>" class="btn btn-sm btn-view-customer"
+                                        style="background-color: var(--primary-green); color: white; border: none; padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-eye" style="pointer-events: none;"></i> <span style="pointer-events: none;">View</span>
                                     </button>
                                 </td>
                             </tr>
@@ -785,10 +785,21 @@
         window.viewCustomerBreakup = async function (customerId, btnEl) {
             console.log('window.viewCustomerBreakup called for customerId:', customerId);
             
-            // Immediately show modal so user gets instant visual feedback
+            // Move modal to body so nested parent divs never trap or obscure it
             const modal = document.getElementById('breakupModal');
             if (modal) {
-                modal.style.display = 'flex';
+                if (modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+                modal.style.setProperty('display', 'flex', 'important');
+                modal.style.setProperty('z-index', '99999999', 'important');
+                modal.style.setProperty('position', 'fixed', 'important');
+                modal.style.setProperty('top', '0', 'important');
+                modal.style.setProperty('left', '0', 'important');
+                modal.style.setProperty('width', '100vw', 'important');
+                modal.style.setProperty('height', '100vh', 'important');
+                modal.style.setProperty('background-color', 'rgba(0,0,0,0.6)', 'important');
+                modal.style.setProperty('overflow-y', 'auto', 'important');
             }
 
             // Flexible string-based ID lookup
@@ -910,16 +921,19 @@
             }
         };
 
-        function closeBreakupModal() {
-            document.getElementById('breakupModal').style.display = 'none';
-        }
-
-        window.onclick = function (event) {
+        window.closeBreakupModal = function () {
             const modal = document.getElementById('breakupModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            if (modal) {
+                modal.style.setProperty('display', 'none', 'important');
             }
-        }
+        };
+
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('breakupModal');
+            if (modal && event.target === modal) {
+                modal.style.setProperty('display', 'none', 'important');
+            }
+        });
 
         function exportCustomerBreakupExcel() {
             if (!currentBreakupCustomer) return;

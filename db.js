@@ -677,7 +677,7 @@ const Customer = {
             const depositOutstanding = openingDepositOutstanding + stats.depositCollected - stats.depositRefunded;
 
             return {
-                id: c._id,
+                id: String(c._id),
                 name: c.name,
                 phone: c.phone,
                 initialBalance: openingBalance,
