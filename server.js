@@ -499,6 +499,13 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             }
         });
 
+        const isUserAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
+        const damageLogs = await DamageLog.getAll(isUserAdmin ? null : myLocationId);
+        let totalDamages = 0;
+        damageLogs.forEach(d => {
+            totalDamages += (d.qty || 0);
+        });
+
         const totalBranchStock = (warehouseCurrentBalance || 0) + (currentBalance || 0);
 
         res.render('dashboard', { 
@@ -508,7 +515,8 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             chartData,
             alerts,
             allLocations,
-            totalShortage
+            totalShortage,
+            totalDamages
         });
     } catch (err) {
         console.error('Error rendering dashboard:', err);
