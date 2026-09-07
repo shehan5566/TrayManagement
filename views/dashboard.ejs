@@ -13,10 +13,10 @@
         </span>
         <% if (allLocations && allLocations.length > 0) { %>
             <% allLocations.forEach(loc => { %>
-                <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" title="Warehouse Stock (<%= loc.currentStock %>) + Customer Balance (<%= loc.customerBalance || 0 %>)">
                     <span style="color: var(--primary-green-dark); font-weight: 600;"><%= loc.name %></span>
                     <span style="background-color: var(--accent-yellow); color: #333; border-radius: 12px; padding: 2px 8px; font-weight: bold; font-size: 12px;">
-                        <%= loc.currentStock %>
+                        <%= loc.totalBranchStock !== undefined ? loc.totalBranchStock : loc.currentStock %>
                     </span>
                 </div>
             <% }); %>
@@ -77,13 +77,7 @@
         </div>
     </div>
 
-    <div class="card" style="border-left: 5px solid #4f46e5; background: linear-gradient(135deg, rgba(79, 70, 229, 0.06) 0%, rgba(79, 70, 229, 0.14) 100%);">
-        <div class="card-title" style="color: #4338ca; font-weight: 700;">Branch Stocks</div>
-        <div class="card-value" style="color: #3730a3; font-weight: 800;"><%= warehouseStats.totalBranchStock %></div>
-        <div style="font-size: 12px; color: #4338ca; margin-top: 5px; font-weight: 600;">
-            <i class="fa-solid fa-layer-group"></i> Warehouse (<%= warehouseStats.warehouseCurrentBalance %>) + Customer (<%= stats.currentBalance %>)
-        </div>
-    </div>
+
 </div>
 
 <!-- Customer Stats Grid -->
@@ -388,7 +382,7 @@
         if (bCtx) {
             const locs = <%- JSON.stringify(allLocations || []) %>;
             const bLabels = locs.map(l => l.name);
-            const bData = locs.map(l => l.currentStock || 0);
+            const bData = locs.map(l => l.totalBranchStock !== undefined ? l.totalBranchStock : (l.currentStock || 0));
             const bgColors = ['#10b981', '#fbbf24', '#3b82f6', '#ec4899', '#8b5cf6', '#f97316', '#14b8a6'];
 
             new Chart(bCtx, {

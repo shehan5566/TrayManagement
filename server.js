@@ -475,6 +475,16 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
         const alerts = await Customer.getAlerts();
         const allLocations = await Location.getAll();
+        const allCustomersForLocations = await CustomerModel.find({}).lean();
+
+        // Calculate total branch stock for each location (Warehouse stock + sum of customer balances for this location)
+        allLocations.forEach(loc => {
+            const branchCustBalance = allCustomersForLocations
+                .filter(c => String(c.locationId) === String(loc.id))
+                .reduce((sum, c) => sum + (c.currentBalance || 0), 0);
+            loc.totalBranchStock = (loc.currentStock || 0) + branchCustBalance;
+            loc.customerBalance = branchCustBalance;
+        });
 
         const acceptedTransfers = await StockTransferModel.find({ isDeleted: { $ne: true }, status: 'ACCEPTED' });
         let totalShortage = 0;
