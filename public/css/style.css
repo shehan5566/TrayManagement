@@ -1578,15 +1578,6 @@ footer strong {
         height: 34px !important;
         font-size: 15px !important;
     }
-
-    /* Single Mobile Sidebar Expand Button (PC Match) */
-    .sidebar-expand-btn {
-        display: flex !important;
-        position: absolute !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 1050 !important;
-    }
 }
 
 /* DataTables Custom Styling */
