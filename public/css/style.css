@@ -221,6 +221,30 @@ body {
     transform: scale(1.08);
 }
 
+.mobile-sidebar-toggle-btn {
+    position: fixed;
+    bottom: 25px;
+    left: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-green) 0%, var(--primary-green-dark) 100%);
+    color: #ffffff;
+    border: 2px solid var(--accent-yellow);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-sidebar-toggle-btn:active {
+    transform: scale(0.92);
+}
+
 /* Notification Badge */
 .notification-badge {
     position: absolute;
