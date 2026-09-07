@@ -1212,5 +1212,6 @@ module.exports = {
     RoleModel,
     UserModel,
     DamageLogModel,
-    SystemSettingModel
+    SystemSettingModel,
+    CounterModel
 };
