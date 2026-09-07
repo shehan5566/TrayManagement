@@ -151,8 +151,8 @@
 <div class="content-box card" style="margin-top: 30px; padding: 24px; border-left: 4px solid #ef4444;">
     <div class="box-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
-            <span class="box-title" style="color: #ef4444; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Action Required: Long Pending Trays (>= 7 Days) or High Volume (>= 50 Trays)
+            <span class="box-title" style="color: #000000; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i> Action Required: Long Pending Trays (>= 7 Days) or High Volume (>= 50 Trays)
             </span>
         </div>
         <% if (typeof alerts !== 'undefined' && alerts.length > 0) { %>
@@ -205,7 +205,7 @@
                             </td>
                             <td style="text-align: right;">
                                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                    <button onclick="sendReminderSMS('<%= alert.customerId %>')" class="btn btn-primary btn-sm" style="font-size: 12px; background: #3b82f6; border: none; display: inline-flex; align-items: center; gap: 6px;">
+                                    <button onclick="sendReminderSMS('<%= alert.customerId %>')" class="btn btn-primary btn-sm" style="font-size: 12px; background: #10b981; border: none; display: inline-flex; align-items: center; gap: 6px;">
                                         <i class="fa-solid fa-comment-sms"></i> Send SMS
                                     </button>
                                     <a href="/reports?showBreakup=<%= alert.customerId %>" class="btn btn-secondary btn-sm" style="font-size: 12px;">
