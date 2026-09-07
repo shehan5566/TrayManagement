@@ -31,8 +31,12 @@
 
                             <div class="form-group">
                                 <label for="password">Password</label>
-                                <input type="password" id="password" name="password" placeholder="Enter password"
-                                    required>
+                                <div style="position: relative; display: flex; align-items: center;">
+                                    <input type="password" id="password" name="password" placeholder="Enter password" required style="padding-right: 40px; width: 100%;">
+                                    <button type="button" onclick="togglePasswordVisibility('password', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-light); font-size: 15px; padding: 5px;" title="Toggle Password Visibility">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -273,7 +277,12 @@
 
                         <div class="form-group">
                             <label>New Password <small>(Leave blank to keep current)</small></label>
-                            <input type="password" id="editPassword" name="password" placeholder="Enter new password" autocomplete="new-password">
+                            <div style="position: relative; display: flex; align-items: center;">
+                                <input type="password" id="editPassword" name="password" placeholder="Enter new password" autocomplete="new-password" style="padding-right: 40px; width: 100%;">
+                                <button type="button" onclick="togglePasswordVisibility('editPassword', this)" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-light); font-size: 15px; padding: 5px;" title="Toggle Password Visibility">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Update

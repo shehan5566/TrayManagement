@@ -318,3 +318,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// Toggle password visibility (show/hide password)
+function togglePasswordVisibility(inputId, btnElement) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    const icon = (btnElement && btnElement.querySelector) ? (btnElement.querySelector('i') || btnElement) : btnElement;
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon && icon.classList) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
+    } else {
+        input.type = 'password';
+        if (icon && icon.classList) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+}
