@@ -13,7 +13,7 @@ const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 const MongoStore = require('connect-mongo').MongoStore || require('connect-mongo').default || require('connect-mongo');
 
-const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting } = require('./db');
+const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting, CustomerModel } = require('./db');
 const smsService = require('./smsService');
 const backupService = require('./backupService');
 const cron = require('node-cron');
