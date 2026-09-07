@@ -146,6 +146,7 @@
             Transfer</button>
         <button class="tab-btn" data-tab="receiveStockReport"><i class="fa-solid fa-boxes-packing"></i> Receive
             Stock</button>
+        <button class="tab-btn" data-tab="warehouseBalanceReport"><i class="fa-solid fa-warehouse"></i> Warehouse Tray Balance</button>
         <button class="tab-btn" data-tab="damagesReport"><i class="fa-solid fa-boxes-stacked"></i> Tray Damages & Loss</button>
     </div>
 
@@ -565,6 +566,52 @@
                 </table>
             </div>
         </div>
+    <!-- 5.5. Warehouse Tray Balance Report Tab -->
+    <div id="warehouseBalanceReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="box-title"><i class="fa-solid fa-warehouse" style="color: var(--primary-green);"></i> Warehouse Tray Balance Audit Report</span>
+                <div>
+                    <button onclick="exportTableToExcel('warehouseBalanceTable', 'Warehouse_Tray_Balance_Report')" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="warehouseBalanceTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Stock Transfer No</th>
+                            <th>GRN No</th>
+                            <th style="text-align: right;">Opening Balance</th>
+                            <th style="text-align: right; color: #dc2626;">Dispatched Qty</th>
+                            <th style="text-align: right; color: #16a34a;">GRN Qty</th>
+                            <th style="text-align: right; font-weight: bold;">Closing Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% (typeof warehouseBalanceList !== 'undefined' ? warehouseBalanceList : []).forEach(wb => { %>
+                            <tr>
+                                <td><%= new Date(wb.date).toLocaleString() %></td>
+                                <td><code><%= wb.transferDocNo || '-' %></code></td>
+                                <td><code><%= wb.grnNo || '-' %></code></td>
+                                <td style="text-align: right; font-weight: 600;"><%= wb.openingBalance %></td>
+                                <td style="text-align: right; font-weight: bold; color: <%= wb.dispatchedQty > 0 ? '#dc2626' : 'inherit' %>;">
+                                    <%= wb.dispatchedQty > 0 ? wb.dispatchedQty : '-' %>
+                                </td>
+                                <td style="text-align: right; font-weight: bold; color: <%= wb.grnQty > 0 ? '#16a34a' : 'inherit' %>;">
+                                    <%= wb.grnQty > 0 ? wb.grnQty : '-' %>
+                                </td>
+                                <td style="text-align: right; font-weight: bold; background-color: rgba(16, 185, 129, 0.08);"><%= wb.closingBalance %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- 6. Tray Damages & Loss Report Tab -->
@@ -706,6 +753,8 @@
             $('#reportInTable').DataTable(tableConfig);
             $('#stockTransferTable').DataTable(tableConfig);
             $('#receiveStockTable').DataTable(tableConfig);
+            $('#warehouseBalanceTable').DataTable(tableConfig);
+            $('#damagesReportTable').DataTable(tableConfig);
         });
     </script>
 
@@ -1096,6 +1145,12 @@
             if (damagesTable) {
                 const ws4 = XLSX.utils.table_to_sheet(damagesTable);
                 XLSX.utils.book_append_sheet(wb, ws4, "Tray Damages & Loss");
+            }
+
+            const whTable = document.getElementById('warehouseBalanceTable');
+            if (whTable) {
+                const ws5 = XLSX.utils.table_to_sheet(whTable);
+                XLSX.utils.book_append_sheet(wb, ws5, "Warehouse Tray Balance");
             }
 
             XLSX.writeFile(wb, `Nelna_Agri_Tray_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`);

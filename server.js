@@ -1338,6 +1338,49 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const receivedTransfers = receivedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const damageLogs = damageLogsRaw.map(doc => { doc.id = doc._id; return doc; });
 
+        // Build Warehouse Tray Balance Ledger (Date, Stock Transfer No, GRN No, Opening Balance, Dispatched Qty, GRN Qty, Closing Balance)
+        let warehouseEvents = [];
+
+        dispatchedTransfersRaw.forEach(t => {
+            warehouseEvents.push({
+                date: t.dispatchedDate,
+                transferDocNo: t.transferDocNo || '-',
+                grnNo: t.grnNo || '-',
+                dispatchedQty: t.dispatchedQty || 0,
+                grnQty: 0,
+                fromLocationName: t.fromLocationName || 'Head Office',
+                toLocationName: t.toLocationName || 'Branch'
+            });
+        });
+
+        receivedTransfersRaw.forEach(t => {
+            warehouseEvents.push({
+                date: t.receivedDate || t.dispatchedDate,
+                transferDocNo: t.transferDocNo || '-',
+                grnNo: t.grnNo || '-',
+                dispatchedQty: 0,
+                grnQty: t.receivedQty || 0,
+                fromLocationName: t.fromLocationName || 'Head Office',
+                toLocationName: t.toLocationName || 'Branch'
+            });
+        });
+
+        warehouseEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        let currentRunningBal = 0;
+        const warehouseBalanceList = warehouseEvents.map(ev => {
+            const openingBalance = currentRunningBal;
+            const closingBalance = openingBalance - ev.dispatchedQty + ev.grnQty;
+            currentRunningBal = closingBalance;
+            return {
+                ...ev,
+                openingBalance,
+                closingBalance
+            };
+        });
+
+        warehouseBalanceList.reverse();
+
         let activeTab = req.query.activeTab || 'balanceReport';
 
         res.render('reports', {
@@ -1348,6 +1391,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             dispatchedTransfers,
             receivedTransfers,
             damageLogs,
+            warehouseBalanceList,
             startDate,
             endDate,
             activeTab
