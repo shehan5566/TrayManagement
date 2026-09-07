@@ -5,7 +5,6 @@
         </div> <!-- /main-body -->
     </div> <!-- /app-layout -->
 
-    <script>
         function handleSidebarToggle() {
             if (window.innerWidth <= 768) {
                 toggleSidebar();
@@ -15,17 +14,32 @@
         }
 
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
+            const sidebar = document.getElementById('sidebar');
+            const expandBtn = document.getElementById('sidebarExpandBtn');
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+            if (window.innerWidth <= 768 && expandBtn) {
+                expandBtn.style.display = 'flex';
+            }
         }
 
         function toggleDesktopSidebar() {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+                return;
+            }
             const sidebar = document.getElementById('sidebar');
             const expandBtn = document.getElementById('sidebarExpandBtn');
-            sidebar.classList.toggle('collapsed');
-            if (sidebar.classList.contains('collapsed')) {
-                expandBtn.style.display = 'flex';
-            } else {
-                expandBtn.style.display = 'none';
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                if (expandBtn) {
+                    if (sidebar.classList.contains('collapsed')) {
+                        expandBtn.style.display = 'flex';
+                    } else {
+                        expandBtn.style.display = 'none';
+                    }
+                }
             }
         }
 
