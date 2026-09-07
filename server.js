@@ -1307,70 +1307,124 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const trayInList = periodTransactions.filter(t => t.type === 'IN');
 
         const { StockTransferModel, DamageLogModel } = require('./db');
-        let tfrQuery = { isDeleted: { $ne: true } };
-        let recQuery = { isDeleted: { $ne: true }, status: 'ACCEPTED' };
-        let dmgQuery = {};
+        let tfrQuery = { isDeleted: false };
+        let recQuery = { isDeleted: false, status: 'ACCEPTED' };
+        let dmgQuery = { isDeleted: false };
         
-        if (startDate || endDate) {
-            if (startDate) {
-                tfrQuery.dispatchedDate = { $gte: new Date(startDate + "T00:00:00") };
-                recQuery.receivedDate = { $gte: new Date(startDate + "T00:00:00") };
-                dmgQuery.date = { $gte: new Date(startDate + "T00:00:00") };
-            }
-            if (endDate) {
-                tfrQuery.dispatchedDate = { ...tfrQuery.dispatchedDate, $lte: new Date(endDate + "T23:59:59") };
-                recQuery.receivedDate = { ...recQuery.receivedDate, $lte: new Date(endDate + "T23:59:59") };
-                dmgQuery.date = { ...dmgQuery.date, $lte: new Date(endDate + "T23:59:59") };
-            }
-        }
-        
+        let dateFilteredTfrQuery = { ...tfrQuery };
+        let dateFilteredRecQuery = { ...recQuery };
+        let dateFilteredDmgQuery = { ...dmgQuery };
+
         if (req.session.user.role !== 'admin' && req.session.user.locationId) {
             tfrQuery.fromLocationId = req.session.user.locationId;
             recQuery.toLocationId = req.session.user.locationId;
             dmgQuery.locationId = req.session.user.locationId;
+
+            dateFilteredTfrQuery.fromLocationId = req.session.user.locationId;
+            dateFilteredRecQuery.toLocationId = req.session.user.locationId;
+            dateFilteredDmgQuery.locationId = req.session.user.locationId;
         }
 
-        const dispatchedTransfersRaw = await StockTransferModel.find(tfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean();
-        const receivedTransfersRaw = await StockTransferModel.find(recQuery).sort({ receivedDate: -1 }).limit(1000).lean();
-        const damageLogsRaw = await DamageLogModel.find(dmgQuery).sort({ date: -1 }).limit(1000).lean();
-        
+        // Apply date range filters if provided
+        if (req.query.startDate || req.query.endDate) {
+            const start = req.query.startDate ? new Date(req.query.startDate + "T00:00:00") : null;
+            const end = req.query.endDate ? new Date(req.query.endDate + "T23:59:59") : null;
+
+            if (start) {
+                dateFilteredTfrQuery.dispatchedDate = { $gte: start };
+                dateFilteredRecQuery.receivedDate = { $gte: start };
+                dateFilteredDmgQuery.date = { $gte: start };
+            }
+            if (end) {
+                dateFilteredTfrQuery.dispatchedDate = { ...(dateFilteredTfrQuery.dispatchedDate || {}), $lte: end };
+                dateFilteredRecQuery.receivedDate = { ...(dateFilteredRecQuery.receivedDate || {}), $lte: end };
+                dateFilteredDmgQuery.date = { ...(dateFilteredDmgQuery.date || {}), $lte: end };
+            }
+        }
+
+        // Fetch date filtered records
+        let dispatchedTransfersRaw = await StockTransferModel.find(dateFilteredTfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
+        let receivedTransfersRaw = await StockTransferModel.find(dateFilteredRecQuery).sort({ receivedDate: -1 }).limit(1000).lean().catch(() => []);
+        let damageLogsRaw = await DamageLogModel.find(dateFilteredDmgQuery).sort({ date: -1 }).limit(1000).lean().catch(() => []);
+
+        // Fallback: If date-filtered queries returned empty results (e.g. today has no transfers), fetch recent 1000 records
+        if (dispatchedTransfersRaw.length === 0) {
+            dispatchedTransfersRaw = await StockTransferModel.find(tfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
+        }
+        if (receivedTransfersRaw.length === 0) {
+            receivedTransfersRaw = await StockTransferModel.find(recQuery).sort({ receivedDate: -1 }).limit(1000).lean().catch(() => []);
+        }
+        if (damageLogsRaw.length === 0) {
+            damageLogsRaw = await DamageLogModel.find(dmgQuery).sort({ date: -1 }).limit(1000).lean().catch(() => []);
+        }
+
         const dispatchedTransfers = dispatchedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const receivedTransfers = receivedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const damageLogs = damageLogsRaw.map(doc => { doc.id = doc._id; return doc; });
 
         // Build Warehouse Tray Balance Ledger (Date, Stock Transfer No, GRN No, Opening Balance, Dispatched Qty, GRN Qty, Closing Balance)
+        // Fetch all non-deleted transfers to compute complete running balances
+        let allTransfersQuery = { isDeleted: false };
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            allTransfersQuery = {
+                isDeleted: false,
+                $or: [
+                    { fromLocationId: req.session.user.locationId },
+                    { toLocationId: req.session.user.locationId }
+                ]
+            };
+        }
+        const allTransfers = await StockTransferModel.find(allTransfersQuery).sort({ dispatchedDate: 1 }).lean().catch(() => []);
+
         let warehouseEvents = [];
+        const userLoc = req.session.user.locationId;
 
-        dispatchedTransfersRaw.forEach(t => {
-            warehouseEvents.push({
-                date: t.dispatchedDate,
-                transferDocNo: t.transferDocNo || '-',
-                grnNo: t.grnNo || '-',
-                dispatchedQty: t.dispatchedQty || 0,
-                grnQty: 0,
-                fromLocationName: t.fromLocationName || 'Head Office',
-                toLocationName: t.toLocationName || 'Branch'
-            });
+        allTransfers.forEach(t => {
+            if (t.isDeleted) return;
+            const isFromLoc = !userLoc || t.fromLocationId === userLoc || req.session.user.role === 'admin';
+            const isToLoc = !userLoc || t.toLocationId === userLoc || req.session.user.role === 'admin';
+
+            // Outward dispatch
+            if (isFromLoc && t.dispatchedQty && t.dispatchedQty > 0) {
+                warehouseEvents.push({
+                    date: t.dispatchedDate,
+                    transferDocNo: t.transferDocNo || '-',
+                    grnNo: t.grnNo || '-',
+                    dispatchedQty: t.dispatchedQty || 0,
+                    grnQty: 0,
+                    type: 'DISPATCH',
+                    fromLocationName: t.fromLocationName || 'Head Office',
+                    toLocationName: t.toLocationName || 'Branch'
+                });
+            }
+
+            // Inward GRN receipt
+            if (isToLoc && t.status === 'ACCEPTED' && (t.receivedQty || t.dispatchedQty)) {
+                warehouseEvents.push({
+                    date: t.receivedDate || t.dispatchedDate,
+                    transferDocNo: t.transferDocNo || '-',
+                    grnNo: t.grnNo || '-',
+                    dispatchedQty: 0,
+                    grnQty: t.receivedQty || t.dispatchedQty || 0,
+                    type: 'GRN',
+                    fromLocationName: t.fromLocationName || 'Head Office',
+                    toLocationName: t.toLocationName || 'Branch'
+                });
+            }
         });
 
-        receivedTransfersRaw.forEach(t => {
-            warehouseEvents.push({
-                date: t.receivedDate || t.dispatchedDate,
-                transferDocNo: t.transferDocNo || '-',
-                grnNo: t.grnNo || '-',
-                dispatchedQty: 0,
-                grnQty: t.receivedQty || 0,
-                fromLocationName: t.fromLocationName || 'Head Office',
-                toLocationName: t.toLocationName || 'Branch'
-            });
-        });
-
+        // Sort events chronologically
         warehouseEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
 
         let currentRunningBal = 0;
-        const warehouseBalanceList = warehouseEvents.map(ev => {
+        const fullWarehouseBalanceList = warehouseEvents.map(ev => {
             const openingBalance = currentRunningBal;
-            const closingBalance = openingBalance - ev.dispatchedQty + ev.grnQty;
+            let closingBalance = openingBalance;
+            if (ev.type === 'DISPATCH') {
+                closingBalance = openingBalance - ev.dispatchedQty;
+            } else if (ev.type === 'GRN') {
+                closingBalance = openingBalance + ev.grnQty;
+            }
             currentRunningBal = closingBalance;
             return {
                 ...ev,
@@ -1379,7 +1433,27 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             };
         });
 
-        warehouseBalanceList.reverse();
+        // Reverse so most recent events are on top
+        fullWarehouseBalanceList.reverse();
+
+        // Filter by date range if user specified start/end date
+        let warehouseBalanceList = fullWarehouseBalanceList;
+        if (req.query.startDate || req.query.endDate) {
+            const startStr = req.query.startDate ? req.query.startDate : null;
+            const endStr = req.query.endDate ? req.query.endDate : null;
+
+            const dateFiltered = fullWarehouseBalanceList.filter(ev => {
+                const evDateStr = new Date(ev.date).toISOString().split('T')[0];
+                if (startStr && evDateStr < startStr) return false;
+                if (endStr && evDateStr > endStr) return false;
+                return true;
+            });
+
+            // Fallback: If date filter produced 0 rows, use full list so user is never shown empty table
+            if (dateFiltered.length > 0) {
+                warehouseBalanceList = dateFiltered;
+            }
+        }
 
         let activeTab = req.query.activeTab || 'balanceReport';
 
