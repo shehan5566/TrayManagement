@@ -1306,31 +1306,37 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const trayOutList = periodTransactions.filter(t => t.type === 'OUT');
         const trayInList = periodTransactions.filter(t => t.type === 'IN');
 
-        const { StockTransferModel } = require('./db');
+        const { StockTransferModel, DamageLogModel } = require('./db');
         let tfrQuery = { isDeleted: { $ne: true } };
         let recQuery = { isDeleted: { $ne: true }, status: 'ACCEPTED' };
+        let dmgQuery = {};
         
         if (startDate || endDate) {
             if (startDate) {
                 tfrQuery.dispatchedDate = { $gte: new Date(startDate + "T00:00:00") };
                 recQuery.receivedDate = { $gte: new Date(startDate + "T00:00:00") };
+                dmgQuery.date = { $gte: new Date(startDate + "T00:00:00") };
             }
             if (endDate) {
                 tfrQuery.dispatchedDate = { ...tfrQuery.dispatchedDate, $lte: new Date(endDate + "T23:59:59") };
                 recQuery.receivedDate = { ...recQuery.receivedDate, $lte: new Date(endDate + "T23:59:59") };
+                dmgQuery.date = { ...dmgQuery.date, $lte: new Date(endDate + "T23:59:59") };
             }
         }
         
         if (req.session.user.role !== 'admin' && req.session.user.locationId) {
             tfrQuery.fromLocationId = req.session.user.locationId;
             recQuery.toLocationId = req.session.user.locationId;
+            dmgQuery.locationId = req.session.user.locationId;
         }
 
         const dispatchedTransfersRaw = await StockTransferModel.find(tfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean();
         const receivedTransfersRaw = await StockTransferModel.find(recQuery).sort({ receivedDate: -1 }).limit(1000).lean();
+        const damageLogsRaw = await DamageLogModel.find(dmgQuery).sort({ date: -1 }).limit(1000).lean();
         
         const dispatchedTransfers = dispatchedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const receivedTransfers = receivedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
+        const damageLogs = damageLogsRaw.map(doc => { doc.id = doc._id; return doc; });
 
         res.render('reports', {
             trayOutList,
@@ -1339,11 +1345,45 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             allTransactions: periodTransactions,
             dispatchedTransfers,
             receivedTransfers,
+            damageLogs,
             startDate,
             endDate
         });
     } catch (err) {
         res.status(500).send('Error rendering reports');
+    }
+});
+
+// Export Damages CSV Route
+app.get('/reports/export/damages-csv', requireAuth, async (req, res) => {
+    try {
+        let startDate = req.query.startDate || '';
+        let endDate = req.query.endDate || '';
+        const { DamageLogModel } = require('./db');
+        
+        let dmgQuery = {};
+        if (startDate || endDate) {
+            if (startDate) dmgQuery.date = { $gte: new Date(startDate + "T00:00:00") };
+            if (endDate) dmgQuery.date = { ...dmgQuery.date, $lte: new Date(endDate + "T23:59:59") };
+        }
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            dmgQuery.locationId = req.session.user.locationId;
+        }
+        
+        const logs = await DamageLogModel.find(dmgQuery).sort({ date: -1 }).limit(10000).lean();
+        
+        let csvContent = '\uFEFF';
+        csvContent += 'Ref No,Date & Time,Location,Type,Quantity,Reason,Reported By\n';
+
+        logs.forEach(l => {
+            csvContent += `"${l.damageNo || ''}","${new Date(l.date).toLocaleString()}","${(l.locationName || '').replace(/"/g, '""')}","${l.type || ''}",${l.qty || 0},"${(l.reason || '').replace(/"/g, '""')}","${l.reportedBy || ''}"\n`;
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="Tray_Damages_Report_${startDate}_to_${endDate}.csv"`);
+        res.send(csvContent);
+    } catch (err) {
+        res.status(500).send('Error exporting damages report');
     }
 });
 

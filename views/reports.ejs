@@ -145,6 +145,7 @@
             Transfer</button>
         <button class="tab-btn" data-tab="receiveStockReport"><i class="fa-solid fa-boxes-packing"></i> Receive
             Stock</button>
+        <button class="tab-btn" data-tab="damagesReport"><i class="fa-solid fa-boxes-stacked"></i> Tray Damages & Loss</button>
     </div>
 
     <!-- 1. Customer Balance Report Tab -->
@@ -559,6 +560,59 @@
                                 </td>
                             </tr>
                             <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Tray Damages & Loss Report Tab -->
+    <div id="damagesReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="box-title"><i class="fa-solid fa-boxes-stacked" style="color: #d97706;"></i> Tray Damage & Loss Log</span>
+                <div>
+                    <button onclick="exportTableToExcel('damagesReportTable', 'Tray_Damages_Report')" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                    <a href="/reports/export/damages-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
+                        class="btn btn-sm"
+                        style="background-color: #d97706; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="damagesReportTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Ref No</th>
+                            <th>Location / Branch</th>
+                            <th>Type</th>
+                            <th style="text-align: right;">Quantity (Trays)</th>
+                            <th>Reason / Remarks</th>
+                            <th>Reported By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% (typeof damageLogs !== 'undefined' ? damageLogs : []).forEach(d => { %>
+                            <tr>
+                                <td><%= new Date(d.date).toLocaleString() %></td>
+                                <td><strong><%= d.damageNo || '-' %></strong></td>
+                                <td><%= d.locationName || 'Head Office' %></td>
+                                <td>
+                                    <span class="badge" style="background-color: <%= d.type === 'LOST' ? '#ef4444' : '#f59e0b' %>; color: white;">
+                                        <%= d.type %>
+                                    </span>
+                                </td>
+                                <td style="text-align: right; font-weight: bold; color: #d97706;"><%= d.qty %></td>
+                                <td><%= d.reason || '-' %></td>
+                                <td><%= d.reportedBy || '-' %></td>
+                            </tr>
+                        <% }); %>
                     </tbody>
                 </table>
             </div>
@@ -1040,6 +1094,12 @@
             if (inTable) {
                 const ws3 = XLSX.utils.table_to_sheet(inTable);
                 XLSX.utils.book_append_sheet(wb, ws3, "Tray Returns (IN)");
+            }
+
+            const damagesTable = document.getElementById('damagesReportTable');
+            if (damagesTable) {
+                const ws4 = XLSX.utils.table_to_sheet(damagesTable);
+                XLSX.utils.book_append_sheet(wb, ws4, "Tray Damages & Loss");
             }
 
             XLSX.writeFile(wb, `Nelna_Agri_Tray_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`);
