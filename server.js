@@ -95,18 +95,18 @@ const loginLimiter = rateLimit({
 });
 // app.use('/login', loginLimiter);
 
-// Body Parser Middleware
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Prevent HTTP browser caching
+// Prevent HTTP browser caching for all routes and static assets
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
     next();
 });
+
+// Body Parser Middleware
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0, etag: false }));
 
 // Secure Session configuration with MongoDB Store
 app.use(session({

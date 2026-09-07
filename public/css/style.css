@@ -1456,9 +1456,18 @@ footer strong {
         display: block;
     }
 
+    .sidebar-expand-btn {
+        display: flex !important;
+        position: absolute !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 1050 !important;
+    }
+
     /* Typography & Spacing */
     main {
         padding: 15px;
+        padding-left: 60px !important;
     }
 
     .box-header {
