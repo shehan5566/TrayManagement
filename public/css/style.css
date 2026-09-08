@@ -973,55 +973,72 @@ tr:hover td {
     display: block;
 }
 
-/* Login Page Creative Box & Background */
+/* Login Page Creative Box & Full Background */
+body.login-page-active,
+body:has(.login-wrapper) {
+    background: linear-gradient(135deg, rgba(15, 48, 37, 0.35) 0%, rgba(23, 78, 62, 0.25) 50%, rgba(15, 48, 37, 0.40) 100%), url('/images/login-bg.jpg') no-repeat center center fixed !important;
+    background-size: cover !important;
+    min-height: 100vh;
+}
+
+body.login-page-active main,
+body:has(.login-wrapper) main {
+    padding: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    min-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+}
+
+body.login-page-active footer,
+body:has(.login-wrapper) footer {
+    background: rgba(15, 48, 37, 0.65) !important;
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
 .login-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 110px);
+    flex: 1;
+    min-height: calc(100vh - 70px);
     padding: 40px 20px;
-    background: linear-gradient(135deg, rgba(15, 48, 37, 0.65) 0%, rgba(23, 78, 62, 0.50) 50%, rgba(15, 48, 37, 0.75) 100%), url('/images/login-bg.jpg') no-repeat center center / cover;
-    background-attachment: fixed;
-    margin: -30px -30px -30px -30px;
-    width: calc(100% + 60px);
+    background: linear-gradient(135deg, rgba(15, 48, 37, 0.35) 0%, rgba(23, 78, 62, 0.25) 50%, rgba(15, 48, 37, 0.40) 100%), url('/images/login-bg.jpg') no-repeat center center fixed;
+    background-size: cover;
     position: relative;
-}
-
-@media (max-width: 768px) {
-    .login-wrapper {
-        margin: -15px -15px -15px -15px;
-        width: calc(100% + 30px);
-        min-height: calc(100vh - 80px);
-    }
+    width: 100%;
 }
 
 .login-container {
     width: 100%;
     max-width: 420px;
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.4);
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-top: 6px solid var(--primary-green);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .login-container:hover {
     transform: translateY(-4px);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.6);
 }
 
 [data-theme="dark"] .login-container {
-    background: rgba(15, 30, 24, 0.88);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 30, 24, 0.80);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .login-header {
-    background: linear-gradient(135deg, rgba(23, 78, 62, 0.95) 0%, rgba(15, 48, 37, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(23, 78, 62, 0.90) 0%, rgba(15, 48, 37, 0.90) 100%);
     padding: 30px 25px;
     text-align: center;
     color: var(--white);
