@@ -133,7 +133,7 @@
                                         <% } %>
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_delete'))) { %>
                                         <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')">
-                                            <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" title="Delete">
+                                            <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px; background-color: #d97706; border-color: #d97706; color: #ffffff;" title="Delete">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </form>
