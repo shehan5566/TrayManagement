@@ -228,7 +228,7 @@ window.confirmAjaxDelete = function (event, form, itemType) {
         text: `Do you really want to delete this ${itemType || 'item'}? This action cannot be undone!`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
+        confirmButtonColor: '#10b981',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Yes, delete it!'
     }).then(async (result) => {
