@@ -233,11 +233,11 @@
                                                                  <form action="/transactions/<%= tx.id %>/delete"
                                                                      method="POST"
                                                                      onsubmit="confirmAjaxDelete(event, this, 'transaction record')">
-                                                                     <button type="submit" class="btn btn-danger"
-                                                                         style="padding: 6px 10px; font-size: 12px;"
-                                                                         title="Delete Record">
-                                                                         <i class="fa-solid fa-trash-can"></i>
-                                                                     </button>
+                                                                      <button type="submit" class="btn btn-danger"
+                                                                          style="padding: 6px 10px; font-size: 12px; background-color: #ffc300; border-color: #e6b000; color: #000000;"
+                                                                          title="Delete Record">
+                                                                          <i class="fa-solid fa-trash"></i>
+                                                                      </button>
                                                                  </form>
                                                              <% } %>
                                                         </div>
