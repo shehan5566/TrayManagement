@@ -115,10 +115,10 @@ app.use(session({
     saveUninitialized: false,
     store: (process.env.MONGODB_URI ? MongoStore.create({
         mongoUrl: process.env.MONGODB_URI,
-        ttl: 24 * 60 * 60
+        ttl: 20 * 60
     }) : undefined),
     cookie: { 
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        maxAge: 20 * 60 * 1000, // 20 minutes
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production' && process.env.DISABLE_SECURE_COOKIE !== 'true'
@@ -134,17 +134,12 @@ app.use(async (req, res, next) => {
             const loc = await Location.getById(req.session.user.locationId || 'main');
             if (loc) locationName = loc.name;
         } catch (e) {
-            console.error("Error fetching location for header:", e);
+            console.error('Error loading user location name:', e);
         }
         userPermissions = await getUserPermissions(req.session.user);
         res.locals.user = { ...req.session.user, locationName, permissions: userPermissions };
         res.locals.userPermissions = userPermissions;
-        res.locals.hasPerm = (perm) => {
-            if (!userPermissions) return false;
-            if (userPermissions.includes('*')) return true;
-            const valid = permissionAliases[perm] || [perm];
-            return valid.some(p => userPermissions.includes(p));
-        };
+        res.locals.hasPerm = (permName) => hasPermission(req.session.user, userPermissions, permName);
     } else {
         res.locals.user = null;
         res.locals.userPermissions = [];
@@ -154,7 +149,10 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// Authentication middleware
+// 20-minute (1,200,000 ms) Inactivity Timeout limit
+const INACTIVITY_TIMEOUT = 20 * 60 * 1000;
+
+// Authentication middleware with inactivity timeout
 const requireAuth = (req, res, next) => {
     if (!req.session.user) {
         if (req.headers.accept && req.headers.accept.includes('application/json')) {
@@ -162,6 +160,19 @@ const requireAuth = (req, res, next) => {
         }
         return res.redirect('/login');
     }
+
+    const now = Date.now();
+    if (req.session.lastActivity && (now - req.session.lastActivity > INACTIVITY_TIMEOUT)) {
+        req.session.destroy(() => {
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(401).json({ success: false, error: 'Session expired due to 20 minutes of inactivity.', redirect: '/login?reason=inactivity' });
+            }
+            return res.redirect('/login?reason=inactivity');
+        });
+        return;
+    }
+
+    req.session.lastActivity = now;
     next();
 };
 
@@ -358,7 +369,11 @@ app.get('/login', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
     }
-    res.render('login', { error: null });
+    let error = null;
+    if (req.query.reason === 'inactivity') {
+        error = 'You were automatically logged out due to 20 minutes of inactivity.';
+    }
+    res.render('login', { error });
 });
 
 app.post('/login', async (req, res) => {
@@ -375,6 +390,7 @@ app.post('/login', async (req, res) => {
                 locationId: verifiedUser.locationId || 'main',
                 roleId: verifiedUser.roleId
             };
+            req.session.lastActivity = Date.now();
             return res.redirect('/dashboard');
         }
         res.render('login', { error: 'Invalid username or password!' });
@@ -385,8 +401,13 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
+    const reason = req.query.reason;
     req.session.destroy(() => {
-        res.redirect('/login');
+        if (reason) {
+            res.redirect('/login?reason=' + encodeURIComponent(reason));
+        } else {
+            res.redirect('/login');
+        }
     });
 });
 

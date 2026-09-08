@@ -114,12 +114,6 @@
             }
         }
 
-        // Fetch notifications on load & every 60 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchNotifications();
-            setInterval(fetchNotifications, 60000);
-        });
-
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
             const userDropdown = document.querySelector('.user-dropdown-menu');
@@ -134,6 +128,71 @@
                 notifDropdown.classList.remove('show');
             }
         });
+
+        // 20-Minute (1200 seconds) Client-Side Inactivity Auto-Logout
+        (function setupInactivityTimer() {
+            const INACTIVITY_LIMIT_MS = 20 * 60 * 1000; // 20 minutes
+            const WARNING_TIME_MS = 19 * 60 * 1000; // 19 minutes (1 minute warning)
+            let idleTimer = null;
+            let warningTimer = null;
+            let isWarningOpen = false;
+
+            function resetTimer() {
+                if (isWarningOpen) return;
+                clearTimeout(idleTimer);
+                clearTimeout(warningTimer);
+
+                warningTimer = setTimeout(showWarning, WARNING_TIME_MS);
+                idleTimer = setTimeout(doLogout, INACTIVITY_LIMIT_MS);
+            }
+
+            function showWarning() {
+                if (typeof Swal === 'undefined') return;
+                isWarningOpen = true;
+                let timeLeft = 60; // 60 seconds countdown
+                
+                Swal.fire({
+                    title: 'Inactivity Warning',
+                    html: `You have been inactive for 19 minutes.<br>System will auto logout in <strong id="logoutCountdown" style="color: #d90429; font-size: 18px;">60</strong> seconds due to inactivity.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fa-solid fa-user-check"></i> Stay Logged In',
+                    cancelButtonText: '<i class="fa-solid fa-right-from-bracket"></i> Logout Now',
+                    confirmButtonColor: '#174e3e',
+                    cancelButtonColor: '#d90429',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    timer: 60000,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        const countdownElem = Swal.getHtmlContainer().querySelector('#logoutCountdown');
+                        const interval = setInterval(() => {
+                            timeLeft--;
+                            if (countdownElem) countdownElem.textContent = timeLeft;
+                            if (timeLeft <= 0) clearInterval(interval);
+                        }, 1000);
+                    }
+                }).then((result) => {
+                    isWarningOpen = false;
+                    if (result.isConfirmed) {
+                        fetch('/api/notifications', { headers: { 'Accept': 'application/json' } }).catch(() => {});
+                        resetTimer();
+                    } else {
+                        doLogout();
+                    }
+                });
+            }
+
+            function doLogout() {
+                window.location.href = '/logout?reason=inactivity';
+            }
+
+            ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'].forEach(evt => {
+                window.addEventListener(evt, resetTimer, { passive: true });
+            });
+
+            resetTimer();
+        })();
     </script>
     <% } %>
 
