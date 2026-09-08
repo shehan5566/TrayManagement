@@ -220,8 +220,25 @@ window.submitAjaxForm = async function (event, form, successMessage, successCall
     }
 };
 
+function resetSubmitButton(form, submitBtn) {
+    if (form) form.classList.remove('is-submitting');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        if (submitBtn.dataset.originalContent) {
+            submitBtn.innerHTML = submitBtn.dataset.originalContent;
+        }
+    }
+}
+
 window.confirmAjaxDelete = function (event, form, itemType) {
     event.preventDefault();
+
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    if (submitBtn && !submitBtn.dataset.originalContent) {
+        submitBtn.dataset.originalContent = submitBtn.innerHTML;
+    }
 
     Swal.fire({
         title: 'Are you sure?',
@@ -233,10 +250,18 @@ window.confirmAjaxDelete = function (event, form, itemType) {
         confirmButtonText: 'Yes, delete it!'
     }).then(async (result) => {
         if (result.isConfirmed) {
+            if (form) form.classList.add('is-submitting');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.8';
+                submitBtn.style.cursor = 'not-allowed';
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            }
+
             try {
                 const url = form.getAttribute('action') || form.action;
                 const response = await fetch(url, {
-                    method: 'POST', // standard HTML forms use POST for deletes in our app
+                    method: 'POST',
                     headers: { 'Accept': 'application/json' }
                 });
 
@@ -264,10 +289,15 @@ window.confirmAjaxDelete = function (event, form, itemType) {
                     }
                 } else {
                     Swal.fire('Error!', data.error || 'Failed to delete.', 'error');
+                    resetSubmitButton(form, submitBtn);
                 }
             } catch (err) {
                 Swal.fire('Error!', 'Network error occurred.', 'error');
+                resetSubmitButton(form, submitBtn);
             }
+        } else {
+            // User cancelled confirmation -> Reset button immediately
+            resetSubmitButton(form, submitBtn);
         }
     });
 };
@@ -294,6 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         form.addEventListener('submit', function (e) {
+            // Skip auto loading state for confirmation forms (handled inside confirmAjaxDelete)
+            const onsubmitAttr = this.getAttribute('onsubmit') || '';
+            if (onsubmitAttr.includes('confirmAjaxDelete') || onsubmitAttr.includes('confirm(')) {
+                return;
+            }
+
             // Prevent multiple submissions
             if (this.classList.contains('is-submitting')) {
                 e.preventDefault();
