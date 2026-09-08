@@ -115,78 +115,15 @@ app.use(session({
     saveUninitialized: false,
     store: (process.env.MONGODB_URI ? MongoStore.create({
         mongoUrl: process.env.MONGODB_URI,
-        ttl: 20 * 60
+        ttl: 8 * 60 * 60
     }) : undefined),
     cookie: { 
-        maxAge: 20 * 60 * 1000, // 20 minutes
+        maxAge: 8 * 60 * 60 * 1000, // 8 hours session cookie limit
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production' && process.env.DISABLE_SECURE_COOKIE !== 'true'
     }
 }));
-
-// Global view variables
-app.use(async (req, res, next) => {
-    let locationName = 'Head Office';
-    let userPermissions = [];
-    if (req.session.user) {
-        try {
-            const loc = await Location.getById(req.session.user.locationId || 'main');
-            if (loc) locationName = loc.name;
-        } catch (e) {
-            console.error('Error loading user location name:', e);
-        }
-        userPermissions = await getUserPermissions(req.session.user);
-        res.locals.user = { ...req.session.user, locationName, permissions: userPermissions };
-        res.locals.userPermissions = userPermissions;
-        res.locals.hasPerm = (permName) => hasPermission(req.session.user, userPermissions, permName);
-    } else {
-        res.locals.user = null;
-        res.locals.userPermissions = [];
-        res.locals.hasPerm = () => false;
-    }
-    res.locals.activePath = req.path;
-    next();
-});
-
-// 20-minute (1,200,000 ms) Inactivity Timeout limit
-const INACTIVITY_TIMEOUT = 20 * 60 * 1000;
-
-// Authentication middleware with inactivity timeout
-const requireAuth = (req, res, next) => {
-    if (!req.session.user) {
-        if (req.headers.accept && req.headers.accept.includes('application/json')) {
-            return res.status(401).json({ success: false, error: 'Session expired. Please log in again.', redirect: '/login' });
-        }
-        return res.redirect('/login');
-    }
-
-    const now = Date.now();
-    if (req.session.lastActivity && (now - req.session.lastActivity > INACTIVITY_TIMEOUT)) {
-        req.session.destroy(() => {
-            if (req.headers.accept && req.headers.accept.includes('application/json')) {
-                return res.status(401).json({ success: false, error: 'Session expired due to 20 minutes of inactivity.', redirect: '/login?reason=inactivity' });
-            }
-            return res.redirect('/login?reason=inactivity');
-        });
-        return;
-    }
-
-    req.session.lastActivity = now;
-    next();
-};
-
-// Admin-only authorization middleware
-const requireAdmin = (req, res, next) => {
-    if (req.session.user && (req.session.user.role === 'admin' || req.session.user.username === 'admin')) {
-        next();
-    } else {
-        if (req.headers.accept && req.headers.accept.includes('application/json')) {
-            return res.status(403).json({ success: false, error: 'Unauthorized. Admin access required.' });
-        }
-        res.status(403).send('Unauthorized. Admin access required.');
-    }
-};
 
 // Permission Alias Mapping for backward compatibility & flexible role configurations
 const permissionAliases = {
@@ -243,6 +180,76 @@ const permissionAliases = {
     'delete_records': ['delete_records', 'transactions_delete', 'stock_transfers_delete', 'customer_delete', 'receive_stock_delete'],
     'backdate_records': ['backdate_records', 'transactions_backdate', 'stock_transfers_backdate', 'receive_stock_backdate']
 };
+
+// Global view variables
+app.use(async (req, res, next) => {
+    let locationName = 'Head Office';
+    let userPermissions = [];
+    if (req.session.user) {
+        try {
+            const loc = await Location.getById(req.session.user.locationId || 'main');
+            if (loc) locationName = loc.name;
+        } catch (e) {
+            console.error('Error loading user location name:', e);
+        }
+        userPermissions = await getUserPermissions(req.session.user);
+        res.locals.user = { ...req.session.user, locationName, permissions: userPermissions };
+        res.locals.userPermissions = userPermissions;
+        res.locals.hasPerm = (perm) => {
+            if (!userPermissions) return false;
+            if (userPermissions.includes('*')) return true;
+            const valid = permissionAliases[perm] || [perm];
+            return valid.some(p => userPermissions.includes(p));
+        };
+    } else {
+        res.locals.user = null;
+        res.locals.userPermissions = [];
+        res.locals.hasPerm = () => false;
+    }
+    res.locals.activePath = req.path;
+    next();
+});
+
+// 20-minute (1,200,000 ms) Inactivity Timeout limit
+const INACTIVITY_TIMEOUT = 20 * 60 * 1000;
+
+// Authentication middleware with inactivity timeout
+const requireAuth = (req, res, next) => {
+    if (!req.session.user) {
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            return res.status(401).json({ success: false, error: 'Session expired. Please log in again.', redirect: '/login' });
+        }
+        return res.redirect('/login');
+    }
+
+    const now = Date.now();
+    if (req.session.lastActivity && (now - req.session.lastActivity > INACTIVITY_TIMEOUT)) {
+        req.session.destroy(() => {
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(401).json({ success: false, error: 'Session expired due to 20 minutes of inactivity.', redirect: '/login?reason=inactivity' });
+            }
+            return res.redirect('/login?reason=inactivity');
+        });
+        return;
+    }
+
+    req.session.lastActivity = now;
+    next();
+};
+
+// Admin-only authorization middleware
+const requireAdmin = (req, res, next) => {
+    if (req.session.user && (req.session.user.role === 'admin' || req.session.user.username === 'admin')) {
+        next();
+    } else {
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            return res.status(403).json({ success: false, error: 'Unauthorized. Admin access required.' });
+        }
+        res.status(403).send('Unauthorized. Admin access required.');
+    }
+};
+
+
 
 const getUserPermissions = async (user) => {
     if (!user) return [];
