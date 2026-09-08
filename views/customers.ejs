@@ -110,13 +110,15 @@
                                 <td><%= c.address || '-' %></td>
                                 <td><%= c.phone %></td>
                                 <td><%= c.initialBalance %></td>
-                                <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; display: flex; align-items: center; justify-content: space-between;">
-                                    <span><%= c.currentBalance %></span>
-                                    <% if (typeof hasPerm !== 'function' || hasPerm('customer_sms')) { %>
-                                    <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
-                                        <i class="fa-solid fa-comment-sms"></i>
-                                    </button>
-                                    <% } %>
+                                <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <span><%= c.currentBalance %></span>
+                                        <% if (typeof hasPerm !== 'function' || hasPerm('customer_sms')) { %>
+                                        <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
+                                            <i class="fa-solid fa-comment-sms"></i>
+                                        </button>
+                                        <% } %>
+                                    </div>
                                 </td>
                                 <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
                                 <td>
