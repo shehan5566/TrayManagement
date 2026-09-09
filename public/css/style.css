@@ -1325,7 +1325,8 @@ tr:hover td {
     /* Status Badges in Print */
     .badge,
     .receipt-details-table .badge,
-    span.badge {
+    span.badge,
+    span[style*="background"] {
         display: inline-block !important;
         visibility: visible !important;
         opacity: 1 !important;
@@ -1342,11 +1343,10 @@ tr:hover td {
         border-radius: 3px !important;
     }
 
-    /* Highlight box / Deposit statement box / Status boxes */
-    div[style*="margin: 18px 0;"],
-    div[style*="margin: 18px 0"],
-    div[style*="background-color"],
-    div[style*="background:"] {
+    /* Highlight box / Deposit statement box / Transfer status boxes / Gate pass box */
+    div[style*="background"],
+    div[style*="border: 1px dashed"],
+    div[style*="border: 2px solid"] {
         background: transparent !important;
         background-color: #ffffff !important;
         border: 1.5px solid #000000 !important;
