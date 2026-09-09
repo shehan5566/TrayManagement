@@ -177,7 +177,7 @@
                                                             <% } %>
                                             </td>
                                             <td style="text-align: center;">
-                                                <div style="display: grid; grid-template-columns: 28px 28px 28px; gap: 5px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
+                                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
                                                      <% const isAdminOrPermitted = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_edit') || hasPerm('stock_transfers_backdate') || hasPerm('manage_stock')))); %>
                                                      <% if (isAdminOrPermitted) { %>
                                                          <button type="button" class="btn edit-transfer-btn" 
@@ -188,15 +188,13 @@
                                                              data-date="<%= t.dispatchedDate || '' %>"
                                                              data-tolocation="<%= t.toLocationId || '' %>"
                                                              onclick="handleEditTransferClick(this)"
-                                                             style="background-color: var(--accent-yellow); color: #333; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Edit Transfer">
+                                                             style="background-color: var(--accent-yellow); color: #333; padding: 4px 8px; font-size: 11px; height: 28px; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center;" title="Edit Transfer">
                                                              <i class="fa-solid fa-pen"></i>
                                                          </button>
-                                                     <% } else { %>
-                                                         <div></div>
                                                      <% } %>
 
-                                                     <a href="/transfers/<%= t._id || t.id %>/print" target="_blank" class="btn" style="background-color: #2196F3; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Print Transfer Note & Gate Pass">
-                                                         <i class="fa-solid fa-print"></i>
+                                                     <a href="/transfers/<%= t._id || t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Transfer Note & Gate Pass">
+                                                         <i class="fa-solid fa-print"></i> Receipt
                                                      </a>
 
                                                      <% const canDelete = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_delete') || hasPerm('delete_records')))); %>
@@ -204,11 +202,9 @@
                                                          <button type="button" class="btn delete-transfer-btn" 
                                                              data-id="<%= t._id || t.id %>"
                                                              onclick="deleteTransfer('<%= t._id || t.id %>')"
-                                                             style="background-color: #f44336; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Delete Transfer">
+                                                             style="background-color: #f44336; color: white; padding: 4px 8px; font-size: 11px; height: 28px; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center;" title="Delete Transfer">
                                                              <i class="fa-solid fa-trash"></i>
                                                          </button>
-                                                     <% } else { %>
-                                                         <div></div>
                                                      <% } %>
                                                 </div>
                                             </td>

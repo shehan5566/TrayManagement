@@ -167,18 +167,14 @@
                                                                 <% } %>
                                                 </td>
                                                 <td style="text-align: center;">
-                                                    <div style="display: grid; grid-template-columns: 28px 28px 28px; gap: 5px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
-                                                        <a href="/transfers/<%= t._id || t.id %>/print-grn" target="_blank" class="btn" style="background-color: #1b5e20; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" title="Print Goods Received Note (GRN)"><i class="fa-solid fa-print"></i></a>
+                                                    <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
+                                                        <a href="/transfers/<%= t._id || t.id %>/print-grn" target="_blank" class="btn btn-receipt-action" title="Print Goods Received Note (GRN)"><i class="fa-solid fa-print"></i> Receipt</a>
                                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_backdate') || hasPerm('receive_stock_delete')))) { %>
                                                             <% if (t.status === 'ACCEPTED' && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_backdate') || hasPerm('backdate_records'))))) { %>
-                                                                <button class="btn" style="background-color: var(--accent-yellow); color: #333; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" onclick="openBackdateGRNModal('<%= t._id || t.id %>', '<%= t.receivedDate || '' %>')" title="Backdate GRN"><i class="fa-solid fa-calendar-day"></i></button>
-                                                            <% } else { %>
-                                                                <div></div>
+                                                                <button class="btn" style="background-color: var(--accent-yellow); color: #333; padding: 4px 8px; font-size: 11px; height: 28px; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center;" onclick="openBackdateGRNModal('<%= t._id || t.id %>', '<%= t.receivedDate || '' %>')" title="Backdate GRN"><i class="fa-solid fa-calendar-day"></i></button>
                                                             <% } %>
                                                             <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_delete') || hasPerm('delete_records')))) { %>
-                                                                <button class="btn" style="background-color: #f44336; color: white; padding: 4px 0; font-size: 11px; width: 28px; height: 26px; display: inline-flex; justify-content: center; align-items: center;" onclick="deleteTransfer('<%= t.id %>')" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
-                                                            <% } else { %>
-                                                                <div></div>
+                                                                <button class="btn" style="background-color: #f44336; color: white; padding: 4px 8px; font-size: 11px; height: 28px; border-radius: 6px; display: inline-flex; justify-content: center; align-items: center;" onclick="deleteTransfer('<%= t.id %>')" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
                                                             <% } %>
                                                         <% } %>
                                                     </div>
