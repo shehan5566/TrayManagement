@@ -199,8 +199,11 @@
 
     <div class="print-actions">
         <button onclick="window.print()" class="btn btn-primary" style="padding: 12px 24px;">
-            <i class="fa-solid fa-print"></i> Print Receipt Slip
+            <i class="fa-solid fa-print"></i> Print Receipt Slip (Dot-Matrix)
         </button>
+        <a href="/transactions/<%= tx._id || tx.id %>/receipt-pos" class="btn btn-secondary" style="padding: 12px 24px; background: #eef2f6; color: #2c303e; border: 1px solid #cbd5e1;">
+            <i class="fa-solid fa-receipt"></i> POS Thermal Receipt (80mm)
+        </a>
         <a href="/transactions" class="btn btn-secondary" style="padding: 12px 24px;">
             <i class="fa-solid fa-arrow-left"></i> Back to Logs
         </a>
