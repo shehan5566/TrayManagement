@@ -1503,6 +1503,93 @@ tr:hover td {
         color: #000000 !important;
         font-weight: normal !important;
     }
+
+    /* POS Thermal Printer Auto-Adaptation (80mm / 58mm POS Receipt Printers in Windows Print Dialog) */
+    @media print and (max-width: 4.5in), print and (max-width: 115mm) {
+        @page {
+            size: auto;
+            margin: 2mm 0mm;
+        }
+
+        html,
+        body,
+        .app-layout,
+        .main-body,
+        .main-wrapper,
+        main {
+            max-width: 100% !important;
+            width: 100% !important;
+            font-size: 8.5pt !important;
+        }
+
+        .receipt-card {
+            margin: 0 auto !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 2mm !important;
+        }
+
+        .receipt-logo-img {
+            display: block !important;
+            height: 38px !important;
+            margin: 0 auto 3px auto !important;
+            box-shadow: none !important;
+        }
+
+        .receipt-title {
+            display: block !important;
+            font-size: 10pt !important;
+            font-weight: normal !important;
+            text-align: center !important;
+            color: #000000 !important;
+        }
+
+        .receipt-meta {
+            max-width: 100% !important;
+            font-size: 8.5pt !important;
+        }
+
+        .receipt-details-table {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        .receipt-details-table td {
+            font-size: 8.5pt !important;
+        }
+
+        .receipt-details-table td.label {
+            width: 45% !important;
+            max-width: 45% !important;
+        }
+
+        .receipt-details-table td.value {
+            width: 55% !important;
+            max-width: 55% !important;
+        }
+
+        div[style*="background"],
+        div[style*="border: 1px dashed"],
+        div[style*="border: 2px solid"],
+        div[style*="padding: 12px; background-color: #f9f9f9"],
+        div[style*="padding: 10px 14px; background-color: #f9f9f9"] {
+            max-width: 100% !important;
+            width: 100% !important;
+            font-size: 8.5pt !important;
+            padding: 4px 6px !important;
+        }
+
+        .receipt-signatures {
+            margin-top: 25px !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            gap: 5px !important;
+        }
+
+        .signature-line {
+            font-size: 8.5pt !important;
+        }
+    }
 }
 
 /* Footer styling */
