@@ -1160,6 +1160,7 @@ tr:hover td {
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        font-style: normal !important; /* Disable italic fonts for sharp pin printing */
     }
 
     /* Hide UI navigation, sidebars, footers, buttons, and popups */
@@ -1215,7 +1216,7 @@ tr:hover td {
         width: 100% !important;
         max-width: 5.0in !important;
         box-sizing: border-box !important;
-        font-family: 'Courier New', Courier, monospace, sans-serif !important;
+        font-family: Consolas, 'Lucida Console', 'Courier New', monospace, sans-serif !important;
         font-size: 9pt !important;
         line-height: 1.3 !important;
     }
