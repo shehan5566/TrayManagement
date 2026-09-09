@@ -1149,91 +1149,119 @@ tr:hover td {
     gap: 15px;
 }
 
-/* Print CSS overrides for POS Thermal Printers & Dot-Matrix / Standard Printers */
+/* Bulletproof Print CSS Isolation for Thermal POS & Dot-Matrix / Standard Printers */
 @media print {
     @page {
         margin: 5mm;
         size: auto;
     }
 
-    * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+    /* Hide everything on page by default */
+    body * {
+        visibility: hidden !important;
     }
 
+    /* Show ONLY receipt card and its children */
+    .receipt-card,
+    .receipt-card * {
+        visibility: visible !important;
+    }
+
+    /* Position receipt card at top left to eliminate page overflow/scrollbars */
+    .receipt-card {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 5px !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: #ffffff !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Strictly hide all layout, navigation, chatbot, voice, header & footer widgets */
     header,
-    nav,
     footer,
-    .print-actions,
-    .btn,
-    .navbar,
+    nav,
+    aside,
+    .top-header,
     .sidebar,
     .sidebar-overlay,
     .sidebar-expand-btn,
     .mobile-only,
     .mobile-topbar,
-    .floating-voice-widget,
+    .print-actions,
+    .chat-widget-btn,
+    #chatWidgetBtn,
     .chat-window,
-    .chat-widget,
-    .voice-assistant-modal,
+    #chatWindow,
+    .voice-modal-overlay,
+    #voiceModal,
     .command-palette-overlay,
-    .command-palette-modal,
-    #headerSidebarToggleBtn,
-    #sidebarExpandBtn,
-    #voiceAssistantBtn,
+    #commandPaletteModal,
     .notification-dropdown-wrapper,
-    .user-dropdown-wrapper {
+    .user-dropdown-wrapper,
+    .swal2-container,
+    button,
+    .btn {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
-        height: 0 !important;
         width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
     }
 
-    main, .main-body, .main-wrapper {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-
-    body {
-        background-color: #ffffff !important;
+    html, body {
+        background: #ffffff !important;
         color: #000000 !important;
+        width: 100% !important;
+        height: auto !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
+        overflow: visible !important;
         font-family: Arial, Helvetica, sans-serif !important;
         font-size: 10pt !important;
-    }
-
-    .receipt-card {
-        box-shadow: none !important;
-        border: none !important;
-        margin: 0 auto !important;
-        padding: 5px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        background: #ffffff !important;
     }
 
     .receipt-header {
         border-bottom: none !important;
         padding-bottom: 0 !important;
-        margin-bottom: 12px !important;
+        margin-bottom: 10px !important;
+        text-align: center !important;
+    }
+
+    .receipt-logo-img {
+        max-height: 45px !important;
+        margin-bottom: 4px !important;
+        display: inline-block !important;
+    }
+
+    .receipt-title {
+        font-size: 12pt !important;
+        font-weight: bold !important;
+        color: #000000 !important;
         text-align: center !important;
     }
 
     .receipt-doc-title {
         display: block !important;
-        font-size: 12pt !important;
+        font-size: 11pt !important;
         font-weight: bold !important;
         text-transform: uppercase !important;
         color: #000000 !important;
-        letter-spacing: 1px !important;
+        letter-spacing: 0.5px !important;
+        text-align: center !important;
+    }
+
+    .receipt-subtitle {
+        font-size: 8.5pt !important;
+        color: #333333 !important;
+        text-align: center !important;
     }
 
     .receipt-meta {
@@ -1242,24 +1270,24 @@ tr:hover td {
         box-sizing: border-box !important;
         display: flex !important;
         justify-content: space-between !important;
-        font-size: 9.5pt !important;
-        margin-bottom: 10px !important;
+        font-size: 9pt !important;
+        margin-bottom: 8px !important;
         border-bottom: 1px dashed #000 !important;
-        padding-bottom: 5px !important;
+        padding-bottom: 4px !important;
     }
 
     .receipt-details-table {
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
-        margin-bottom: 12px !important;
+        margin-bottom: 10px !important;
         border-collapse: collapse !important;
         table-layout: auto !important;
     }
 
     .receipt-details-table td {
-        padding: 4px 2px !important;
-        font-size: 9.5pt !important;
+        padding: 3px 2px !important;
+        font-size: 9pt !important;
         border-bottom: 1px dotted #ccc !important;
         word-break: break-word !important;
     }
@@ -1282,8 +1310,8 @@ tr:hover td {
     div[style*="margin: 18px 0"] {
         background-color: transparent !important;
         border: 1px solid #000 !important;
-        padding: 8px !important;
-        margin: 8px 0 !important;
+        padding: 6px 8px !important;
+        margin: 6px 0 !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
@@ -1298,16 +1326,16 @@ tr:hover td {
     div[style*="padding: 12px; background-color: #f9f9f9;"] {
         background-color: transparent !important;
         border: 1px dashed #000 !important;
-        padding: 6px !important;
+        padding: 5px !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
-        font-size: 9.5pt !important;
+        font-size: 9pt !important;
         text-align: center !important;
     }
 
     .receipt-signatures {
-        margin-top: 40px !important;
+        margin-top: 35px !important;
         width: 100% !important;
         max-width: 100% !important;
         display: flex !important;
@@ -1320,8 +1348,8 @@ tr:hover td {
         max-width: 30% !important;
         border-top: 1px solid #000 !important;
         text-align: center !important;
-        padding-top: 3px !important;
-        font-size: 8.5pt !important;
+        padding-top: 2px !important;
+        font-size: 8pt !important;
         color: #000000 !important;
         font-weight: bold !important;
     }
