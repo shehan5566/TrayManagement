@@ -1482,9 +1482,9 @@ tr:hover td {
         font-size: 10.5pt !important;
     }
 
-    /* Signature lines (Increased font-size to 10.5pt) */
+    /* Signature lines (Increased font-size to 10.5pt, adjusted margin for clear spacing) */
     .receipt-signatures {
-        margin-top: 75px !important;
+        margin-top: 105px !important;
         width: 100% !important;
         max-width: 5.0in !important;
         display: flex !important;
