@@ -15,3 +15,5 @@ The print CSS in `public/css/style.css` (`@media print`) and print layouts in `v
 - **Font Style**: `normal` (no italics in print)
 - **Signature Block**: `margin-top: 75px`, `font-size: 10.5pt`
 - **Net Balance Box / Notes**: `font-size: 10.5pt`
+- **Detail Lines**: `border-bottom: none` (no dotted lines under table detail rows in print)
+- **Status Badges & Boxes**: `background: transparent`, `color: #000`, `border: 1px solid #000` (no dark background highlight ink blobs in print)

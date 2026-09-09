@@ -21,5 +21,9 @@ DO NOT modify or override the following `@media print` rules in `public/css/styl
   - Font Style: `font-style: normal !important;` (no italics in print).
 - **Signature Block**:
   - `margin-top: 75px !important;` and `font-size: 10.5pt !important;`.
-- **Net Tray Balance Box**:
+- **Net Tray Balance Box & Verification Notes**:
   - `font-size: 10.5pt !important;`.
+- **Detail Lines**:
+  - `border-bottom: none !important;` (no dotted lines under table detail rows in print).
+- **Status Badges & Boxes**:
+  - `background: transparent !important; color: #000000 !important; border: 1px solid #000000 !important;` (no dark background highlight ink blobs in print).
