@@ -5,8 +5,8 @@
         <div>
             <h2 style="font-size: 26px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 12px;">
                 <span style="position: relative; display: inline-flex; align-items: center; justify-content: center;">
-                    <i class="fa-solid fa-boxes-stacked" style="color: #ef4444;"></i>
-                    <i class="fa-solid fa-burst" style="position: absolute; right: -4px; top: -4px; font-size: 11px; color: #ef4444;"></i>
+                    <i class="fa-solid fa-boxes-stacked" style="color: #10b981;"></i>
+                    <i class="fa-solid fa-burst" style="position: absolute; right: -4px; top: -4px; font-size: 11px; color: #10b981;"></i>
                 </span>
                 Tray Damage, Loss & Audit
             </h2>
@@ -27,15 +27,15 @@
         const totalDisposed = logs.filter(l => l.type === 'DISPOSED').reduce((s, l) => s + (l.qty || 0), 0);
         const totalAuditAdj = logs.filter(l => l.type === 'AUDIT_ADJUSTMENT').reduce((s, l) => s + (l.qty || 0), 0);
     %>
-    <div class="card metric-card" style="border-left: 4px solid #ef4444;">
+    <div class="card metric-card" style="border-left: 4px solid #10b981;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <span style="font-size: 13px; font-weight: 600; color: var(--text-light); text-transform: uppercase;">Damaged Trays</span>
                 <h3 style="font-size: 28px; font-weight: 800; color: var(--text-dark); margin: 8px 0 0 0;"><%= totalDamaged.toLocaleString() %></h3>
             </div>
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(239, 68, 68, 0.15); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 20px; position: relative;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 20px; position: relative;">
                 <i class="fa-solid fa-boxes-stacked"></i>
-                <i class="fa-solid fa-burst" style="position: absolute; right: 6px; top: 6px; font-size: 11px; color: #ef4444;"></i>
+                <i class="fa-solid fa-burst" style="position: absolute; right: 6px; top: 6px; font-size: 11px; color: #10b981;"></i>
             </div>
         </div>
     </div>
@@ -52,13 +52,13 @@
         </div>
     </div>
 
-    <div class="card metric-card" style="border-left: 4px solid #3b82f6;">
+    <div class="card metric-card" style="border-left: 4px solid #10b981;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
                 <span style="font-size: 13px; font-weight: 600; color: var(--text-light); text-transform: uppercase;">Audit Adjustments</span>
                 <h3 style="font-size: 28px; font-weight: 800; color: var(--text-dark); margin: 8px 0 0 0;"><%= totalAuditAdj.toLocaleString() %></h3>
             </div>
-            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 20px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 20px;">
                 <i class="fa-solid fa-clipboard-check"></i>
             </div>
         </div>
