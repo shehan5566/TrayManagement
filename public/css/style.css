@@ -1153,7 +1153,7 @@ tr:hover td {
 @media print {
     @page {
         size: 5.5in 8.0in portrait;
-        margin: 0.15in 0.1in 0.15in 0.1in;
+        margin: 0.15in 0in 0.15in 0in;
         /* Left-aligned 5.5 x 8 inches paper format for dot matrix printers */
     }
 
@@ -1223,7 +1223,7 @@ tr:hover td {
     .receipt-card {
         box-shadow: none !important;
         border: none !important;
-        margin: 1.2in auto 0 0 !important;
+        margin: 1.2in auto 0 -0.25in !important;
         padding: 0 !important;
         width: 100% !important;
         max-width: 5.0in !important;
@@ -1351,7 +1351,7 @@ tr:hover td {
     }
 
     .receipt-signatures {
-        margin-top: 30px !important;
+        margin-top: 75px !important;
         width: 100% !important;
         max-width: 5.0in !important;
         display: flex !important;
