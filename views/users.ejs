@@ -82,7 +82,7 @@
                             <a href="/backup" class="btn btn-sm" style="background-color: #2e7d32; color: #fff; padding: 6px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
                                 <i class="fa-solid fa-download"></i> Backup Data
                             </a>
-                            <button onclick="document.getElementById('restoreFileInput').click()" class="btn btn-sm" style="background-color: #d32f2f; color: #fff; padding: 6px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer;">
+                            <button onclick="document.getElementById('restoreFileInput').click()" class="btn btn-sm" style="background-color: #f59e0b; color: #fff; padding: 6px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer;">
                                 <i class="fa-solid fa-upload"></i> Restore Data
                             </button>
                             <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
@@ -111,7 +111,7 @@
                                             %>
                                                 <span class="badge" style="background:#1b5e20; color:white; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'Admin' %></span>
                                             <% } else { %>
-                                                <span class="badge" style="background:#0288d1; color:white; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'User' %></span>
+                                                <span class="badge" style="background:#f59e0b; color:white; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'User' %></span>
                                             <% } %>
                                         </td>
                                         <td>
@@ -127,8 +127,8 @@
                                                 <% if (u.username !=='admin' ) { %>
                                                     <form action="/users/<%= u.id %>/delete" method="POST"
                                                         onsubmit="confirmAjaxDelete(event, this, 'user account')">
-                                                        <button type="submit" class="btn btn-danger"
-                                                            style="padding: 6px 10px; font-size: 12px;"
+                                                        <button type="submit" class="btn btn-secondary"
+                                                            style="padding: 6px 10px; font-size: 12px; background-color: #f59e0b; color: #ffffff; border: none;"
                                                             title="Delete User">
                                                             <i class="fa-solid fa-trash"></i>
                                                         </button>
@@ -213,7 +213,7 @@
                                                 </button>
                                                 <% if (loc.id !== 'main') { %>
                                                 <form action="/locations/<%= loc.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'branch')">
-                                                    <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;" title="Delete Branch">
+                                                    <button type="submit" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; background-color: #f59e0b; color: #ffffff; border: none;" title="Delete Branch">
                                                         <i class="fa-solid fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -401,8 +401,8 @@
                         text: "Restoring a backup will COMPLETELY WIPE the current database and replace it with the backup file data. This action CANNOT be undone! Are you absolutely sure?",
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#d32f2f',
-                        cancelButtonColor: '#3085d6',
+                        confirmButtonColor: '#f59e0b',
+                        cancelButtonColor: '#6c757d',
                         confirmButtonText: 'Yes, Wipe & Restore',
                         cancelButtonText: 'Cancel'
                     }).then((result) => {
