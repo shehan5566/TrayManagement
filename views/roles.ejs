@@ -133,17 +133,17 @@
                 .perm-tag-label input[type="checkbox"] {
                     margin: 0;
                     cursor: pointer;
-                    accent-color: #10b981;
+                    accent-color: var(--primary-green);
                 }
                 .perm-tag-label.selected {
-                    background: #10b981;
-                    border-color: #059669;
+                    background: var(--primary-green);
+                    border-color: var(--primary-green-dark);
                     color: #ffffff;
                     font-weight: 700;
-                    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+                    box-shadow: 0 2px 6px rgba(27, 77, 62, 0.25);
                 }
                 .perm-tag-label.selected:hover {
-                    background: #059669;
+                    background: var(--primary-green-light);
                 }
             </style>
 
@@ -151,7 +151,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
                     <p style="margin: 0; color: #666; font-size: 13px;">Select the specific permissions for this role by clicking the tags below.</p>
                     <div style="display: flex; gap: 8px;">
-                        <button type="button" onclick="toggleAllPermissions(true)" class="btn btn-sm" style="padding: 5px 12px; font-size: 12px; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                        <button type="button" onclick="toggleAllPermissions(true)" class="btn btn-sm" style="padding: 5px 12px; font-size: 12px; background-color: var(--primary-green); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
                             <i class="fa-solid fa-check-double"></i> Select All
                         </button>
                         <button type="button" onclick="toggleAllPermissions(false)" class="btn btn-sm" style="padding: 5px 12px; font-size: 12px; background-color: #ffc300; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
