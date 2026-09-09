@@ -4,8 +4,8 @@
 - All code modifications MUST be strictly isolated to the exact target files requested.
 - Never make unrequested edits or refactors to unrelated modules or CSS files.
 
-## 2. Locked Epson Dot-Matrix (5.5" x 8.0" Paper) Receipt Print Specification
-DO NOT modify or override the following `@media print` rules in `public/css/style.css` or layout elements in `views/receipt.ejs`:
+## 2. Locked Epson Dot-Matrix (5.5" x 8.0" Paper) Receipt, GRN & Transfer Specification
+DO NOT modify or override the following `@media print` rules in `public/css/style.css` or layout elements in `views/receipt.ejs`, `views/print-grn.ejs`, and `views/print-transfer.ejs`:
 
 - **Paper Size & Margins**:
   - `@page { size: 5.5in 8.0in portrait; margin: 0.15in 0in 0.15in 0in; }`
