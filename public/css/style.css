@@ -1303,7 +1303,7 @@ tr:hover td {
     .receipt-card {
         box-shadow: none !important;
         border: none !important;
-        margin: 0.85in auto 0 auto !important;
+        margin: 0.85in auto 0 -0.45in !important;
         padding: 0 !important;
         width: 100% !important;
         max-width: 5.0in !important;

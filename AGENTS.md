@@ -7,7 +7,7 @@
 The print CSS in `public/css/style.css` (`@media print`) and print layouts in `views/receipt.ejs`, `views/print-grn.ejs`, and `views/print-transfer.ejs` are LOCKED for Epson Dot-Matrix printers (5.5" x 8.0" continuous form paper):
 - **Page Size**: `5.5in x 8.0in` portrait
 - **Top Margin**: `0.85in` (clears pre-printed company letterhead)
-- **Left Margin**: Centered horizontally (`margin: 0.85in auto 0 auto`)
+- **Left Margin**: `-0.45in` (left-aligned for continuous form tractor)
 - **Pre-printed Header**: `.receipt-logo-img` and `.receipt-title` must remain hidden in print
 - **Title**: Document titles (`TRAY TRANSACTION RECEIPT`, `GOODS RECEIVED NOTE (GRN)`, `STOCK TRANSFER NOTE & GATE PASS`) displayed centered with dashed border
 - **Font Stack**: `Consolas, 'Lucida Console', 'Courier New', monospace`

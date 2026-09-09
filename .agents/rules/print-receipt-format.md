@@ -11,7 +11,7 @@ DO NOT modify or override the following `@media print` rules in `public/css/styl
   - `@page { size: 5.5in 8.0in portrait; margin: 0.15in 0in 0.15in 0in; }`
 - **Receipt Card Alignment**:
   - Top Offset: `margin: 0.85in auto 0 -0.45in !important;` (aligns below pre-printed letterhead).
-  - Left Offset: Centered horizontally (`margin: 0.85in auto 0 auto !important;`).
+  - Left Offset: `-0.45in` (aligns with continuous tractor left margin).
 - **Header Elements**:
   - Hide `.receipt-logo-img` and `.receipt-title` (`display: none !important;`) because paper is pre-printed.
   - Show `.receipt-doc-title` ("TRAY TRANSACTION RECEIPT") and `.receipt-subtitle` ("STORE OPERATIONS LOG") with a `1px dashed #000` bottom border.
