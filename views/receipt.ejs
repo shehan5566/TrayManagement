@@ -5,11 +5,19 @@
             <div style="position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 70px; font-weight: bold; color: rgba(255, 0, 0, 0.15); z-index: 10; pointer-events: none; white-space: nowrap; border: 5px solid rgba(255, 0, 0, 0.15); padding: 20px; border-radius: 10px;">CANCELLED</div>
         <% } %>
         <div class="receipt-header">
-            <img src="/images/logo.png" alt="Nelna Agri Development Logo" class="receipt-logo-img">
-            <div class="receipt-title">Nelna Agri Development (Pvt) Ltd</div>
-            <div class="receipt-doc-title" style="font-size: 13px; color: var(--text-dark); font-weight: 600;">Tray
-                Transaction Receipt</div>
-            <div class="receipt-subtitle">Store Operations Log</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 8px;">
+                <img src="/images/logo.png" alt="Nelna Logo" class="receipt-logo-img" style="height: 48px;">
+                <div style="text-align: left;">
+                    <div class="receipt-company-name" style="font-weight: 800; font-size: 15px; color: #1b4d3e;">Nelna Agri Development (Pvt) Ltd</div>
+                    <div class="receipt-company-info" style="font-size: 10.5px; color: #444; line-height: 1.35;">
+                        <strong>Address :</strong> No. 558, Avissawella Road, Ihala Bomiriya, Kaduwela.<br>
+                        <strong>Tele &nbsp;&nbsp;&nbsp;:</strong> 0112 054212 / 0771 430103<br>
+                        <strong>Web &nbsp;&nbsp;&nbsp;:</strong> www.nelnamango.com<br>
+                        <strong>E-mail :</strong> sales@nelnamango.com
+                    </div>
+                </div>
+            </div>
+            <div class="receipt-doc-title" style="font-size: 14px; color: var(--text-dark); font-weight: 800; text-transform: uppercase; margin-top: 6px;">Tray Transaction Receipt</div>
         </div>
 
         <div class="receipt-meta">
@@ -185,6 +193,10 @@
                 <div class="signature-line">Created By</div>
                 <div class="signature-line">Checked By</div>
                 <div class="signature-line">Received By</div>
+            </div>
+
+            <div class="receipt-footer-thankyou" style="text-align: center; margin-top: 30px; font-weight: 700; font-size: 13px; color: #333;">
+                Thank You Come Again ...!
             </div>
     </div>
 
