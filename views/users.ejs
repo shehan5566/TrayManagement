@@ -82,7 +82,7 @@
                             <a href="/backup" class="btn btn-sm" style="background-color: #2e7d32; color: #fff; padding: 6px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
                                 <i class="fa-solid fa-download"></i> Backup Data
                             </a>
-                            <button onclick="document.getElementById('restoreFileInput').click()" class="btn btn-sm" style="background-color: #d32f2f; color: #fff; padding: 6px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer;">
+                            <button onclick="document.getElementById('restoreFileInput').click()" class="btn btn-sm" style="background-color: #ffc300; color: #000; font-weight: 700; padding: 6px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer;">
                                 <i class="fa-solid fa-upload"></i> Restore Data
                             </button>
                             <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="handleRestoreFile(event)">
@@ -111,7 +111,7 @@
                                             %>
                                                 <span class="badge" style="background:#1b5e20; color:white; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'Admin' %></span>
                                             <% } else { %>
-                                                <span class="badge" style="background:#0288d1; color:white; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'User' %></span>
+                                                <span class="badge" style="background:#ffc300; color:#000; font-weight:700; padding:4px 8px; font-size:11px;"><%= roleObj ? roleObj.name : 'User' %></span>
                                             <% } %>
                                         </td>
                                         <td>
@@ -401,7 +401,7 @@
                         text: "Restoring a backup will COMPLETELY WIPE the current database and replace it with the backup file data. This action CANNOT be undone! Are you absolutely sure?",
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonColor: '#d32f2f',
+                        confirmButtonColor: '#ffc300',
                         cancelButtonColor: '#3085d6',
                         confirmButtonText: 'Yes, Wipe & Restore',
                         cancelButtonText: 'Cancel'
