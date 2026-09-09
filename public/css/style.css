@@ -1971,3 +1971,86 @@ footer strong {
     border-radius: 8px !important;
     font-size: 14px !important;
 }
+
+/* -------------------------------------------
+   Animated Send Button (Paper Airplane Flying Effect)
+------------------------------------------- */
+.btn-send-animated {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 125px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.btn-send-animated .btn-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-send-animated .plane-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    font-size: 16px;
+    pointer-events: none;
+    color: white;
+}
+
+.btn-send-animated .sent-content {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    font-weight: 700;
+    color: white;
+}
+
+/* Flying Keyframe Animation */
+@keyframes paperPlaneFlyOut {
+    0% {
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    25% {
+        transform: translate(-40%, -60%) scale(1.1) rotate(-15deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(110px, -80px) scale(0.2) rotate(35deg);
+        opacity: 0;
+    }
+}
+
+/* Sending State */
+.btn-send-animated.sending .btn-content {
+    opacity: 0;
+    transform: scale(0.4);
+}
+
+.btn-send-animated.sending .plane-icon {
+    opacity: 1;
+    animation: paperPlaneFlyOut 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Sent State */
+.btn-send-animated.sent .btn-content {
+    opacity: 0;
+    transform: scale(0.4);
+}
+
+.btn-send-animated.sent .sent-content {
+    opacity: 1;
+    transform: scale(1);
+}

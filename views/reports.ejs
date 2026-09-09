@@ -56,9 +56,15 @@
                         <div id="recentEmailsList" style="display: inline-flex; gap: 5px; flex-wrap: wrap;"></div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary"
+                <button type="submit" id="sendNowAnimatedBtn" class="btn btn-primary btn-send-animated"
                     style="padding: 8px 16px; height: 38px; background-color: #107c41; color: white;">
-                    <i class="fa-solid fa-paper-plane"></i> Send Now
+                    <span class="btn-content">
+                        <i class="fa-solid fa-paper-plane"></i> Send Now
+                    </span>
+                    <i class="fa-solid fa-paper-plane plane-icon"></i>
+                    <span class="sent-content">
+                        <i class="fa-solid fa-check"></i> Sent
+                    </span>
                 </button>
             </form>
 
@@ -98,6 +104,20 @@
                     const emailForm = document.getElementById('manualEmailForm');
                     if (emailForm) {
                         emailForm.addEventListener('submit', () => {
+                            // Trigger Send Button Airplane Animation
+                            const sendBtn = document.getElementById('sendNowAnimatedBtn');
+                            if (sendBtn) {
+                                sendBtn.classList.remove('sent');
+                                sendBtn.classList.add('sending');
+                                setTimeout(() => {
+                                    sendBtn.classList.remove('sending');
+                                    sendBtn.classList.add('sent');
+                                }, 1200);
+                                setTimeout(() => {
+                                    sendBtn.classList.remove('sent');
+                                }, 4000);
+                            }
+
                             // Pass current date filters to the backend
                             const sd = document.getElementById('startDate').value;
                             const ed = document.getElementById('endDate').value;
