@@ -1111,7 +1111,35 @@ app.get('/transactions/:id/receipt', requireAuth, async (req, res) => {
             return res.redirect('/transactions');
         }
         const customer = await Customer.getById(tx.customerId);
-        res.render('receipt', { tx, customer });
+
+        let totalPendingDepositBalance = 0;
+        if (tx.customerId) {
+            const { TransactionModel } = require('./db');
+            const custTxs = await TransactionModel.find({ customerId: tx.customerId, isDeleted: { $ne: true } }).lean();
+            custTxs.forEach(t => {
+                const countQty = Number(t.count) || 0;
+                const rate = Number(t.depositPerTray) || 2000;
+                const totalTrayDeposit = Number(t.expectedDeposit) || (countQty * rate);
+                let paidAmt = 0;
+                if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
+                    paidAmt = Number(t.totalDeposit);
+                } else if (t.depositOption === 'ZERO') {
+                    paidAmt = 0;
+                } else if (t.depositOption === 'HALF') {
+                    paidAmt = totalTrayDeposit / 2;
+                } else {
+                    paidAmt = totalTrayDeposit;
+                }
+                if (t.type === 'OUT') {
+                    totalPendingDepositBalance += (totalTrayDeposit - paidAmt);
+                } else if (t.type === 'IN') {
+                    totalPendingDepositBalance -= paidAmt;
+                }
+            });
+            if (totalPendingDepositBalance < 0) totalPendingDepositBalance = 0;
+        }
+
+        res.render('receipt', { tx, customer, totalPendingDepositBalance });
     } catch (err) {
         res.status(500).send('Error loading receipt');
     }

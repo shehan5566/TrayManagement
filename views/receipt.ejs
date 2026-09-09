@@ -174,11 +174,19 @@
 
             <div
                 style="padding: 12px; background-color: #f9f9f9; border-radius: 6px; font-size: 13px; text-align: center; border: 1px solid #eee;">
-                <strong>Customer's Net Tray Balance:</strong>
-                <span
-                    style="font-weight: 700; color: <%= (customer && customer.currentBalance > 0) ? '#d32f2f' : '#2e7d32' %>">
-                    <%= customer ? customer.currentBalance : 0 %> Trays Outstanding
-                </span>
+                <div>
+                    <strong>Customer's Net Tray Balance:</strong>
+                    <span
+                        style="font-weight: 700; color: <%= (customer && customer.currentBalance > 0) ? '#d32f2f' : '#2e7d32' %>">
+                        <%= customer ? customer.currentBalance : 0 %> Trays Outstanding
+                    </span>
+                </div>
+                <div style="margin-top: 4px; font-size: 12px;">
+                    <strong>Total Pending Deposit Balance:</strong>
+                    <span style="font-weight: 700; color: <%= (typeof totalPendingDepositBalance !== 'undefined' && totalPendingDepositBalance > 0) ? '#d32f2f' : '#2e7d32' %>">
+                        Rs. <%= (typeof totalPendingDepositBalance !== 'undefined' ? totalPendingDepositBalance : 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                    </span>
+                </div>
             </div>
 
             <div class="receipt-signatures">
