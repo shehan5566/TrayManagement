@@ -1292,7 +1292,7 @@ tr:hover td {
         margin: 0 !important;
         padding: 0 !important;
         width: 100% !important;
-        max-width: 5.0in !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
         font-family: Consolas, 'Lucida Console', 'Courier New', monospace, sans-serif !important;
         font-size: 9.5pt !important;
@@ -1306,7 +1306,7 @@ tr:hover td {
         margin: 0.85in auto 0 -0.45in !important;
         padding: 0 !important;
         width: 100% !important;
-        max-width: 5.0in !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
     }
@@ -1344,7 +1344,7 @@ tr:hover td {
 
     .receipt-meta {
         width: 100% !important;
-        max-width: 5.0in !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
         display: flex !important;
         justify-content: space-between !important;
@@ -1363,7 +1363,7 @@ tr:hover td {
 
     .receipt-details-table {
         width: 100% !important;
-        max-width: 5.0in !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
         margin-bottom: 10px !important;
         border-collapse: collapse !important;
@@ -1380,14 +1380,16 @@ tr:hover td {
     }
 
     .receipt-details-table td.label {
-        width: 2.1in !important;
+        width: 42% !important;
+        max-width: 42% !important;
         text-align: left !important;
         font-weight: normal !important;
         color: #000000 !important;
     }
 
     .receipt-details-table td.value {
-        width: 2.9in !important;
+        width: 58% !important;
+        max-width: 58% !important;
         text-align: right !important;
         font-weight: normal !important;
         color: #000000 !important;
@@ -1431,7 +1433,7 @@ tr:hover td {
         padding: 6px 10px !important;
         margin: 6px 0 !important;
         width: 100% !important;
-        max-width: 5.0in !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
         border-radius: 4px !important;
     }
@@ -1467,7 +1469,7 @@ tr:hover td {
         padding: 6px !important;
         margin: 6px 0 !important;
         width: 100% !important;
-        max-width: 5.0in !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
         font-size: 10.5pt !important;
         font-weight: normal !important;
@@ -1486,7 +1488,7 @@ tr:hover td {
     .receipt-signatures {
         margin-top: 105px !important;
         width: 100% !important;
-        max-width: 5.0in !important;
+        max-width: 100% !important;
         display: flex !important;
         justify-content: space-between !important;
         box-sizing: border-box !important;
