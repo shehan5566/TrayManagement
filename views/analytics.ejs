@@ -219,24 +219,94 @@
                 }
             });
 
-            // Circulation Doughnut Chart
+            // Circulation Doughnut Chart (Green & Yellow Theme with Percentages)
             const ctx2 = document.getElementById('circulationChart').getContext('2d');
+            
+            // Custom Plugin to draw percentage text directly on chart slices
+            const doughnutPercentagesPlugin = {
+                id: 'doughnutPercentages',
+                afterDraw(chart) {
+                    const { ctx, data } = chart;
+                    const total = data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+                    if (total <= 0) return;
+
+                    chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
+                        const val = data.datasets[0].data[index];
+                        if (!val || val <= 0) return;
+                        const percentage = ((val / total) * 100).toFixed(1) + '%';
+                        
+                        const { x, y } = datapoint.tooltipPosition();
+                        ctx.save();
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+                        ctx.shadowBlur = 4;
+                        ctx.fillText(percentage, x, y);
+                        ctx.restore();
+                    });
+                }
+            };
+
             new Chart(ctx2, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Trays Issued (OUT)', 'Trays Returned (IN)', 'Outstanding with Customers'],
+                    labels: ['Trays Returned (IN)', 'Trays Issued (OUT)', 'Outstanding with Customers'],
                     datasets: [{
-                        data: [<%= totalOut %>, <%= totalIn %>, <%= totalOutstanding %>],
-                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'],
-                        borderWidth: 2
+                        data: [<%= totalIn %>, <%= totalOut %>, <%= totalOutstanding %>],
+                        backgroundColor: ['#10b981', '#f59e0b', '#174e3e'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
                     }]
                 },
+                plugins: [doughnutPercentagesPlugin],
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom' }
-                    }
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 14,
+                                font: { size: 12, weight: '600' },
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        const dataset = data.datasets[0];
+                                        const total = dataset.data.reduce((a, b) => Number(a) + Number(b), 0);
+                                        return data.labels.map(function(label, i) {
+                                            const val = dataset.data[i] || 0;
+                                            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                            const style = chart.getDatasetMeta(0).controller.getStyle(i);
+                                            return {
+                                                text: `${label} (${pct}%)`,
+                                                fillStyle: style.backgroundColor,
+                                                strokeStyle: style.borderColor,
+                                                lineWidth: style.borderWidth,
+                                                hidden: !chart.isDatasetVisible(0) || chart.getDatasetMeta(0).data[i].hidden,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.chart.data.datasets[0].data.reduce((a, b) => Number(a) + Number(b), 0);
+                                    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return ` ${label}: ${value.toLocaleString()} Trays (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
                 }
             });
         });
