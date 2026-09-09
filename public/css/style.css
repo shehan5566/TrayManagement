@@ -1149,11 +1149,11 @@ tr:hover td {
     gap: 15px;
 }
 
-/* Print CSS overrides for Epson Dot-Matrix (5.5in x 8.0in Continuous Forms) */
+/* Print CSS overrides for POS Thermal Printers & Dot-Matrix / Standard Printers */
 @media print {
     @page {
-        margin: 0;
-        /* Hides browser default URL/Date headers & footers */
+        margin: 5mm;
+        size: auto;
     }
 
     * {
@@ -1163,16 +1163,38 @@ tr:hover td {
 
     header,
     nav,
-    .print-actions,
     footer,
+    .print-actions,
     .btn,
-    .navbar {
+    .navbar,
+    .sidebar,
+    .sidebar-overlay,
+    .sidebar-expand-btn,
+    .mobile-only,
+    .mobile-topbar,
+    .floating-voice-widget,
+    .chat-window,
+    .chat-widget,
+    .voice-assistant-modal,
+    .command-palette-overlay,
+    .command-palette-modal,
+    #headerSidebarToggleBtn,
+    #sidebarExpandBtn,
+    #voiceAssistantBtn,
+    .notification-dropdown-wrapper,
+    .user-dropdown-wrapper {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
     }
 
-    main {
+    main, .main-body, .main-wrapper {
         margin: 0 !important;
         padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     body {
@@ -1180,31 +1202,22 @@ tr:hover td {
         color: #000000 !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 5.0in !important;
-        /* Fixed width to match physical paper */
-        max-width: 5.0in !important;
+        width: 100% !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
-        font-family: monospace !important;
+        font-family: Arial, Helvetica, sans-serif !important;
         font-size: 10pt !important;
     }
 
     .receipt-card {
         box-shadow: none !important;
         border: none !important;
-        margin: 0 !important;
-        padding: 1.0in 0.3in 0.2in 0.3in !important;
-        /* 1.0in top padding to push content down */
-        width: 5.0in !important;
-        max-width: 5.0in !important;
+        margin: 0 auto !important;
+        padding: 5px !important;
+        width: 100% !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
-    }
-
-    /* Hide specific logo/title/subtitle elements but keep doc title */
-    .receipt-logo-img,
-    .receipt-title,
-    .receipt-subtitle {
-        display: none !important;
     }
 
     .receipt-header {
@@ -1216,7 +1229,7 @@ tr:hover td {
 
     .receipt-doc-title {
         display: block !important;
-        font-size: 13pt !important;
+        font-size: 12pt !important;
         font-weight: bold !important;
         text-transform: uppercase !important;
         color: #000000 !important;
@@ -1224,84 +1237,93 @@ tr:hover td {
     }
 
     .receipt-meta {
-        width: 4.4in !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
         display: flex !important;
         justify-content: space-between !important;
-        font-size: 10pt !important;
+        font-size: 9.5pt !important;
         margin-bottom: 10px !important;
         border-bottom: 1px dashed #000 !important;
         padding-bottom: 5px !important;
     }
 
     .receipt-details-table {
-        width: 4.4in !important;
-        /* Fits exactly inside the 5.0in container minus padding */
-        max-width: 4.4in !important;
-        margin-bottom: 15px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin-bottom: 12px !important;
         border-collapse: collapse !important;
+        table-layout: auto !important;
     }
 
     .receipt-details-table td {
-        padding: 4px 0 !important;
-        font-size: 10pt !important;
+        padding: 4px 2px !important;
+        font-size: 9.5pt !important;
         border-bottom: 1px dotted #ccc !important;
+        word-break: break-word !important;
     }
 
     .receipt-details-table td.label {
-        width: 2.0in !important;
+        width: 45% !important;
         text-align: left !important;
         color: #000000 !important;
     }
 
     .receipt-details-table td.value {
-        width: 2.4in !important;
+        width: 55% !important;
         text-align: right !important;
         font-weight: bold !important;
         color: #000000 !important;
     }
 
-    /* Override inline styles for background containers to fit 4.4in width and print cleanly */
-    /* Deposit highlight box */
-    div[style*="margin: 18px 0;"] {
+    /* Override inline styles for background containers to fit 100% width cleanly */
+    div[style*="margin: 18px 0;"],
+    div[style*="margin: 18px 0"] {
         background-color: transparent !important;
         border: 1px solid #000 !important;
         padding: 8px !important;
         margin: 8px 0 !important;
-        width: 4.4in !important;
+        width: 100% !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
     }
 
-    div[style*="margin: 18px 0;"] * {
+    div[style*="margin: 18px 0;"] *,
+    div[style*="margin: 18px 0"] * {
         color: #000000 !important;
     }
 
-    /* Net balance box */
-    div[style*="padding: 12px; background-color: #f9f9f9"] {
+    div[style*="padding: 12px; background-color: #f9f9f9"],
+    div[style*="padding: 12px; background-color: #f9f9f9;"] {
         background-color: transparent !important;
         border: 1px dashed #000 !important;
         padding: 6px !important;
-        width: 4.4in !important;
+        width: 100% !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
-        font-size: 10pt !important;
+        font-size: 9.5pt !important;
         text-align: center !important;
     }
 
     .receipt-signatures {
-        margin-top: 65px !important;
-        width: 4.4in !important;
+        margin-top: 40px !important;
+        width: 100% !important;
+        max-width: 100% !important;
         display: flex !important;
         justify-content: space-between !important;
+        box-sizing: border-box !important;
     }
 
     .signature-line {
-        width: 1.2in !important;
+        flex: 1 !important;
+        max-width: 30% !important;
         border-top: 1px solid #000 !important;
         text-align: center !important;
         padding-top: 3px !important;
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
         color: #000000 !important;
         font-weight: bold !important;
-        flex: none !important;
     }
 }
 
