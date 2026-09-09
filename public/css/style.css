@@ -891,16 +891,17 @@ textarea:focus {
 }
 
 .btn-receipt-action {
-    background-color: #f0f2f5;
+    background-color: #eef2f6;
     color: #2c303e;
-    padding: 5px 14px;
-    font-size: 12px;
+    padding: 0 14px;
+    height: 32px;
+    font-size: 13px;
     font-weight: 600;
-    border-radius: 12px;
+    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 7px;
     text-decoration: none;
     border: 1px solid #e2e8f0;
     transition: all 0.2s ease;
@@ -909,7 +910,7 @@ textarea:focus {
 }
 
 .btn-receipt-action i {
-    font-size: 13px;
+    font-size: 14px;
     color: #2c303e;
 }
 
@@ -918,6 +919,52 @@ textarea:focus {
     color: #1a1d24;
     border-color: #cbd5e1;
     text-decoration: none;
+}
+
+.btn-action-edit {
+    background-color: #144d37;
+    color: #ffffff !important;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 13px;
+    border-radius: 10px;
+    border: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-action-edit:hover {
+    background-color: #0f3d2c;
+    color: #ffffff !important;
+}
+
+.btn-action-delete {
+    background-color: #ffc107;
+    color: #000000 !important;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 13px;
+    border-radius: 10px;
+    border: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-action-delete i {
+    color: #000000 !important;
+}
+
+.btn-action-delete:hover {
+    background-color: #e0a800;
+    color: #000000 !important;
 }
 
 /* Tables */
