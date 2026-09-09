@@ -1235,14 +1235,34 @@ tr:hover td {
     }
 
     .receipt-header {
-        display: none !important;
+        display: block !important;
+        border-bottom: 1px dashed #000000 !important;
+        padding-bottom: 5px !important;
+        margin-bottom: 8px !important;
+        text-align: center !important;
     }
 
     .receipt-logo-img,
-    .receipt-title,
-    .receipt-doc-title,
-    .receipt-subtitle {
+    .receipt-title {
         display: none !important;
+    }
+
+    .receipt-doc-title {
+        display: block !important;
+        font-size: 11pt !important;
+        font-weight: normal !important;
+        text-transform: uppercase !important;
+        color: #000000 !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .receipt-subtitle {
+        display: block !important;
+        font-size: 8.5pt !important;
+        color: #000000 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-top: 1px !important;
     }
 
     .receipt-meta {
