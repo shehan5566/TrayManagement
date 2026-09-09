@@ -115,32 +115,50 @@
                     display: inline-flex;
                     align-items: center;
                     gap: 5px;
-                    background: #e3f2fd;
-                    border: 1px solid #90caf9;
-                    color: #1565c0;
-                    padding: 4px 8px;
-                    border-radius: 4px;
+                    background: #fff8e1;
+                    border: 1px solid #ffe082;
+                    color: #594214;
+                    padding: 5px 10px;
+                    border-radius: 6px;
                     font-size: 12px;
+                    font-weight: 600;
                     cursor: pointer;
                     user-select: none;
-                    transition: all 0.2s;
+                    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
                 }
                 .perm-tag-label:hover {
-                    background: #bbdefb;
+                    background: #ffecb3;
+                    border-color: #ffd54f;
                 }
                 .perm-tag-label input[type="checkbox"] {
                     margin: 0;
                     cursor: pointer;
+                    accent-color: #10b981;
                 }
                 .perm-tag-label.selected {
-                    background: #1976d2;
-                    border-color: #1565c0;
-                    color: white;
+                    background: #10b981;
+                    border-color: #059669;
+                    color: #ffffff;
+                    font-weight: 700;
+                    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+                }
+                .perm-tag-label.selected:hover {
+                    background: #059669;
                 }
             </style>
 
             <div id="permissionsSection">
-                <p style="margin: 0 0 10px 0; color: #666; font-size: 13px;">Select the specific permissions for this role by clicking the tags below.</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <p style="margin: 0; color: #666; font-size: 13px;">Select the specific permissions for this role by clicking the tags below.</p>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" onclick="toggleAllPermissions(true)" class="btn btn-sm" style="padding: 5px 12px; font-size: 12px; background-color: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-check-double"></i> Select All
+                        </button>
+                        <button type="button" onclick="toggleAllPermissions(false)" class="btn btn-sm" style="padding: 5px 12px; font-size: 12px; background-color: #ffc300; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-xmark"></i> Deselect All
+                        </button>
+                    </div>
+                </div>
                 <div class="permissions-grid">
                         
                         <!-- 1. Transactions (In/Out) -->
@@ -251,6 +269,17 @@
             }
         });
     });
+
+    function toggleAllPermissions(selectAll) {
+        document.querySelectorAll('.perm-tag-label input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = selectAll;
+            if (selectAll) {
+                checkbox.parentElement.classList.add('selected');
+            } else {
+                checkbox.parentElement.classList.remove('selected');
+            }
+        });
+    }
 
     function togglePermissionsGrid() {
         const isSuperUser = document.getElementById('roleIsSuperUser').checked;
