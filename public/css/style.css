@@ -1041,12 +1041,12 @@ tr:hover td {
 
 /* Print Receipt Layout */
 .receipt-card {
-    max-width: 600px;
-    margin: 40px auto;
+    max-width: 550px;
+    margin: 30px auto;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    padding: 40px;
+    padding: 30px 35px;
     border-radius: 14px;
     box-shadow: var(--glass-shadow);
     border: 1px solid var(--glass-border);
@@ -1055,24 +1055,24 @@ tr:hover td {
 .receipt-header {
     text-align: center;
     border-bottom: 2px dashed #ccc;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
+    padding-bottom: 16px;
+    margin-bottom: 18px;
 }
 
 .receipt-logo-img {
-    height: 85px;
+    height: 75px;
     width: auto;
     object-fit: contain;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     display: inline-block;
-    border-radius: 14px;
+    border-radius: 12px;
     background-color: #ffffff;
     padding: 4px 8px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
 }
 
 .receipt-title {
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 700;
     color: var(--primary-green-dark);
 }
@@ -1090,23 +1090,23 @@ tr:hover td {
     justify-content: space-between;
     font-size: 13px;
     color: var(--text-light);
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .receipt-details-table {
     width: 100%;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .receipt-details-table td {
-    padding: 10px 0;
+    padding: 8px 0;
     border-bottom: 1px solid #f0f0f0;
 }
 
 .receipt-details-table td.label {
     font-weight: 600;
     color: var(--primary-green-dark);
-    width: 40%;
+    width: 42%;
 }
 
 .receipt-details-table td.value {
@@ -1121,13 +1121,13 @@ tr:hover td {
     text-align: right;
     padding-top: 10px;
     border-top: 2px solid var(--primary-green);
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .receipt-signatures {
     display: flex;
     justify-content: space-between;
-    margin-top: 50px;
+    margin-top: 40px;
     gap: 15px;
 }
 
@@ -1135,7 +1135,7 @@ tr:hover td {
     flex: 1;
     border-top: 1px solid #777;
     text-align: center;
-    padding-top: 8px;
+    padding-top: 6px;
     font-size: 12px;
     font-weight: 600;
     color: var(--text-dark);
@@ -1149,11 +1149,12 @@ tr:hover td {
     gap: 15px;
 }
 
-/* Print CSS overrides for Epson Dot-Matrix (5.5in x 8.0in Continuous Forms) */
+/* Print CSS overrides tailored for Epson Dot-Matrix Printer (5.5in x 8.0in Continuous Forms) */
 @media print {
     @page {
-        margin: 0;
-        /* Hides browser default URL/Date headers & footers */
+        size: 5.5in 8.0in portrait;
+        margin: 0.15in 0.25in;
+        /* Custom 5.5 x 8 inches paper format with tight margins for dot matrix pin tractors */
     }
 
     * {
@@ -1161,7 +1162,7 @@ tr:hover td {
         print-color-adjust: exact !important;
     }
 
-    /* Hide sidebar, headers, footers, chatbots, voice assistant & all navigation/UI elements */
+    /* Hide UI navigation, sidebars, footers, buttons, and popups */
     header,
     footer,
     nav,
@@ -1196,7 +1197,7 @@ tr:hover td {
         width: 0 !important;
     }
 
-    /* Clear all background colors and heights to eliminate grey boxes at bottom */
+    /* Reset body & layout containers to fill 5.5 inch paper width (5.0in printable area) */
     html,
     body,
     .app-layout,
@@ -1208,102 +1209,136 @@ tr:hover td {
         color: #000000 !important;
         min-height: 0 !important;
         height: auto !important;
-        overflow: hidden !important;
-        overflow-x: hidden !important;
-        overflow-y: hidden !important;
+        overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 3.8in !important;
-        max-width: 3.8in !important;
+        width: 100% !important;
+        max-width: 5.0in !important;
         box-sizing: border-box !important;
-        font-family: monospace !important;
-        font-size: 8.5pt !important;
+        font-family: 'Courier New', Courier, monospace, sans-serif !important;
+        font-size: 9pt !important;
+        line-height: 1.3 !important;
     }
 
     .receipt-card {
         box-shadow: none !important;
         border: none !important;
-        margin: 0 !important;
-        padding: 0.1in 0.05in !important;
-        width: 3.8in !important;
-        max-width: 3.8in !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 5.0in !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
     }
 
-    /* Hide specific logo/title/subtitle elements but keep doc title */
-    .receipt-logo-img,
-    .receipt-title,
-    .receipt-subtitle {
-        display: none !important;
+    .receipt-header {
+        border-bottom: 2px solid #000000 !important;
+        padding-bottom: 4px !important;
+        margin-bottom: 8px !important;
+        text-align: center !important;
     }
 
-    .receipt-header {
-        border-bottom: none !important;
-        padding-bottom: 0 !important;
-        margin-bottom: 6px !important;
-        text-align: center !important;
+    .receipt-logo-img {
+        display: inline-block !important;
+        height: 40px !important;
+        width: auto !important;
+        margin-bottom: 2px !important;
+        filter: grayscale(100%) contrast(180%) !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    .receipt-title {
+        display: block !important;
+        font-size: 11pt !important;
+        font-weight: bold !important;
+        color: #000000 !important;
+        letter-spacing: 0.5px !important;
+        text-transform: uppercase !important;
     }
 
     .receipt-doc-title {
         display: block !important;
-        font-size: 11pt !important;
+        font-size: 10pt !important;
         font-weight: bold !important;
         text-transform: uppercase !important;
         color: #000000 !important;
-        letter-spacing: 0.5px !important;
+        margin-top: 2px !important;
+    }
+
+    .receipt-subtitle {
+        display: block !important;
+        font-size: 8pt !important;
+        color: #333333 !important;
+        text-transform: uppercase !important;
+        margin-top: 1px !important;
     }
 
     .receipt-meta {
-        width: 3.6in !important;
-        max-width: 3.6in !important;
+        width: 100% !important;
+        max-width: 5.0in !important;
         box-sizing: border-box !important;
         display: flex !important;
         justify-content: space-between !important;
-        font-size: 8.5pt !important;
-        margin-bottom: 6px !important;
-        border-bottom: 1px dashed #000 !important;
+        font-size: 9pt !important;
+        margin-bottom: 8px !important;
+        border-bottom: 1px dashed #000000 !important;
         padding-bottom: 4px !important;
+        color: #000000 !important;
+    }
+
+    .receipt-meta strong {
+        color: #000000 !important;
     }
 
     .receipt-details-table {
-        width: 3.6in !important;
-        max-width: 3.6in !important;
+        width: 100% !important;
+        max-width: 5.0in !important;
         box-sizing: border-box !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 10px !important;
         border-collapse: collapse !important;
     }
 
     .receipt-details-table td {
-        padding: 2px 0 !important;
-        font-size: 8.5pt !important;
-        border-bottom: 1px dotted #ccc !important;
+        padding: 3px 0 !important;
+        font-size: 9pt !important;
+        border-bottom: 1px dotted #888888 !important;
         word-break: break-word !important;
+        color: #000000 !important;
     }
 
     .receipt-details-table td.label {
-        width: 1.5in !important;
+        width: 2.1in !important;
         text-align: left !important;
+        font-weight: bold !important;
         color: #000000 !important;
     }
 
     .receipt-details-table td.value {
-        width: 2.1in !important;
+        width: 2.9in !important;
         text-align: right !important;
         font-weight: bold !important;
         color: #000000 !important;
     }
 
-    /* Override inline styles for Deposit highlight box to fit 3.6in width cleanly */
+    .receipt-details-table td.value strong,
+    .receipt-details-table td.value code,
+    .receipt-details-table td.value span {
+        color: #000000 !important;
+    }
+
+    /* Highlight box / Deposit statement box */
     div[style*="margin: 18px 0;"],
     div[style*="margin: 18px 0"] {
-        background-color: transparent !important;
-        border: 1px solid #000 !important;
-        padding: 4px 6px !important;
-        margin: 4px 0 !important;
-        width: 3.6in !important;
-        max-width: 3.6in !important;
+        background-color: #ffffff !important;
+        border: 1.5px solid #000000 !important;
+        padding: 6px 10px !important;
+        margin: 6px 0 !important;
+        width: 100% !important;
+        max-width: 5.0in !important;
         box-sizing: border-box !important;
+        border-radius: 4px !important;
     }
 
     div[style*="margin: 18px 0;"] *,
@@ -1311,7 +1346,6 @@ tr:hover td {
         color: #000000 !important;
     }
 
-    /* Target inner flex box of Deposit Statement */
     div[style*="margin: 18px 0;"] > div,
     div[style*="margin: 18px 0"] > div {
         display: flex !important;
@@ -1324,40 +1358,50 @@ tr:hover td {
     div[style*="margin: 18px 0;"] div[style*="font-size: 24px"],
     div[style*="margin: 18px 0"] div[style*="font-size: 24px"] {
         font-size: 13pt !important;
+        font-weight: bold !important;
         white-space: nowrap !important;
     }
 
-    /* Net balance box */
+    /* Net balance box & verification notes */
     div[style*="padding: 12px; background-color: #f9f9f9"],
-    div[style*="padding: 12px; background-color: #f9f9f9;"] {
-        background-color: transparent !important;
-        border: 1px dashed #000 !important;
-        padding: 4px !important;
-        width: 3.6in !important;
-        max-width: 3.6in !important;
+    div[style*="padding: 12px; background-color: #f9f9f9;"],
+    div[style*="border: 1px dashed"] {
+        background-color: #ffffff !important;
+        border: 1px dashed #000000 !important;
+        padding: 5px !important;
+        margin: 6px 0 !important;
+        width: 100% !important;
+        max-width: 5.0in !important;
         box-sizing: border-box !important;
         font-size: 8.5pt !important;
         text-align: center !important;
+        color: #000000 !important;
+    }
+
+    div[style*="padding: 12px; background-color: #f9f9f9"] *,
+    div[style*="padding: 12px; background-color: #f9f9f9;"] * {
+        color: #000000 !important;
     }
 
     .receipt-signatures {
-        margin-top: 35px !important;
-        width: 3.6in !important;
-        max-width: 3.6in !important;
+        margin-top: 30px !important;
+        width: 100% !important;
+        max-width: 5.0in !important;
         display: flex !important;
         justify-content: space-between !important;
         box-sizing: border-box !important;
+        gap: 10px !important;
     }
 
     .signature-line {
-        width: 1.0in !important;
-        border-top: 1px solid #000 !important;
+        flex: 1 !important;
+        width: auto !important;
+        border-top: 1px solid #000000 !important;
         text-align: center !important;
-        padding-top: 2px !important;
-        font-size: 8pt !important;
+        padding-top: 3px !important;
+        font-size: 8.5pt !important;
         color: #000000 !important;
         font-weight: bold !important;
-        flex: none !important;
     }
 }
 
