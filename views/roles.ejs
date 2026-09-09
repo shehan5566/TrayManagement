@@ -49,7 +49,7 @@
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                     <form action="/roles/<%= r.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'role')">
-                                        <button type="submit" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; background-color: #f59e0b; color: #ffffff; border: none;" title="Delete Role">
+                                        <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px; background-color: #ffc300; border-color: #e6b000; color: #000000;" title="Delete Role">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
@@ -74,7 +74,7 @@
         <form id="roleForm" action="/roles/create" method="POST" onsubmit="submitAjaxForm(event, this, 'Role saved successfully', () => window.location.reload())">
             <div style="display: flex; gap: 20px; margin-bottom: 20px; align-items: flex-end;">
                 <div class="form-group" style="flex-grow: 1; margin: 0;">
-                    <label for="roleName">Role Name <span style="color: #f59e0b;">*</span></label>
+                    <label for="roleName">Role Name <span style="color: red;">*</span></label>
                     <input type="text" id="roleName" name="name" placeholder="e.g. Distributor" required>
                 </div>
                 <div class="form-group" style="margin: 0; padding-bottom: 10px;">
