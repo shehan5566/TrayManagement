@@ -1296,7 +1296,8 @@ tr:hover td {
         padding: 3px 0 !important;
         font-size: 9.5pt !important;
         font-weight: normal !important;
-        border-bottom: 1px dotted #888888 !important;
+        border-bottom: none !important;
+        border: none !important;
         word-break: break-word !important;
         color: #000000 !important;
     }
