@@ -1148,51 +1148,6 @@ app.get('/transactions/:id/receipt', requireAuth, async (req, res) => {
     }
 });
 
-// Dedicated POS Thermal Receipt Route (Isolated for POS Printers)
-app.get('/transactions/:id/receipt-pos', requireAuth, async (req, res) => {
-    try {
-        const tx = await Transaction.getById(req.params.id);
-        if (!tx) {
-            return res.redirect('/transactions');
-        }
-        const customer = await Customer.getById(tx.customerId);
-
-        let totalCustomerPendingDeposit = 0;
-        if (customer && (customer.id || customer._id)) {
-            const TransactionModel = require('mongoose').model('Transaction');
-            const custId = customer.id || customer._id;
-            const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
-            custTxs.forEach(t => {
-                const rate = Number(t.depositPerTray) || 2000;
-                const countQty = Number(t.count) || 0;
-                const expected = Number(t.expectedDeposit) || (countQty * rate);
-                let paid = 0;
-                if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
-                    paid = Number(t.totalDeposit);
-                } else if (t.depositOption === 'ZERO') {
-                    paid = 0;
-                } else if (t.depositOption === 'HALF') {
-                    paid = expected / 2;
-                } else {
-                    paid = expected;
-                }
-
-                if (t.type === 'OUT') {
-                    totalCustomerPendingDeposit += (expected - paid);
-                } else if (t.type === 'IN') {
-                    totalCustomerPendingDeposit -= (expected - paid);
-                }
-            });
-        }
-        if (totalCustomerPendingDeposit < 0) totalCustomerPendingDeposit = 0;
-
-        res.render('pos-receipt', { tx, customer, totalCustomerPendingDeposit });
-    } catch (err) {
-        console.error('Error loading POS receipt:', err);
-        res.status(500).send('Error loading POS receipt');
-    }
-});
-
 // Stock Transfers Routes
 app.get('/transfers', requireAuth, requirePermission('manage_stock'), async (req, res) => {
     try {
