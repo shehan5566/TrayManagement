@@ -1196,40 +1196,37 @@ tr:hover td {
         width: 0 !important;
     }
 
-    html, body {
-        overflow: hidden !important;
-        overflow-x: hidden !important;
-        overflow-y: hidden !important;
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 4.6in !important;
-        max-width: 4.6in !important;
-        box-sizing: border-box !important;
-        font-family: monospace !important;
-        font-size: 9.5pt !important;
-    }
-
+    /* Clear all background colors and heights to eliminate grey boxes at bottom */
+    html,
+    body,
     .app-layout,
     .main-body,
     .main-wrapper,
     main {
-        display: block !important;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        overflow: hidden !important;
+        overflow-x: hidden !important;
+        overflow-y: hidden !important;
         margin: 0 !important;
         padding: 0 !important;
-        width: 4.6in !important;
-        max-width: 4.6in !important;
-        overflow: visible !important;
+        width: 3.8in !important;
+        max-width: 3.8in !important;
+        box-sizing: border-box !important;
+        font-family: monospace !important;
+        font-size: 8.5pt !important;
     }
 
     .receipt-card {
         box-shadow: none !important;
         border: none !important;
         margin: 0 !important;
-        padding: 0.15in 0.1in 0.1in 0.1in !important;
-        width: 4.6in !important;
-        max-width: 4.6in !important;
+        padding: 0.1in 0.05in !important;
+        width: 3.8in !important;
+        max-width: 3.8in !important;
         box-sizing: border-box !important;
         background: #ffffff !important;
     }
@@ -1244,13 +1241,13 @@ tr:hover td {
     .receipt-header {
         border-bottom: none !important;
         padding-bottom: 0 !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 6px !important;
         text-align: center !important;
     }
 
     .receipt-doc-title {
         display: block !important;
-        font-size: 12pt !important;
+        font-size: 11pt !important;
         font-weight: bold !important;
         text-transform: uppercase !important;
         color: #000000 !important;
@@ -1258,54 +1255,54 @@ tr:hover td {
     }
 
     .receipt-meta {
-        width: 4.4in !important;
-        max-width: 4.4in !important;
+        width: 3.6in !important;
+        max-width: 3.6in !important;
         box-sizing: border-box !important;
         display: flex !important;
         justify-content: space-between !important;
-        font-size: 9pt !important;
-        margin-bottom: 8px !important;
+        font-size: 8.5pt !important;
+        margin-bottom: 6px !important;
         border-bottom: 1px dashed #000 !important;
         padding-bottom: 4px !important;
     }
 
     .receipt-details-table {
-        width: 4.4in !important;
-        max-width: 4.4in !important;
+        width: 3.6in !important;
+        max-width: 3.6in !important;
         box-sizing: border-box !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
         border-collapse: collapse !important;
     }
 
     .receipt-details-table td {
-        padding: 3px 0 !important;
-        font-size: 9pt !important;
+        padding: 2px 0 !important;
+        font-size: 8.5pt !important;
         border-bottom: 1px dotted #ccc !important;
         word-break: break-word !important;
     }
 
     .receipt-details-table td.label {
-        width: 1.8in !important;
+        width: 1.5in !important;
         text-align: left !important;
         color: #000000 !important;
     }
 
     .receipt-details-table td.value {
-        width: 2.6in !important;
+        width: 2.1in !important;
         text-align: right !important;
         font-weight: bold !important;
         color: #000000 !important;
     }
 
-    /* Override inline styles for Deposit highlight box to fit 4.4in width cleanly */
+    /* Override inline styles for Deposit highlight box to fit 3.6in width cleanly */
     div[style*="margin: 18px 0;"],
     div[style*="margin: 18px 0"] {
         background-color: transparent !important;
         border: 1px solid #000 !important;
-        padding: 6px 8px !important;
-        margin: 6px 0 !important;
-        width: 4.4in !important;
-        max-width: 4.4in !important;
+        padding: 4px 6px !important;
+        margin: 4px 0 !important;
+        width: 3.6in !important;
+        max-width: 3.6in !important;
         box-sizing: border-box !important;
     }
 
@@ -1326,7 +1323,7 @@ tr:hover td {
 
     div[style*="margin: 18px 0;"] div[style*="font-size: 24px"],
     div[style*="margin: 18px 0"] div[style*="font-size: 24px"] {
-        font-size: 15pt !important;
+        font-size: 13pt !important;
         white-space: nowrap !important;
     }
 
@@ -1335,29 +1332,29 @@ tr:hover td {
     div[style*="padding: 12px; background-color: #f9f9f9;"] {
         background-color: transparent !important;
         border: 1px dashed #000 !important;
-        padding: 5px !important;
-        width: 4.4in !important;
-        max-width: 4.4in !important;
+        padding: 4px !important;
+        width: 3.6in !important;
+        max-width: 3.6in !important;
         box-sizing: border-box !important;
-        font-size: 9pt !important;
+        font-size: 8.5pt !important;
         text-align: center !important;
     }
 
     .receipt-signatures {
-        margin-top: 40px !important;
-        width: 4.4in !important;
-        max-width: 4.4in !important;
+        margin-top: 35px !important;
+        width: 3.6in !important;
+        max-width: 3.6in !important;
         display: flex !important;
         justify-content: space-between !important;
         box-sizing: border-box !important;
     }
 
     .signature-line {
-        width: 1.2in !important;
+        width: 1.0in !important;
         border-top: 1px solid #000 !important;
         text-align: center !important;
-        padding-top: 3px !important;
-        font-size: 8.5pt !important;
+        padding-top: 2px !important;
+        font-size: 8pt !important;
         color: #000000 !important;
         font-weight: bold !important;
         flex: none !important;
