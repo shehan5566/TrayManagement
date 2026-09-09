@@ -1322,9 +1322,32 @@ tr:hover td {
         font-weight: normal !important;
     }
 
-    /* Highlight box / Deposit statement box */
+    /* Status Badges in Print */
+    .badge,
+    .receipt-details-table .badge,
+    span.badge {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        height: auto !important;
+        width: auto !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #000000 !important;
+        border: 1px solid #000000 !important;
+        padding: 1px 6px !important;
+        font-size: 8.5pt !important;
+        font-weight: normal !important;
+        box-shadow: none !important;
+        border-radius: 3px !important;
+    }
+
+    /* Highlight box / Deposit statement box / Status boxes */
     div[style*="margin: 18px 0;"],
-    div[style*="margin: 18px 0"] {
+    div[style*="margin: 18px 0"],
+    div[style*="background-color"],
+    div[style*="background:"] {
+        background: transparent !important;
         background-color: #ffffff !important;
         border: 1.5px solid #000000 !important;
         padding: 6px 10px !important;
