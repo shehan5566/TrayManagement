@@ -1161,31 +1161,66 @@ tr:hover td {
         print-color-adjust: exact !important;
     }
 
+    /* Hide sidebar, headers, footers, chatbots, voice assistant & all navigation/UI elements */
     header,
-    nav,
-    .print-actions,
     footer,
+    nav,
+    aside,
+    .sidebar,
+    .top-header,
+    .mobile-topbar,
+    .mobile-only,
+    .sidebar-overlay,
+    .sidebar-expand-btn,
+    .print-actions,
     .btn,
-    .navbar {
+    button,
+    .navbar,
+    .chat-widget-btn,
+    #chatWidgetBtn,
+    .chat-window,
+    #chatWindow,
+    .chat-widget,
+    .floating-voice-widget,
+    .voice-modal-overlay,
+    #voiceModal,
+    .command-palette-overlay,
+    #commandPaletteModal,
+    .notification-dropdown-wrapper,
+    .user-dropdown-wrapper,
+    .swal2-container {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        width: 0 !important;
     }
 
-    main {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    body {
+    html, body {
+        overflow: hidden !important;
+        overflow-x: hidden !important;
+        overflow-y: hidden !important;
         background-color: #ffffff !important;
         color: #000000 !important;
         margin: 0 !important;
         padding: 0 !important;
         width: 5.0in !important;
-        /* Fixed width to match physical paper */
         max-width: 5.0in !important;
         box-sizing: border-box !important;
         font-family: monospace !important;
         font-size: 10pt !important;
+    }
+
+    .app-layout,
+    .main-body,
+    .main-wrapper,
+    main {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 5.0in !important;
+        max-width: 5.0in !important;
+        overflow: visible !important;
     }
 
     .receipt-card {
