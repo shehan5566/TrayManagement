@@ -20,9 +20,9 @@ DO NOT modify or override the following `@media print` rules in `public/css/styl
   - Font Weight: `font-weight: normal !important;` across all print elements (single-pass crisp printing).
   - Font Style: `font-style: normal !important;` (no italics in print).
 - **Signature Block**:
-  - `margin-top: 75px !important;` and `font-size: 10.5pt !important;`.
-- **Net Tray Balance Box & Verification Notes**:
-  - `font-size: 10.5pt !important;`.
+  - `margin-top: 105px !important;` and `font-size: 10.5pt !important;`.
+- **Net Tray Balance & Pending Deposit Balance Box**:
+  - Centered box layout with `font-size: 10.5pt !important;` in print.
 - **Detail Lines**:
   - `border-bottom: none !important;` (no dotted lines under table detail rows in print).
 - **Status Badges & Boxes**:
