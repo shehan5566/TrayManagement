@@ -52,19 +52,33 @@
                         <div id="recentEmailsList" style="display: inline-flex; gap: 5px; flex-wrap: wrap;"></div>
                     </div>
                 </div>
-                <button type="submit" id="sendNowAnimatedBtn" class="btn btn-primary btn-send-animated"
-                    style="padding: 8px 16px; height: 38px; background-color: var(--primary-green); color: white;">
-                    <span class="btn-content">
-                        <i class="fa-solid fa-paper-plane"></i> Send Now
-                    </span>
-                    <i class="fa-solid fa-paper-plane plane-icon"></i>
-                    <span class="sent-content">
-                        <i class="fa-solid fa-check"></i> Sent
-                    </span>
-                </button>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" id="sendNowAnimatedBtn" class="btn btn-primary btn-send-animated"
+                        style="padding: 8px 16px; height: 38px; background-color: var(--primary-green); color: white;">
+                        <span class="btn-content">
+                            <i class="fa-solid fa-paper-plane"></i> Send Email
+                        </span>
+                        <i class="fa-solid fa-paper-plane plane-icon"></i>
+                        <span class="sent-content">
+                            <i class="fa-solid fa-check"></i> Sent
+                        </span>
+                    </button>
+                    <button type="button" id="downloadExcelReportBtn" onclick="downloadInstantExcelReport()" class="btn"
+                        title="Download full Excel report directly to your computer"
+                        style="padding: 8px 16px; height: 38px; background-color: #0f766e; color: white; border: none; border-radius: 4px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer;">
+                        <i class="fa-solid fa-file-excel"></i> Download Excel Report
+                    </button>
+                </div>
             </form>
 
             <script>
+                function downloadInstantExcelReport() {
+                    const sd = document.getElementById('startDate') ? document.getElementById('startDate').value : '';
+                    const ed = document.getElementById('endDate') ? document.getElementById('endDate').value : '';
+                    const url = `/api/reports/master-export?startDate=${encodeURIComponent(sd)}&endDate=${encodeURIComponent(ed)}`;
+                    window.location.href = url;
+                }
+
                 async function sendManualEmailReport(e, form) {
                     e.preventDefault();
                     const sendBtn = document.getElementById('sendNowAnimatedBtn');
