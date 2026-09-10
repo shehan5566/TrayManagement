@@ -2469,6 +2469,12 @@ app.get('/analytics', requireAuth, async (req, res) => {
         console.error('Error rendering analytics page:', err);
         res.status(500).send('Error loading AI analytics page');
     }
+// Health / Keep-Alive Ping Route (for UptimeRobot / Cron-Job.org)
+app.get('/ping', (req, res) => {
+    res.status(200).send('OK');
+});
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Generic 404 handler
