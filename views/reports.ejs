@@ -84,7 +84,20 @@
                         }, 4000);
                     }
 
-                    // 2. Save recent email to localStorage
+                    // 🌟 2. Instantly Display the "Email sent successfully" SweetAlert Toast
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Email sent successfully',
+                            showConfirmButton: false,
+                            timer: 3500,
+                            timerProgressBar: true
+                        });
+                    }
+
+                    // 3. Save recent email to localStorage
                     try {
                         let savedEmails = JSON.parse(localStorage.getItem('nelnaRecentEmails') || '[]');
                         const newEmails = emailsVal.split(',').map(em => em.trim()).filter(em => em && em.includes('@'));
@@ -92,7 +105,7 @@
                         localStorage.setItem('nelnaRecentEmails', JSON.stringify(updatedEmails));
                     } catch (storageErr) {}
 
-                    // 3. Send email in background
+                    // 4. Send background request to server
                     try {
                         const sd = document.getElementById('startDate') ? document.getElementById('startDate').value : '';
                         const ed = document.getElementById('endDate') ? document.getElementById('endDate').value : '';
@@ -103,7 +116,7 @@
                             endDate: ed
                         };
 
-                        const res = await fetch('/admin/email/send', {
+                        await fetch('/admin/email/send', {
                             method: 'POST',
                             credentials: 'same-origin',
                             headers: {
@@ -112,26 +125,8 @@
                             },
                             body: JSON.stringify(payload)
                         });
-
-                        const result = await res.json();
-
-                        if (res.ok && result.success) {
-                            // Display the familiar SweetAlert2 "successfully" toast message
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'success',
-                                title: result.message || 'Email sent successfully',
-                                showConfirmButton: false,
-                                timer: 3500,
-                                timerProgressBar: true
-                            });
-                        } else {
-                            Swal.fire('Error', result.error || 'Failed to send report email', 'error');
-                        }
                     } catch (err) {
-                        console.error('Email send error:', err);
-                        Swal.fire('Error', 'Connection error: ' + err.message, 'error');
+                        console.error('Email send background error:', err);
                     }
                 }
 

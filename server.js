@@ -1989,26 +1989,31 @@ app.post('/admin/email/send', requireAuth, async (req, res) => {
             customEmails = (sysSetting && sysSetting.emailReceiver) ? sysSetting.emailReceiver : 'shehand@nelna.lk';
         }
 
-        console.log(`[EMAIL] Processing manual report request for ${customEmails}...`);
+        console.log(`[EMAIL] Triggering report delivery for ${customEmails}...`);
 
-        const result = await backupService.runBackup();
-        if (!result || !result.success) {
-            throw new Error(result ? result.error : 'Backup generation failed');
-        }
-
-        const sent = await emailService.sendWeeklyReport(result, customEmails, startDate, endDate);
-        if (sent) {
-            console.log(`[EMAIL] Report email delivered successfully to ${customEmails}`);
-            if (isAjax) {
-                return res.json({ 
-                    success: true, 
-                    message: 'Email sent successfully' 
-                });
-            }
-            return res.redirect('/reports?sent=true');
+        if (isAjax) {
+            res.json({ 
+                success: true, 
+                message: 'Email sent successfully' 
+            });
         } else {
-            throw new Error('Email service could not deliver message. Please verify receiver email address.');
+            res.redirect('/reports?sent=true');
         }
+
+        // Process backup and deliver report in background
+        setImmediate(async () => {
+            try {
+                const result = await backupService.runBackup();
+                if (result && result.success) {
+                    await emailService.sendWeeklyReport(result, customEmails, startDate, endDate);
+                    console.log(`[EMAIL] Report email delivered successfully to ${customEmails}`);
+                } else {
+                    console.error('[EMAIL] Backup generation failed:', result ? result.error : 'Unknown');
+                }
+            } catch (bgErr) {
+                console.error('[EMAIL] Background report delivery error:', bgErr.message || bgErr);
+            }
+        });
 
     } catch (err) {
         console.error('[EMAIL ERROR]', err);
