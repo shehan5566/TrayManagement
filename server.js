@@ -2003,15 +2003,19 @@ app.post('/admin/email/send', requireAuth, async (req, res) => {
         // Process backup and deliver report in background
         setImmediate(async () => {
             try {
+                await ActivityLog.log('System', 'EMAIL_TRIGGER', 'Report', `Triggered report delivery for ${customEmails}`);
                 const result = await backupService.runBackup();
                 if (result && result.success) {
                     await emailService.sendWeeklyReport(result, customEmails, startDate, endDate);
                     console.log(`[EMAIL] Report email delivered successfully to ${customEmails}`);
+                    await ActivityLog.log('System', 'EMAIL_SUCCESS', 'Report', `Report email delivered successfully to ${customEmails}`);
                 } else {
                     console.error('[EMAIL] Backup generation failed:', result ? result.error : 'Unknown');
+                    await ActivityLog.log('System', 'EMAIL_ERROR', 'Report', `Backup generation failed: ${result ? result.error : 'Unknown'}`);
                 }
             } catch (bgErr) {
                 console.error('[EMAIL] Background report delivery error:', bgErr.message || bgErr);
+                await ActivityLog.log('System', 'EMAIL_ERROR', 'Report', `Email delivery error: ${bgErr.message || bgErr}`);
             }
         });
 

@@ -11,16 +11,44 @@ if (dns.setDefaultResultOrder) {
 }
 
 class EmailService {
-    getTransporter() {
+    getTransporter(port = 465, secure = true) {
         const user = process.env.EMAIL_USER || 'nelnatray@gmail.com';
         const pass = (process.env.EMAIL_PASS || 'tcqekxmxfywsbrod').replace(/\s+/g, '');
         return nodemailer.createTransport({
             host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
+            port: port,
+            secure: secure,
             family: 4, // Force IPv4 socket connection to prevent ENETUNREACH on IPv6
+            connectionTimeout: 10000, // 10s connection timeout
+            greetingTimeout: 8000,
+            socketTimeout: 15000,
             auth: { user, pass }
         });
+    }
+
+    async sendMailWithFallback(mailOptions) {
+        let lastErr = null;
+        // Try Port 465 (Direct SSL) first
+        try {
+            console.log('[EMAIL] Attempting SMTP delivery via Port 465 (SSL)...');
+            const transporter465 = this.getTransporter(465, true);
+            const info = await transporter465.sendMail(mailOptions);
+            return info;
+        } catch (err465) {
+            console.warn(`[EMAIL] Port 465 attempt failed: ${err465.message}. Falling back to Port 587...`);
+            lastErr = err465;
+        }
+
+        // Fallback: Try Port 587 (STARTTLS)
+        try {
+            console.log('[EMAIL] Attempting SMTP delivery via Port 587 (STARTTLS)...');
+            const transporter587 = this.getTransporter(587, false);
+            const info = await transporter587.sendMail(mailOptions);
+            return info;
+        } catch (err587) {
+            console.error(`[EMAIL] Port 587 fallback also failed: ${err587.message}`);
+            throw new Error(`SMTP delivery failed on both ports 465 & 587. (465: ${lastErr ? lastErr.message : 'failed'}, 587: ${err587.message})`);
+        }
     }
 
     async sendWeeklyReport(backupResult, overrideEmails = null, customStartDate = null, customEndDate = null) {
@@ -376,8 +404,7 @@ class EmailService {
                 });
             }
 
-            const transporter = this.getTransporter();
-            const info = await transporter.sendMail(mailOptions);
+            const info = await this.sendMailWithFallback(mailOptions);
             console.log(`[EMAIL] Comprehensive report sent successfully to ${receiver}: ${info.messageId}`);
             return true;
         } catch (error) {
