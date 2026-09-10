@@ -228,13 +228,15 @@ class EmailService {
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #ffffff; color: #1f2937; line-height: 1.5;">
                     
                     <!-- Header -->
-                    <div style="background: linear-gradient(135deg, #174e3e 0%, #0e3328 100%); color: #ffffff; padding: 26px 24px; text-align: center;">
-                        <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;">${companyName}</h1>
-                        <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.9; font-weight: 500;">
-                            ${isCustomDate ? 'Executive Management Summary' : 'Weekly Executive Management Summary & Operational Audit'}
+                    <div style="background-color: #107c41; color: #ffffff; padding: 22px 20px; text-align: center;">
+                        <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff;">
+                            Nelna <span style="background-color: #ffe082; color: #000000; padding: 2px 7px; border-radius: 4px; font-weight: 800; display: inline-block;">Tray</span> System
+                        </h2>
+                        <p style="margin: 6px 0 0 0; font-size: 14px; color: #ffffff; opacity: 0.95; font-weight: 500;">
+                            ${isCustomDate ? 'Summary Report' : 'Weekly Summary Report'}
                         </p>
-                        <div style="margin-top: 10px; display: inline-block; background: rgba(255, 255, 255, 0.15); padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">
-                            Period: ${startDate.toLocaleDateString('en-GB')} — ${endDate.toLocaleDateString('en-GB')}
+                        <div style="margin-top: 8px; display: inline-block; background: rgba(0, 0, 0, 0.15); padding: 3px 12px; border-radius: 14px; font-size: 12px; color: #ffffff; font-weight: 600;">
+                            ${startDate.toLocaleDateString('en-GB')} — ${endDate.toLocaleDateString('en-GB')}
                         </div>
                     </div>
                     
