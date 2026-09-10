@@ -273,7 +273,7 @@ class EmailService {
                             ${isCustomDate ? 'Summary Report' : 'Weekly Summary Report'}
                         </p>
                         <div style="margin-top: 8px; display: inline-block; background: rgba(0, 0, 0, 0.15); padding: 3px 12px; border-radius: 14px; font-size: 12px; color: #ffffff; font-weight: 600;">
-                            ${startDate.toLocaleDateString('en-GB')} — ${endDate.toLocaleDateString('en-GB')}
+                            ${startDate.toLocaleDateString('en-GB')} to ${endDate.toLocaleDateString('en-GB')}
                         </div>
                     </div>
                     
@@ -281,25 +281,25 @@ class EmailService {
 
                         <!-- Key Operational Metrics Grid -->
                         <h3 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 700; color: #111827; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #174e3e; padding-bottom: 6px;">
-                            📊 Operational Activity Summary
+                            Operational Activity Summary
                         </h3>
 
                         <table style="width: 100%; border-collapse: separate; border-spacing: 10px; margin-bottom: 20px;">
                             <tr>
                                 <td style="width: 50%; background: #fff7ed; border-left: 4px solid #ea580c; border-radius: 8px; padding: 14px 16px;">
-                                    <div style="font-size: 11.5px; font-weight: 700; color: #9a3412; text-transform: uppercase;">📤 Total Trays Issued (OUT)</div>
+                                    <div style="font-size: 11.5px; font-weight: 700; color: #9a3412; text-transform: uppercase;">Total Trays Issued (OUT)</div>
                                     <div style="font-size: 24px; font-weight: 800; color: #ea580c; margin-top: 4px;">${traysOut.toLocaleString()} <span style="font-size: 13px; font-weight: 600;">Trays</span></div>
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">Dispatched to customers</div>
                                 </td>
                                 <td style="width: 50%; background: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 8px; padding: 14px 16px;">
-                                    <div style="font-size: 11.5px; font-weight: 700; color: #166534; text-transform: uppercase;">📥 Total Trays Returned (IN)</div>
+                                    <div style="font-size: 11.5px; font-weight: 700; color: #166534; text-transform: uppercase;">Total Trays Returned (IN)</div>
                                     <div style="font-size: 24px; font-weight: 800; color: #16a34a; margin-top: 4px;">${traysIn.toLocaleString()} <span style="font-size: 13px; font-weight: 600;">Trays</span></div>
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">Recovered from customers</div>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="width: 50%; background: #eff6ff; border-left: 4px solid #2563eb; border-radius: 8px; padding: 14px 16px;">
-                                    <div style="font-size: 11.5px; font-weight: 700; color: #1e40af; text-transform: uppercase;">💰 Net Circulation Balance</div>
+                                    <div style="font-size: 11.5px; font-weight: 700; color: #1e40af; text-transform: uppercase;">Net Circulation Balance</div>
                                     <div style="font-size: 24px; font-weight: 800; color: #2563eb; margin-top: 4px;">
                                         ${netTrayDifference > 0 ? '+' + netTrayDifference.toLocaleString() : netTrayDifference.toLocaleString()} <span style="font-size: 13px; font-weight: 600;">Trays</span>
                                     </div>
@@ -308,7 +308,7 @@ class EmailService {
                                     </div>
                                 </td>
                                 <td style="width: 50%; background: #fef2f2; border-left: 4px solid #dc2626; border-radius: 8px; padding: 14px 16px;">
-                                    <div style="font-size: 11.5px; font-weight: 700; color: #991b1b; text-transform: uppercase;">⚠️ Damaged / Lost Trays</div>
+                                    <div style="font-size: 11.5px; font-weight: 700; color: #991b1b; text-transform: uppercase;">Damaged / Lost Trays</div>
                                     <div style="font-size: 24px; font-weight: 800; color: #dc2626; margin-top: 4px;">${totalDamagedInPeriod.toLocaleString()} <span style="font-size: 13px; font-weight: 600;">Trays</span></div>
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">All-time recorded: ${totalDamagedAllTime.toLocaleString()} Trays</div>
                                 </td>
@@ -322,7 +322,7 @@ class EmailService {
 
                         <!-- Branch Stock Breakdown -->
                         <h3 style="margin: 24px 0 12px 0; font-size: 15px; font-weight: 700; color: #111827; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #174e3e; padding-bottom: 6px;">
-                            🏢 Branch Stock Breakdown (${allLocations.length} Locations)
+                            Branch Stock Breakdown (${allLocations.length} Locations)
                         </h3>
 
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; font-size: 13px;">
@@ -343,7 +343,7 @@ class EmailService {
 
                         <!-- Top 10 Outstanding Customers -->
                         <h3 style="margin: 28px 0 12px 0; font-size: 15px; font-weight: 700; color: #111827; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #dc2626; padding-bottom: 6px;">
-                            👥 Top 10 Customers with Highest Outstanding Trays
+                            Top 10 Customers with Highest Outstanding Trays
                         </h3>
 
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; font-size: 13px;">
@@ -364,14 +364,14 @@ class EmailService {
                         <div style="background: #fffbea; border-left: 4px solid #f59e0b; padding: 14px 18px; border-radius: 6px; margin-bottom: 20px; font-size: 13px;">
                             <div style="font-weight: 700; color: #92400e; margin-bottom: 4px;">System Health & Ledger Totals:</div>
                             <div style="color: #78350f;">
-                                • Total Active Customers: <strong>${allCustomers.length}</strong><br>
-                                • Total Trays Currently with Customers: <strong style="color:#b91c1c;">${totalOutstandingTrays.toLocaleString()} Trays</strong><br>
-                                • Automated Database JSON Backup: <strong>Successfully Created & Attached</strong>
+                                - Total Active Customers: <strong>${allCustomers.length}</strong><br>
+                                - Total Trays Currently with Customers: <strong style="color:#b91c1c;">${totalOutstandingTrays.toLocaleString()} Trays</strong><br>
+                                - Automated Database JSON Backup: <strong>Successfully Created & Attached</strong>
                             </div>
                         </div>
 
                         <p style="font-size: 12.5px; color: #6b7280; margin: 16px 0 0 0;">
-                            📎 <strong>Attached Documents:</strong> Full system JSON database backup (${backupResult.filename}) and complete Excel workbook with detailed transaction logs and customer balances.
+                            <strong>Attached Documents:</strong> Full system JSON database backup (${backupResult.filename}) and complete Excel workbook with detailed transaction logs and customer balances.
                         </p>
 
                         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
