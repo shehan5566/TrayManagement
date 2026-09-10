@@ -3,13 +3,22 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
 const xlsx = require('xlsx');
+const dns = require('dns');
+
+// Force IPv4 first for DNS lookup to prevent ENETUNREACH on platforms without IPv6 routing
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 
 class EmailService {
     getTransporter() {
         const user = process.env.EMAIL_USER || 'nelnatray@gmail.com';
         const pass = (process.env.EMAIL_PASS || 'tcqekxmxfywsbrod').replace(/\s+/g, '');
         return nodemailer.createTransport({
-            service: process.env.EMAIL_SERVICE || 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
+            family: 4, // Force IPv4 socket connection to prevent ENETUNREACH on IPv6
             auth: { user, pass }
         });
     }
