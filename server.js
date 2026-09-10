@@ -1991,7 +1991,7 @@ app.post('/admin/email/send', requireAuth, async (req, res) => {
         if (isAjax) {
             res.json({ 
                 success: true, 
-                message: `Executive summary report email sent successfully to ${customEmails}!` 
+                message: 'Email sent successfully' 
             });
         } else {
             res.redirect('/reports?sent=true');
