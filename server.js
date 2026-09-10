@@ -23,9 +23,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 const emailService = require('./emailService');
 
-// Schedule Weekly Backup and Email Report (Every Monday at 8:00 AM)
-cron.schedule('0 8 * * 1', async () => {
-    console.log('[CRON] Running scheduled weekly backup and email report...');
+// Schedule Weekly Backup and Email Report (Every Monday at 9:00 AM Sri Lanka Time)
+cron.schedule('0 9 * * 1', async () => {
+    console.log('[CRON] Running scheduled weekly backup and email report at 9:00 AM...');
     try {
         await connectDB();
         const result = await backupService.runBackup();
@@ -35,6 +35,8 @@ cron.schedule('0 8 * * 1', async () => {
     } catch (err) {
         console.error('[CRON] Weekly backup error:', err);
     }
+}, {
+    timezone: 'Asia/Colombo'
 });
 
 // Schedule Automated Outstanding SMS Reminders (Every day at 9:00 AM for customers holding trays > 7 days)
@@ -52,6 +54,8 @@ cron.schedule('0 9 * * *', async () => {
     } catch (err) {
         console.error('[CRON] Error sending automated reminders:', err);
     }
+}, {
+    timezone: 'Asia/Colombo'
 });
 
 const app = express();
