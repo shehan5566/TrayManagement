@@ -348,7 +348,7 @@ class EmailService {
             `;
 
             const mailOptions = {
-                from: `"${companyName}" <${process.env.EMAIL_USER}>`,
+                from: `"${companyName}" <${emailUser}>`,
                 to: receiver,
                 subject: `${isCustomDate ? 'Executive Management Summary' : 'Weekly Executive Report'} & Stock Audit - ${companyName} (${startDate.toLocaleDateString('en-GB')} - ${endDate.toLocaleDateString('en-GB')})`,
                 html: htmlContent,

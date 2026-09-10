@@ -105,6 +105,7 @@
 
                         const res = await fetch('/admin/email/send', {
                             method: 'POST',
+                            credentials: 'same-origin',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json'
