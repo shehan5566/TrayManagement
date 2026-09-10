@@ -404,6 +404,47 @@ class EmailService {
                 });
             }
 
+            // Check for HTTPS Webhook (Bypasses Render cloud SMTP port blocking)
+            const webhookUrl = process.env.EMAIL_WEBHOOK_URL;
+            if (webhookUrl && webhookUrl.trim().startsWith('http')) {
+                console.log('[EMAIL] Dispatching email via Google Apps Script HTTPS Webhook (Port 443)...');
+                const webhookAttachments = [];
+                if (backupResult && backupResult.filepath && fs.existsSync(backupResult.filepath)) {
+                    webhookAttachments.push({
+                        filename: backupResult.filename,
+                        mimeType: 'application/json',
+                        base64: fs.readFileSync(backupResult.filepath).toString('base64')
+                    });
+                }
+                if (excelBuffer) {
+                    webhookAttachments.push({
+                        filename: `Nelna_Executive_Summary_${startDate.toISOString().split('T')[0]}_to_${endDate.toISOString().split('T')[0]}.xlsx`,
+                        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        base64: excelBuffer.toString('base64')
+                    });
+                }
+
+                const resp = await fetch(webhookUrl.trim(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: receiver,
+                        subject: mailOptions.subject,
+                        htmlBody: htmlContent,
+                        senderName: companyName,
+                        attachments: webhookAttachments
+                    })
+                });
+
+                const resData = await resp.json();
+                if (resData && resData.success) {
+                    console.log(`[EMAIL] Comprehensive report delivered successfully via HTTPS Webhook to ${receiver}`);
+                    return true;
+                } else {
+                    console.warn('[EMAIL] Webhook failed, attempting SMTP fallback:', resData ? resData.error : 'Unknown error');
+                }
+            }
+
             const info = await this.sendMailWithFallback(mailOptions);
             console.log(`[EMAIL] Comprehensive report sent successfully to ${receiver}: ${info.messageId}`);
             return true;
