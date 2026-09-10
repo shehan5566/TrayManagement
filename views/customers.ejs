@@ -130,7 +130,12 @@
                                         <% } %>
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_edit'))) { %>
                                         <button type="button" 
-                                            onclick="openEditCustomerModal('<%= c.id %>', '<%- (c.name || \'\').replace(/\'/g, &quot;\\\'&quot;) %>', '<%- (c.address || \'\').replace(/\'/g, &quot;\\\'&quot;) %>', '<%= c.phone || \'\' %>', '<%= c.initialBalance || 0 %>')" 
+                                            data-id="<%= c.id %>"
+                                            data-name="<%= c.name || '' %>"
+                                            data-address="<%= c.address || '' %>"
+                                            data-phone="<%= c.phone || '' %>"
+                                            data-initial-balance="<%= c.initialBalance || 0 %>"
+                                            onclick="handleEditCustomerClick(this)"
                                             class="btn btn-secondary" 
                                             style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark); cursor: pointer;" 
                                             title="Edit Customer">
@@ -228,6 +233,16 @@ function closeEditCustomerModal() {
     if (modal) modal.style.display = 'none';
 }
 
+function handleEditCustomerClick(btn) {
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const name = btn.getAttribute('data-name');
+    const address = btn.getAttribute('data-address');
+    const phone = btn.getAttribute('data-phone');
+    const initialBalance = btn.getAttribute('data-initial-balance');
+    openEditCustomerModal(id, name, address, phone, initialBalance);
+}
+
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('editCustomerModal');
     if (event.target === modal) {
@@ -238,11 +253,11 @@ window.addEventListener('click', function(event) {
 <% if (editCustomer) { %>
 document.addEventListener('DOMContentLoaded', function() {
     openEditCustomerModal(
-        '<%= editCustomer.id %>',
-        '<%- (editCustomer.name || "").replace(/'/g, "\\'") %>',
-        '<%- (editCustomer.address || "").replace(/'/g, "\\'") %>',
-        '<%= editCustomer.phone || "" %>',
-        '<%= editCustomer.initialBalance || 0 %>'
+        <%- JSON.stringify(editCustomer.id || '') %>,
+        <%- JSON.stringify(editCustomer.name || '') %>,
+        <%- JSON.stringify(editCustomer.address || '') %>,
+        <%- JSON.stringify(editCustomer.phone || '') %>,
+        <%= editCustomer.initialBalance || 0 %>
     );
 });
 <% } %>
