@@ -1985,26 +1985,36 @@ app.post('/admin/email/send', requireAuth, async (req, res) => {
             customEmails = (sysSetting && sysSetting.emailReceiver) ? sysSetting.emailReceiver : 'shehand@nelna.lk';
         }
 
-        console.log(`[EMAIL] Manual trigger to send report to: ${customEmails}`);
-        const result = await backupService.runBackup();
-        if (result && result.success) {
-            // Await email delivery so we know real outcome
-            const sent = await emailService.sendWeeklyReport(result, customEmails, startDate, endDate);
-            if (sent) {
-                if (isAjax) return res.json({ success: true, message: `Executive summary report email sent successfully to ${customEmails}!` });
-                return res.redirect('/reports?sent=true');
-            } else {
-                if (isAjax) return res.status(500).json({ success: false, error: 'Email service could not deliver the message. Please check email address.' });
-                return res.redirect('/reports?error=email_failed');
-            }
+        console.log(`[EMAIL] Instant trigger: Sending report to ${customEmails}...`);
+
+        // Respond IMMEDIATELY so the client never waits on 'Processing...'
+        if (isAjax) {
+            res.json({ 
+                success: true, 
+                message: `Report is being sent to ${customEmails}! It will arrive in your inbox in a few seconds.` 
+            });
         } else {
-            const errDetail = result ? result.error : 'Backup generation failed';
-            if (isAjax) return res.status(500).json({ success: false, error: 'Failed to generate backup for report: ' + errDetail });
-            res.status(500).send('Failed to generate backup');
+            res.redirect('/reports?sent=true');
         }
+
+        // Process backup and email delivery in background (non-blocking)
+        setImmediate(async () => {
+            try {
+                const result = await backupService.runBackup();
+                if (result && result.success) {
+                    await emailService.sendWeeklyReport(result, customEmails, startDate, endDate);
+                    console.log(`[EMAIL] Background delivery completed successfully to ${customEmails}`);
+                } else {
+                    console.error('[EMAIL] Backup generation failed:', result ? result.error : 'Unknown');
+                }
+            } catch (bgErr) {
+                console.error('[EMAIL] Background email error:', bgErr.message || bgErr);
+            }
+        });
+
     } catch (err) {
         console.error('[EMAIL ERROR]', err);
-        if (isAjax) return res.status(500).json({ success: false, error: 'Error sending email: ' + (err.message || err) });
+        if (isAjax) return res.status(500).json({ success: false, error: 'Error: ' + (err.message || err) });
         res.status(500).send('Error');
     }
 });

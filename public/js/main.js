@@ -324,9 +324,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         form.addEventListener('submit', function (e) {
-            // Skip auto loading state for confirmation forms (handled inside confirmAjaxDelete)
+            // Skip auto loading state for confirmation forms (handled inside confirmAjaxDelete) or manualEmailForm
             const onsubmitAttr = this.getAttribute('onsubmit') || '';
-            if (onsubmitAttr.includes('confirmAjaxDelete') || onsubmitAttr.includes('confirm(')) {
+            if (onsubmitAttr.includes('confirmAjaxDelete') || onsubmitAttr.includes('confirm(') || this.id === 'manualEmailForm') {
                 return;
             }
 

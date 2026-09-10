@@ -38,7 +38,7 @@
         <% if (user.role==='admin' || user.username==='admin' ) { %>
             <!-- Manual Email Report Form -->
             <form id="manualEmailForm" action="/admin/email/send" method="POST" class="responsive-filter-form"
-                onsubmit="submitAjaxForm(event, this, 'Report is being sent!')"
+                onsubmit="sendManualEmailReport(event, this)"
                 style="display: flex; gap: 15px; align-items: flex-end; background: #fffbea; padding: 15px; border-radius: 8px; border: 1px dashed var(--accent-yellow); margin-top: -5px;">
                 <div style="display: flex; flex-direction: column; gap: 5px; flex-grow: 1;">
                     <label for="emails" style="font-size: 12px; font-weight: 600; color: var(--text-dark);"><i
@@ -65,6 +65,75 @@
             </form>
 
             <script>
+                async function sendManualEmailReport(e, form) {
+                    e.preventDefault();
+                    const sendBtn = document.getElementById('sendNowAnimatedBtn');
+                    const emailsInput = document.getElementById('emails');
+                    const emailsVal = (emailsInput ? emailsInput.value.trim() : '') || 'shehand@nelna.lk';
+
+                    // Trigger airplane animation instantly
+                    if (sendBtn) {
+                        sendBtn.classList.remove('sent');
+                        sendBtn.classList.add('sending');
+                    }
+
+                    // Save recent email
+                    try {
+                        let savedEmails = JSON.parse(localStorage.getItem('nelnaRecentEmails') || '[]');
+                        const newEmails = emailsVal.split(',').map(em => em.trim()).filter(em => em && em.includes('@'));
+                        let updatedEmails = [...new Set([...newEmails, ...savedEmails])].slice(0, 8);
+                        localStorage.setItem('nelnaRecentEmails', JSON.stringify(updatedEmails));
+                    } catch (storageErr) {}
+
+                    try {
+                        const sd = document.getElementById('startDate') ? document.getElementById('startDate').value : '';
+                        const ed = document.getElementById('endDate') ? document.getElementById('endDate').value : '';
+
+                        const payload = {
+                            emails: emailsVal,
+                            startDate: sd,
+                            endDate: ed
+                        };
+
+                        const res = await fetch('/admin/email/send', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const result = await res.json();
+
+                        // Complete button animation to "Sent"
+                        if (sendBtn) {
+                            sendBtn.classList.remove('sending');
+                            sendBtn.classList.add('sent');
+                            setTimeout(() => {
+                                sendBtn.classList.remove('sent');
+                            }, 3500);
+                        }
+
+                        if (res.ok && result.success) {
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: result.message || 'Report email is on its way!',
+                                showConfirmButton: false,
+                                timer: 3500,
+                                timerProgressBar: true
+                            });
+                        } else {
+                            Swal.fire('Error', result.error || 'Failed to send report email', 'error');
+                        }
+                    } catch (err) {
+                        if (sendBtn) sendBtn.classList.remove('sending');
+                        Swal.fire('Error', 'Connection error: ' + err.message, 'error');
+                    }
+                }
+
                 document.addEventListener('DOMContentLoaded', () => {
                     const emailsInput = document.getElementById('emails');
                     const recentEmailsContainer = document.getElementById('recentEmailsContainer');
@@ -93,57 +162,6 @@
                                 }
                             };
                             recentEmailsList.appendChild(pill);
-                        });
-                    }
-
-                    // Save on form submit
-                    const emailForm = document.getElementById('manualEmailForm');
-                    if (emailForm) {
-                        emailForm.addEventListener('submit', () => {
-                            // Trigger Send Button Airplane Animation
-                            const sendBtn = document.getElementById('sendNowAnimatedBtn');
-                            if (sendBtn) {
-                                sendBtn.classList.remove('sent');
-                                sendBtn.classList.add('sending');
-                                setTimeout(() => {
-                                    sendBtn.classList.remove('sending');
-                                    sendBtn.classList.add('sent');
-                                }, 1200);
-                                setTimeout(() => {
-                                    sendBtn.classList.remove('sent');
-                                }, 4000);
-                            }
-
-                            // Pass current date filters to the backend
-                            const sd = document.getElementById('startDate').value;
-                            const ed = document.getElementById('endDate').value;
-
-                            let hiddenSd = document.getElementById('hiddenStartDate');
-                            if (!hiddenSd) {
-                                hiddenSd = document.createElement('input');
-                                hiddenSd.type = 'hidden';
-                                hiddenSd.name = 'startDate';
-                                hiddenSd.id = 'hiddenStartDate';
-                                emailForm.appendChild(hiddenSd);
-                            }
-
-                            let hiddenEd = document.getElementById('hiddenEndDate');
-                            if (!hiddenEd) {
-                                hiddenEd = document.createElement('input');
-                                hiddenEd.type = 'hidden';
-                                hiddenEd.name = 'endDate';
-                                hiddenEd.id = 'hiddenEndDate';
-                                emailForm.appendChild(hiddenEd);
-                            }
-
-                            hiddenSd.value = sd;
-                            hiddenEd.value = ed;
-
-                            // Save recent email
-                            const newEmails = emailsInput.value.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));
-                            let updatedEmails = [...new Set([...newEmails, ...savedEmails])].slice(0, 8); // Keep last 8 unique
-                            localStorage.setItem('nelnaRecentEmails', JSON.stringify(updatedEmails));
-                        });
                     }
                 });
             </script>
