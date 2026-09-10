@@ -2437,6 +2437,8 @@ app.get('/analytics', requireAuth, async (req, res) => {
         const customers = await Customer.getAll();
         const locations = await Location.getAll();
         const transactions = await Transaction.getAll();
+        const sysSetting = await SystemSetting.get();
+        const depositPerTray = sysSetting && sysSetting.depositPerTray ? sysSetting.depositPerTray : 2000;
 
         // Calculate analytics metrics
         const totalOutstanding = customers.reduce((sum, c) => sum + (c.currentBalance || 0), 0);
@@ -2444,7 +2446,7 @@ app.get('/analytics', requireAuth, async (req, res) => {
         const totalOut = transactions.filter(t => t.type === 'OUT').reduce((sum, t) => sum + (t.count || 0), 0);
         
         // Return velocity score (% returned vs issued)
-        const returnVelocity = totalOut > 0 ? Math.min(100, Math.round((totalIn / totalOut) * 100)) : 85;
+        const returnVelocity = totalOut > 0 ? Math.min(100, Math.round((totalIn / totalOut) * 100)) : (totalOutstanding === 0 ? 100 : 85);
 
         // Branch utilization
         const branchStats = locations.map(loc => {
@@ -2457,18 +2459,181 @@ app.get('/analytics', requireAuth, async (req, res) => {
             };
         });
 
+        // ----------------------------------------------------
+        // 1. CUSTOMER RETURN CYCLE & LOSS RISK ANALYTICS
+        // ----------------------------------------------------
+        const now = new Date();
+        const txByCustomer = {};
+        transactions.forEach(t => {
+            if (!txByCustomer[t.customerId]) {
+                txByCustomer[t.customerId] = [];
+            }
+            txByCustomer[t.customerId].push(t);
+        });
+
+        const lossRiskCustomers = [];
+        let totalCycleDaysSum = 0;
+        let totalCycleCount = 0;
+
+        customers.filter(c => (c.currentBalance || 0) > 0).forEach(customer => {
+            const custTx = txByCustomer[customer.id] || [];
+            
+            // Calculate individual historical return cycle
+            const sortedTx = [...custTx].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let cycleDifferences = [];
+            for (let i = 0; i < sortedTx.length - 1; i++) {
+                if (sortedTx[i].type === 'OUT' && sortedTx[i + 1].type === 'IN') {
+                    const d1 = new Date(sortedTx[i].date);
+                    const d2 = new Date(sortedTx[i + 1].date);
+                    const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+                    if (diffDays <= 60) {
+                        cycleDifferences.push(diffDays);
+                    }
+                }
+            }
+
+            const avgCycle = cycleDifferences.length > 0 
+                ? Math.round(cycleDifferences.reduce((a, b) => a + b, 0) / cycleDifferences.length) 
+                : 7; // Default 7 days standard cycle if no historical pair yet
+
+            if (cycleDifferences.length > 0) {
+                totalCycleDaysSum += avgCycle;
+                totalCycleCount++;
+            }
+
+            // Days pending since last transaction
+            let lastTxDate = null;
+            if (sortedTx.length > 0) {
+                lastTxDate = sortedTx[sortedTx.length - 1].date;
+            }
+            
+            const daysPending = lastTxDate 
+                ? Math.max(0, Math.floor((now.getTime() - new Date(lastTxDate).getTime()) / (1000 * 60 * 60 * 24)))
+                : 0;
+
+            // Risk Scoring
+            let riskLevel = 'LOW';
+            let riskScore = 20;
+            
+            if (daysPending >= 21 || (daysPending >= 14 && customer.currentBalance >= 50)) {
+                riskLevel = 'HIGH';
+                riskScore = Math.min(98, 70 + Math.min(28, (daysPending - 14) * 2));
+            } else if (daysPending >= 10 || (daysPending >= 7 && customer.currentBalance >= 30)) {
+                riskLevel = 'MEDIUM';
+                riskScore = Math.min(68, 45 + (daysPending - 7) * 3);
+            } else {
+                riskLevel = 'LOW';
+                riskScore = Math.min(40, 10 + daysPending * 3);
+            }
+
+            const exposureValue = customer.currentBalance * depositPerTray;
+
+            lossRiskCustomers.push({
+                id: customer.id,
+                name: customer.name,
+                phone: customer.phone || 'N/A',
+                locationId: customer.locationId,
+                currentBalance: customer.currentBalance,
+                avgCycle,
+                daysPending,
+                lastTransactionDate: lastTxDate,
+                riskLevel,
+                riskScore,
+                exposureValue
+            });
+        });
+
+        // Fleet-wide average turnaround days
+        const avgTurnaroundDays = totalCycleCount > 0 
+            ? (totalCycleDaysSum / totalCycleCount).toFixed(1) 
+            : '7.0';
+
+        // Sort loss risk customers: HIGH first, then by currentBalance desc
+        lossRiskCustomers.sort((a, b) => {
+            const riskWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+            if (riskWeight[b.riskLevel] !== riskWeight[a.riskLevel]) {
+                return riskWeight[b.riskLevel] - riskWeight[a.riskLevel];
+            }
+            return b.currentBalance - a.currentBalance;
+        });
+
+        const highRiskList = lossRiskCustomers.filter(c => c.riskLevel === 'HIGH');
+        const medRiskList = lossRiskCustomers.filter(c => c.riskLevel === 'MEDIUM');
+        const highRiskTrays = highRiskList.reduce((sum, c) => sum + c.currentBalance, 0);
+        const highRiskExposure = highRiskTrays * depositPerTray;
+
+        // ----------------------------------------------------
+        // 2. VEHICLE & ROUTE VARIANCE ANALYTICS (STOCK SHORTAGES)
+        // ----------------------------------------------------
+        const acceptedTransfers = await StockTransferModel.find({ 
+            isDeleted: { $ne: true }, 
+            status: 'ACCEPTED' 
+        }).lean();
+
+        const vehicleMap = {};
+        const routeMap = {};
+        let totalTransitShortage = 0;
+
+        acceptedTransfers.forEach(t => {
+            const vNo = (t.vehicleNo && t.vehicleNo.trim()) ? t.vehicleNo.trim().toUpperCase() : 'UNKNOWN';
+            const rName = (t.route && t.route.trim()) ? t.route.trim() : 'Standard Route';
+            const dispatched = t.dispatchedQty || 0;
+            const received = (t.receivedQty !== undefined && t.receivedQty !== null) ? t.receivedQty : dispatched;
+            const shortage = Math.max(0, dispatched - received);
+
+            totalTransitShortage += shortage;
+
+            // Vehicle aggregate
+            if (!vehicleMap[vNo]) {
+                vehicleMap[vNo] = { vehicleNo: vNo, transfers: 0, dispatched: 0, received: 0, shortage: 0 };
+            }
+            vehicleMap[vNo].transfers += 1;
+            vehicleMap[vNo].dispatched += dispatched;
+            vehicleMap[vNo].received += received;
+            vehicleMap[vNo].shortage += shortage;
+
+            // Route aggregate
+            if (!routeMap[rName]) {
+                routeMap[rName] = { route: rName, transfers: 0, dispatched: 0, received: 0, shortage: 0 };
+            }
+            routeMap[rName].transfers += 1;
+            routeMap[rName].dispatched += dispatched;
+            routeMap[rName].received += received;
+            routeMap[rName].shortage += shortage;
+        });
+
+        const vehicleShortageStats = Object.values(vehicleMap)
+            .sort((a, b) => b.shortage - a.shortage || b.transfers - a.transfers)
+            .slice(0, 10);
+
+        const routeShortageStats = Object.values(routeMap)
+            .sort((a, b) => b.shortage - a.shortage || b.transfers - a.transfers)
+            .slice(0, 10);
+
         res.render('analytics', {
             totalOutstanding,
             totalIn,
             totalOut,
             returnVelocity,
             branchStats,
+            lossRiskCustomers,
+            highRiskList,
+            medRiskList,
+            highRiskTrays,
+            highRiskExposure,
+            avgTurnaroundDays,
+            vehicleShortageStats,
+            routeShortageStats,
+            totalTransitShortage,
+            depositPerTray,
             activePath: '/analytics'
         });
     } catch (err) {
         console.error('Error rendering analytics page:', err);
         res.status(500).send('Error loading AI analytics page');
     }
+});
 // Health / Keep-Alive Ping Route (for UptimeRobot / Cron-Job.org)
 app.get('/ping', (req, res) => {
     res.status(200).send('OK');
