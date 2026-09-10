@@ -129,9 +129,13 @@
                                         </a>
                                         <% } %>
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_edit'))) { %>
-                                        <a href="/customers/<%= c.id %>/edit" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark);" title="Edit">
+                                        <button type="button" 
+                                            onclick="openEditCustomerModal('<%= c.id %>', '<%- (c.name || \'\').replace(/\'/g, &quot;\\\'&quot;) %>', '<%- (c.address || \'\').replace(/\'/g, &quot;\\\'&quot;) %>', '<%= c.phone || \'\' %>', '<%= c.initialBalance || 0 %>')" 
+                                            class="btn btn-secondary" 
+                                            style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark); cursor: pointer;" 
+                                            title="Edit Customer">
                                             <i class="fa-solid fa-pen-to-square"></i>
-                                        </a>
+                                        </button>
                                         <% } %>
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_delete'))) { %>
                                         <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')">
@@ -152,7 +156,97 @@
     </div>
 </div>
 
+<!-- Edit Customer Modal Window -->
+<div id="editCustomerModal" class="modal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content"
+        style="background-color: #fefefe; margin: 60px auto; padding: 25px; border-radius: 8px; width: 92%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
+            <h3 style="margin: 0; color: var(--primary-green-dark);">
+                <i class="fa-solid fa-pen-to-square"></i> Edit Customer
+            </h3>
+            <span onclick="closeEditCustomerModal()"
+                style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1;">&times;</span>
+        </div>
+
+        <form id="editCustomerForm" method="POST"
+            onsubmit="submitAjaxForm(event, this, 'Customer updated successfully')">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="form-group">
+                    <label for="modalCustomerName" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Customer/Farm Name</label>
+                    <input type="text" id="modalCustomerName" name="name" required style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                </div>
+
+                <div class="form-group">
+                    <label for="modalCustomerAddress" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Address</label>
+                    <input type="text" id="modalCustomerAddress" name="address" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                </div>
+
+                <div class="form-group">
+                    <label for="modalCustomerPhone" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Phone Number</label>
+                    <input type="tel" id="modalCustomerPhone" name="phone" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" required style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                </div>
+
+                <div class="form-group">
+                    <label for="modalCustomerInitialBalance" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Opening Tray Balance (Issued)</label>
+                    <input type="number" id="modalCustomerInitialBalance" name="initialBalance" min="0" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                    <span style="font-size: 11px; color: var(--text-light); margin-top: 3px; display: block;">Opening quantity of trays already with the customer.</span>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-check"></i> Update Customer
+                    </button>
+                    <button type="button" onclick="closeEditCustomerModal()" class="btn btn-secondary" style="height: 38px;">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+function openEditCustomerModal(id, name, address, phone, initialBalance) {
+    const form = document.getElementById('editCustomerForm');
+    if (form) form.action = '/customers/' + id + '/edit';
+    const nameInput = document.getElementById('modalCustomerName');
+    if (nameInput) nameInput.value = name || '';
+    const addrInput = document.getElementById('modalCustomerAddress');
+    if (addrInput) addrInput.value = address || '';
+    const phoneInput = document.getElementById('modalCustomerPhone');
+    if (phoneInput) phoneInput.value = phone || '';
+    const balInput = document.getElementById('modalCustomerInitialBalance');
+    if (balInput) balInput.value = (initialBalance !== undefined && initialBalance !== null) ? initialBalance : 0;
+    
+    const modal = document.getElementById('editCustomerModal');
+    if (modal) modal.style.display = 'block';
+}
+
+function closeEditCustomerModal() {
+    const modal = document.getElementById('editCustomerModal');
+    if (modal) modal.style.display = 'none';
+}
+
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('editCustomerModal');
+    if (event.target === modal) {
+        closeEditCustomerModal();
+    }
+});
+
+<% if (editCustomer) { %>
+document.addEventListener('DOMContentLoaded', function() {
+    openEditCustomerModal(
+        '<%= editCustomer.id %>',
+        '<%- (editCustomer.name || "").replace(/'/g, "\\'") %>',
+        '<%- (editCustomer.address || "").replace(/'/g, "\\'") %>',
+        '<%= editCustomer.phone || "" %>',
+        '<%= editCustomer.initialBalance || 0 %>'
+    );
+});
+<% } %>
+
 async function sendBalanceSMS(customerId) {
     if(!confirm("Are you sure you want to send a manual SMS balance update to this customer?")) return;
     

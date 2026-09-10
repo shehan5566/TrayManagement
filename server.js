@@ -805,7 +805,7 @@ app.get('/customers', requireAuth, async (req, res) => {
     }
 });
 
-app.get('/customers/:id/edit', requireAuth, requireAdmin, async (req, res) => {
+app.get('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), async (req, res) => {
     try {
         const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
         const editCustomer = await Customer.getById(req.params.id);
@@ -914,7 +914,7 @@ app.post('/customers/import', requireEditAccess, upload.single('excelFile'), asy
     }
 });
 
-app.post('/customers/:id/edit', requireAuth, requireAdmin, async (req, res) => {
+app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), async (req, res) => {
     const { name, address, phone, initialBalance } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
