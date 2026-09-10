@@ -61,14 +61,16 @@
                         <button class="header-icon-btn mobile-only" id="headerSidebarToggleBtn" onclick="handleSidebarToggle()" title="Toggle Menu" style="background: rgba(255,255,255,0.2); border: none; color: #ffffff; width: 36px; height: 36px; border-radius: 8px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                             <i class="fa-solid fa-bars"></i>
                         </button>
-                        <img src="/images/logo.png" alt="Nelna Logo" class="brand-logo-img">
-                        <div class="brand-text">
-                            <h1>NELNA AGRI DEVELOPMENT (PVT) LTD</h1>
-                            <p>Tray Management System &nbsp; <span class="header-location-badge"><i
-                                        class="fa-solid fa-location-dot"></i>
-                                    <%= (user && user.locationName) ? user.locationName : 'Head Office' %>
-                                </span></p>
-                        </div>
+                        <a href="/dashboard" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; cursor: pointer;" title="Go to Dashboard">
+                            <img src="/images/logo.png" alt="Nelna Logo" class="brand-logo-img">
+                            <div class="brand-text">
+                                <h1>NELNA AGRI DEVELOPMENT (PVT) LTD</h1>
+                                <p>Tray Management System &nbsp; <span class="header-location-badge"><i
+                                            class="fa-solid fa-location-dot"></i>
+                                        <%= (user && user.locationName) ? user.locationName : 'Head Office' %>
+                                    </span></p>
+                            </div>
+                        </a>
                     </div>
                     <div class="header-right">
                         <!-- Multilingual AI Voice Assistant Button -->
