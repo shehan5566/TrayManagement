@@ -45,6 +45,14 @@
                     <span style="font-size: 11px; color: var(--text-light);">Opening quantity of trays already with the customer.</span>
                 </div>
 
+                <% if (editCustomer) { %>
+                <div class="form-group">
+                    <label for="currentBalance">Current Tray Balance</label>
+                    <input type="number" id="currentBalance" name="currentBalance" value="<%= editCustomer.currentBalance %>" style="font-weight: bold; color: var(--primary-green-dark);">
+                    <span style="font-size: 11px; color: var(--text-light);">Current trays pending with customer.</span>
+                </div>
+                <% } %>
+
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <button type="submit" class="btn btn-primary" style="flex: 1;">
                         <i class="fa-solid <%= editCustomer ? 'fa-pen' : 'fa-plus' %>"></i> <%= editCustomer ? 'Update Customer' : 'Save Customer' %>
@@ -135,6 +143,7 @@
                                             data-address="<%= c.address || '' %>"
                                             data-phone="<%= c.phone || '' %>"
                                             data-initial-balance="<%= c.initialBalance || 0 %>"
+                                            data-current-balance="<%= c.currentBalance || 0 %>"
                                             onclick="handleEditCustomerClick(this)"
                                             class="btn btn-secondary" 
                                             style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark); cursor: pointer;" 
@@ -198,6 +207,14 @@
                     <span style="font-size: 11px; color: var(--text-light); margin-top: 3px; display: block;">Opening quantity of trays already with the customer.</span>
                 </div>
 
+                <div class="form-group">
+                    <label for="modalCustomerCurrentBalance" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">
+                        Current Tray Balance
+                    </label>
+                    <input type="number" id="modalCustomerCurrentBalance" name="currentBalance" style="width: 100%; padding: 8px 12px; border: 1px solid #107c41; border-radius: 4px; box-sizing: border-box; font-weight: bold; color: var(--primary-green-dark); background-color: #f0fdf4;">
+                    <span style="font-size: 11px; color: var(--text-light); margin-top: 3px; display: block;">Current active trays with customer. Modify this to adjust the customer's balance.</span>
+                </div>
+
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button type="submit" class="btn btn-primary" style="flex: 1; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         <i class="fa-solid fa-check"></i> Update Customer
@@ -212,7 +229,7 @@
 </div>
 
 <script>
-function openEditCustomerModal(id, name, address, phone, initialBalance) {
+function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance) {
     const form = document.getElementById('editCustomerForm');
     if (form) form.action = '/customers/' + id + '/edit';
     const nameInput = document.getElementById('modalCustomerName');
@@ -221,8 +238,10 @@ function openEditCustomerModal(id, name, address, phone, initialBalance) {
     if (addrInput) addrInput.value = address || '';
     const phoneInput = document.getElementById('modalCustomerPhone');
     if (phoneInput) phoneInput.value = phone || '';
-    const balInput = document.getElementById('modalCustomerInitialBalance');
-    if (balInput) balInput.value = (initialBalance !== undefined && initialBalance !== null) ? initialBalance : 0;
+    const initBalInput = document.getElementById('modalCustomerInitialBalance');
+    if (initBalInput) initBalInput.value = (initialBalance !== undefined && initialBalance !== null) ? initialBalance : 0;
+    const currBalInput = document.getElementById('modalCustomerCurrentBalance');
+    if (currBalInput) currBalInput.value = (currentBalance !== undefined && currentBalance !== null) ? currentBalance : 0;
     
     const modal = document.getElementById('editCustomerModal');
     if (modal) modal.style.display = 'block';
@@ -240,7 +259,8 @@ function handleEditCustomerClick(btn) {
     const address = btn.getAttribute('data-address');
     const phone = btn.getAttribute('data-phone');
     const initialBalance = btn.getAttribute('data-initial-balance');
-    openEditCustomerModal(id, name, address, phone, initialBalance);
+    const currentBalance = btn.getAttribute('data-current-balance');
+    openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance);
 }
 
 window.addEventListener('click', function(event) {
@@ -257,7 +277,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <%- JSON.stringify(editCustomer.name || '') %>,
         <%- JSON.stringify(editCustomer.address || '') %>,
         <%- JSON.stringify(editCustomer.phone || '') %>,
-        <%= editCustomer.initialBalance || 0 %>
+        <%= editCustomer.initialBalance || 0 %>,
+        <%= editCustomer.currentBalance || 0 %>
     );
 });
 <% } %>

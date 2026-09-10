@@ -915,7 +915,7 @@ app.post('/customers/import', requireEditAccess, upload.single('excelFile'), asy
 });
 
 app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), async (req, res) => {
-    const { name, address, phone, initialBalance } = req.body;
+    const { name, address, phone, initialBalance, currentBalance } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
@@ -933,9 +933,9 @@ app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'),
         return res.render('customers', { customers, editCustomer, error: 'Phone number must be exactly 10 digits!' });
     }
     try {
-        const updatedCustomer = await Customer.update(req.params.id, { name, address, phone, initialBalance });
+        const updatedCustomer = await Customer.update(req.params.id, { name, address, phone, initialBalance, currentBalance });
         if (updatedCustomer) {
-            await ActivityLog.log(req.session.user.username, 'UPDATE', 'Customer', `Updated details for customer: ${updatedCustomer.name}`);
+            await ActivityLog.log(req.session.user.username, 'UPDATE', 'Customer', `Updated customer: ${updatedCustomer.name} (Current Balance: ${updatedCustomer.currentBalance})`);
         }
         if (isAjax) return res.json({ success: true, message: 'Customer updated successfully' });
         res.redirect('/customers');

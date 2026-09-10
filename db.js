@@ -534,19 +534,26 @@ const Customer = {
             customer.name = customerData.name;
             customer.address = customerData.address;
             customer.phone = customerData.phone;
-            customer.initialBalance = parseInt(customerData.initialBalance) || 0;
 
             // Recalculate balance based on initialBalance and all transactions
             const transactions = await TransactionModel.find({ customerId: id, isDeleted: { $ne: true } });
-            let balance = customer.initialBalance;
+            let netTx = 0;
             transactions.forEach(t => {
                 if (t.type === 'OUT') {
-                    balance += t.count;
+                    netTx += t.count;
                 } else if (t.type === 'IN') {
-                    balance -= t.count;
+                    netTx -= t.count;
                 }
             });
-            customer.currentBalance = balance;
+
+            if (customerData.currentBalance !== undefined && customerData.currentBalance !== null && customerData.currentBalance !== '') {
+                const targetCurrentBalance = parseInt(customerData.currentBalance) || 0;
+                customer.currentBalance = targetCurrentBalance;
+                customer.initialBalance = targetCurrentBalance - netTx;
+            } else {
+                customer.initialBalance = parseInt(customerData.initialBalance) || 0;
+                customer.currentBalance = customer.initialBalance + netTx;
+            }
 
             await customer.save();
             return mapDoc(customer);
