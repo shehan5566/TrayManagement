@@ -230,7 +230,7 @@ class EmailService {
                     <!-- Header -->
                     <div style="background-color: #107c41; color: #ffffff; padding: 22px 20px; text-align: center;">
                         <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff;">
-                            Nelna <span style="background-color: #ffe082; color: #000000; padding: 2px 7px; border-radius: 4px; font-weight: 800; display: inline-block;">Tray</span> System
+                            Nelna Tray System
                         </h2>
                         <p style="margin: 6px 0 0 0; font-size: 14px; color: #ffffff; opacity: 0.95; font-weight: 500;">
                             ${isCustomDate ? 'Summary Report' : 'Weekly Summary Report'}
