@@ -2497,3 +2497,12 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });
+
+// Process-level crash prevention (Uncaught Exception & Unhandled Rejection Guards)
+process.on('uncaughtException', (err) => {
+    console.error('CRITICAL: Uncaught Exception caught to prevent server crash:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('CRITICAL: Unhandled Rejection caught to prevent server crash:', reason);
+});
