@@ -71,13 +71,20 @@
                     const emailsInput = document.getElementById('emails');
                     const emailsVal = (emailsInput ? emailsInput.value.trim() : '') || 'shehand@nelna.lk';
 
-                    // Trigger airplane animation instantly
+                    // ✈️ 1. Trigger the User's Airplane Flying Animation (1.2s flight -> 'Sent' checkmark -> reset at 4s)
                     if (sendBtn) {
                         sendBtn.classList.remove('sent');
                         sendBtn.classList.add('sending');
+                        setTimeout(() => {
+                            sendBtn.classList.remove('sending');
+                            sendBtn.classList.add('sent');
+                        }, 1200);
+                        setTimeout(() => {
+                            sendBtn.classList.remove('sent');
+                        }, 4000);
                     }
 
-                    // Save recent email
+                    // 2. Save recent email to localStorage
                     try {
                         let savedEmails = JSON.parse(localStorage.getItem('nelnaRecentEmails') || '[]');
                         const newEmails = emailsVal.split(',').map(em => em.trim()).filter(em => em && em.includes('@'));
@@ -85,6 +92,7 @@
                         localStorage.setItem('nelnaRecentEmails', JSON.stringify(updatedEmails));
                     } catch (storageErr) {}
 
+                    // 3. Send email in background
                     try {
                         const sd = document.getElementById('startDate') ? document.getElementById('startDate').value : '';
                         const ed = document.getElementById('endDate') ? document.getElementById('endDate').value : '';
@@ -106,21 +114,13 @@
 
                         const result = await res.json();
 
-                        // Complete button animation to "Sent"
-                        if (sendBtn) {
-                            sendBtn.classList.remove('sending');
-                            sendBtn.classList.add('sent');
-                            setTimeout(() => {
-                                sendBtn.classList.remove('sent');
-                            }, 3500);
-                        }
-
                         if (res.ok && result.success) {
+                            // Display the familiar SweetAlert2 "successfully" toast message
                             Swal.fire({
                                 toast: true,
                                 position: 'top-end',
                                 icon: 'success',
-                                title: result.message || 'Report email is on its way!',
+                                title: result.message || `Executive summary report email sent successfully to ${emailsVal}!`,
                                 showConfirmButton: false,
                                 timer: 3500,
                                 timerProgressBar: true
@@ -129,7 +129,7 @@
                             Swal.fire('Error', result.error || 'Failed to send report email', 'error');
                         }
                     } catch (err) {
-                        if (sendBtn) sendBtn.classList.remove('sending');
+                        console.error('Email send error:', err);
                         Swal.fire('Error', 'Connection error: ' + err.message, 'error');
                     }
                 }
@@ -162,6 +162,7 @@
                                 }
                             };
                             recentEmailsList.appendChild(pill);
+                        });
                     }
                 });
             </script>
