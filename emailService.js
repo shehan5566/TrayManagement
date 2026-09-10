@@ -5,13 +5,12 @@ const mongoose = require('mongoose');
 const xlsx = require('xlsx');
 
 class EmailService {
-    constructor() {
-        this.transporter = nodemailer.createTransport({
+    getTransporter() {
+        const user = process.env.EMAIL_USER || 'nelnatray@gmail.com';
+        const pass = (process.env.EMAIL_PASS || 'tcqekxmxfywsbrod').replace(/\s+/g, '');
+        return nodemailer.createTransport({
             service: process.env.EMAIL_SERVICE || 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
+            auth: { user, pass }
         });
     }
 
@@ -30,8 +29,11 @@ class EmailService {
                 console.error('[EMAIL] Could not read SystemSetting:', sysErr);
             }
 
-            const receiver = overrideEmails || dbEmails || process.env.REPORT_RECEIVER;
-            if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !receiver) {
+            const emailUser = process.env.EMAIL_USER || 'nelnatray@gmail.com';
+            const emailPass = (process.env.EMAIL_PASS || 'tcqekxmxfywsbrod').replace(/\s+/g, '');
+            const receiver = (overrideEmails && overrideEmails.trim()) || dbEmails || process.env.REPORT_RECEIVER || 'shehand@nelna.lk';
+
+            if (!emailUser || !emailPass || !receiver) {
                 console.log('[EMAIL] Skipping report: Email credentials or receiver not configured');
                 return false;
             }
@@ -363,12 +365,13 @@ class EmailService {
                 });
             }
 
-            const info = await this.transporter.sendMail(mailOptions);
+            const transporter = this.getTransporter();
+            const info = await transporter.sendMail(mailOptions);
             console.log(`[EMAIL] Comprehensive report sent successfully to ${receiver}: ${info.messageId}`);
             return true;
         } catch (error) {
-            console.error('[EMAIL] Error sending weekly report:', error);
-            return false;
+            console.error('[EMAIL] Error sending executive summary report:', error.message || error);
+            throw error;
         }
     }
 }

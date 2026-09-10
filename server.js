@@ -1963,32 +1963,48 @@ app.post('/profile', requireAuth, async (req, res) => {
     }
 });
 
-// Manual Email Report Route (Admin Only)
-app.post('/admin/email/send', requireAuth, requireAdmin, async (req, res) => {
+// Manual Email Report Route (Admin / Reports Authorized)
+app.post('/admin/email/send', requireAuth, async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
-        const customEmails = req.body.emails;
+        const user = req.session.user;
+        const isAuthorized = user && (user.role === 'admin' || user.username === 'admin' || user.isSuperUser);
+        if (!isAuthorized) {
+            const perms = await getUserPermissions(user);
+            if (!perms.includes('*') && !perms.includes('reports_send_manually') && !perms.includes('view_reports')) {
+                if (isAjax) return res.status(403).json({ success: false, error: 'Unauthorized: Admin access required.' });
+                return res.status(403).send('Unauthorized');
+            }
+        }
+
+        let customEmails = req.body.emails;
         const { startDate, endDate } = req.body;
         
-        if (!customEmails) {
-            if (isAjax) return res.status(400).json({ success: false, error: 'Emails are required' });
-            return res.redirect('/reports');
+        if (!customEmails || !customEmails.trim()) {
+            const sysSetting = await SystemSetting.get();
+            customEmails = (sysSetting && sysSetting.emailReceiver) ? sysSetting.emailReceiver : 'shehand@nelna.lk';
         }
 
         console.log(`[EMAIL] Manual trigger to send report to: ${customEmails}`);
         const result = await backupService.runBackup();
         if (result && result.success) {
-            // Trigger asynchronously
-            emailService.sendWeeklyReport(result, customEmails, startDate, endDate);
-            if (isAjax) return res.json({ success: true, message: 'Report is being sent!' });
-            return res.redirect('/reports');
+            // Await email delivery so we know real outcome
+            const sent = await emailService.sendWeeklyReport(result, customEmails, startDate, endDate);
+            if (sent) {
+                if (isAjax) return res.json({ success: true, message: `Executive summary report email sent successfully to ${customEmails}!` });
+                return res.redirect('/reports?sent=true');
+            } else {
+                if (isAjax) return res.status(500).json({ success: false, error: 'Email service could not deliver the message. Please check email address.' });
+                return res.redirect('/reports?error=email_failed');
+            }
         } else {
-            if (isAjax) return res.status(500).json({ success: false, error: 'Failed to generate backup for report' });
+            const errDetail = result ? result.error : 'Backup generation failed';
+            if (isAjax) return res.status(500).json({ success: false, error: 'Failed to generate backup for report: ' + errDetail });
             res.status(500).send('Failed to generate backup');
         }
     } catch (err) {
-        console.error(err);
-        if (isAjax) return res.status(500).json({ success: false, error: 'Internal Server Error' });
+        console.error('[EMAIL ERROR]', err);
+        if (isAjax) return res.status(500).json({ success: false, error: 'Error sending email: ' + (err.message || err) });
         res.status(500).send('Error');
     }
 });
