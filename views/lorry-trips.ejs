@@ -1,0 +1,356 @@
+<%- include('partials/header') %>
+
+<div style="margin-bottom: 25px;">
+    <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck-ramp-box"></i> Lorry Delivery & Tray Reconciliation</h2>
+    <p style="color: var(--text-light); font-size: 14px;">Manage vehicle dispatches, on-route customer deliveries, and warehouse return reconciliation.</p>
+</div>
+
+<% if (locals.error) { %>
+    <div class="error-banner">
+        <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+    </div>
+<% } %>
+
+<!-- 1. Dispatch Lorry (Load Trays) -->
+<% if (typeof hasPerm !== 'function' || hasPerm('transactions_create')) { %>
+<div class="content-box" style="border-top: 4px solid var(--primary-green);">
+    <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <span class="box-title"><i class="fa-solid fa-truck-loading"></i> New Lorry Dispatch (ලොරියට ට්‍රේ පැටවීම)</span>
+        <span style="font-size: 13px; font-weight: 700; color: var(--primary-green-dark); background: #dcfce7; padding: 4px 12px; border-radius: 20px; border: 1px solid #86efac;">
+            <i class="fa-solid fa-warehouse"></i> Warehouse Stock: <%= (typeof currentStock !== 'undefined') ? currentStock : 0 %> Trays
+        </span>
+    </div>
+
+    <form action="/lorry-trips/dispatch" method="POST" onsubmit="submitAjaxForm(event, this, 'Lorry dispatched successfully')">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="vehicleNo">Vehicle Number (වාහන අංකය) <span style="color:red;">*</span></label>
+                <select id="vehicleNo" name="vehicleNo" required>
+                    <option value="">Select Vehicle</option>
+                    <% (vehicles || []).forEach(v => { %>
+                        <option value="<%= v %>"><%= v %></option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="driverName">Driver Name (රියදුරුගේ නම)</label>
+                <input type="text" id="driverName" name="driverName" placeholder="e.g. Nuwan Kumara" required>
+            </div>
+
+            <div class="form-group">
+                <label for="driverPhone">Driver Phone (දුරකථන අංකය)</label>
+                <input type="tel" id="driverPhone" name="driverPhone" placeholder="0771234567" pattern="[0-9]{10}">
+            </div>
+
+            <div class="form-group">
+                <label for="pin">Driver Login PIN (රහස් අංකය)</label>
+                <input type="text" id="pin" name="pin" value="1234" maxlength="4" placeholder="1234" required>
+                <span style="font-size: 11px; color: var(--text-light);">Driver uses this PIN to login on mobile (/driver)</span>
+            </div>
+
+            <div class="form-group">
+                <label for="loadedQty">Loaded Tray Quantity (පටවන ට්‍රේ ගණන) <span style="color:red;">*</span></label>
+                <input type="number" id="loadedQty" name="loadedQty" min="1" placeholder="Enter tray count..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="dispatchedDate">Dispatch Date & Time</label>
+                <input type="datetime-local" id="dispatchedDate" name="dispatchedDate" required>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="notes">Dispatch Notes / Destination Route (ගමන් මාර්ගය හෝ සටහන්)</label>
+            <input type="text" id="notes" name="notes" placeholder="e.g. Gampaha - Negombo Delivery Route">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                <i class="fa-solid fa-paper-plane"></i> Dispatch Lorry with Trays (පැටවීම තහවුරු කරන්න)
+            </button>
+            <a href="/driver" target="_blank" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-mobile-screen-button"></i> Open Driver Mobile Portal (/driver)
+            </a>
+        </div>
+    </form>
+</div>
+<% } %>
+
+<!-- 2. Active Trips on Route -->
+<div class="content-box">
+    <div class="box-header">
+        <span class="box-title"><i class="fa-solid fa-route"></i> Active Lorry Trips on Route (ගමන් මාර්ගයේ ඇති ලොරි)</span>
+    </div>
+
+    <% const activeTrips = (trips || []).filter(t => t.status === 'ON_ROUTE'); %>
+    <% if (activeTrips.length === 0) { %>
+        <p style="text-align: center; color: var(--text-light); padding: 30px 0;">
+            <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 24px; display: block; margin-bottom: 8px;"></i>
+            දැනට ගමන් මාර්ගයේ ලොරි නොමැත. සියලුම ලොරි බා ගලපා අවසන් කර ඇත.
+        </p>
+    <% } else { %>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trip No</th>
+                        <th>Vehicle & Driver</th>
+                        <th>Dispatched</th>
+                        <th style="text-align: right;">Loaded</th>
+                        <th style="text-align: right;">Delivered (OUT)</th>
+                        <th style="text-align: right;">Collected (IN)</th>
+                        <th style="text-align: right; background: #f0fdf4;">Current in Lorry</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% activeTrips.forEach(t => { %>
+                        <tr>
+                            <td><strong><%= t.tripNo %></strong></td>
+                            <td>
+                                <strong style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck"></i> <%= t.vehicleNo %></strong>
+                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'N/A' %> (<%= t.driverPhone || 'PIN: ' + t.pin %>)</div>
+                            </td>
+                            <td>
+                                <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
+                                <small style="color: var(--text-light);"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                            </td>
+                            <td style="text-align: right; font-weight: 700;"><%= t.loadedQty %></td>
+                            <td style="text-align: right; color: #dc2626; font-weight: 700;"><%= t.totalDeliveredQty || 0 %></td>
+                            <td style="text-align: right; color: #2563eb; font-weight: 700;"><%= t.totalCollectedQty || 0 %></td>
+                            <td style="text-align: right; font-weight: 900; font-size: 16px; color: #107c41; background: #f0fdf4;">
+                                <%= (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0) %>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <button onclick="openSettleModal('<%= t.id %>', '<%= t.tripNo %>', '<%= t.vehicleNo %>', '<%= t.driverName %>', <%= t.loadedQty %>, <%= t.totalDeliveredQty || 0 %>, <%= t.totalCollectedQty || 0 %>)" 
+                                            class="btn btn-primary" 
+                                            style="padding: 6px 12px; font-size: 12px; background: #059669; border: none; cursor: pointer;">
+                                        <i class="fa-solid fa-box-archive"></i> Unload & Settle (බෑම)
+                                    </button>
+                                    <form action="/lorry-trips/<%= t.id %>/cancel" method="POST" onsubmit="return confirm('මෙම Trip එක අවලංගු කර පටවන ලද ට්‍රේ ගබඩා තොගයට නැවත එකතු කිරීමට ඔබට සහතිකද?');" style="display:inline;">
+                                        <button type="submit" class="btn btn-secondary" style="padding: 6px 8px; font-size: 12px; color: #dc2626;" title="Cancel Dispatch">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</div>
+
+<!-- 3. Completed Trips History -->
+<div class="content-box">
+    <div class="box-header">
+        <span class="box-title"><i class="fa-solid fa-clock-rotate-left"></i> Completed Trips History & Reconciliation Log</span>
+    </div>
+
+    <% const completedTrips = (trips || []).filter(t => t.status === 'COMPLETED' || t.status === 'CANCELLED'); %>
+    <% if (completedTrips.length === 0) { %>
+        <p style="text-align: center; color: var(--text-light); padding: 20px 0;">තවමත් අවසන් කළ ගමන් වාර්තා නොමැත.</p>
+    <% } else { %>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trip No</th>
+                        <th>Vehicle & Driver</th>
+                        <th>Dispatched</th>
+                        <th>Returned</th>
+                        <th style="text-align: right;">Loaded</th>
+                        <th style="text-align: right;">Delivered</th>
+                        <th style="text-align: right;">Collected</th>
+                        <th style="text-align: right;">Expected</th>
+                        <th style="text-align: right;">Unloaded</th>
+                        <th style="text-align: right;">Variance</th>
+                        <th style="text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% completedTrips.forEach(t => { %>
+                        <tr>
+                            <td><strong><%= t.tripNo %></strong></td>
+                            <td>
+                                <strong><%= t.vehicleNo %></strong><br>
+                                <small style="color: var(--text-light);"><%= t.driverName || 'N/A' %></small>
+                            </td>
+                            <td><%= new Date(t.dispatchedDate).toLocaleDateString() %></td>
+                            <td><%= t.returnedDate ? new Date(t.returnedDate).toLocaleDateString() : '-' %></td>
+                            <td style="text-align: right;"><%= t.loadedQty %></td>
+                            <td style="text-align: right; color: #dc2626;"><%= t.totalDeliveredQty || 0 %></td>
+                            <td style="text-align: right; color: #2563eb;"><%= t.totalCollectedQty || 0 %></td>
+                            <td style="text-align: right; font-weight: bold;"><%= t.expectedRemainingQty || 0 %></td>
+                            <td style="text-align: right; font-weight: bold;"><%= t.actualUnloadedQty !== undefined ? t.actualUnloadedQty : '-' %></td>
+                            <td style="text-align: right;">
+                                <% if (t.status === 'COMPLETED') { %>
+                                    <% if (t.variance === 0) { %>
+                                        <span class="badge badge-in" style="background:#dcfce7; color:#166534; border:1px solid #86efac;">0 (OK)</span>
+                                    <% } else if (t.variance < 0) { %>
+                                        <span class="badge badge-out" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;"><%= t.variance %> (Missing)</span>
+                                    <% } else { %>
+                                        <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd;">+<%= t.variance %> (Excess)</span>
+                                    <% } %>
+                                <% } else { %>
+                                    <span style="color: #9ca3af;">-</span>
+                                <% } %>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="badge <%= t.status === 'COMPLETED' ? 'badge-in' : 'badge-out' %>">
+                                    <%= t.status %>
+                                </span>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</div>
+
+<!-- Settle / Unload Modal -->
+<div id="settleModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div style="background-color: #fff; margin: 5% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-top: 5px solid #107c41;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: var(--primary-green-dark);"><i class="fa-solid fa-box-archive"></i> Unload & Settle Trip</h3>
+            <span onclick="closeSettleModal()" style="font-size: 24px; font-weight: bold; cursor: pointer; color: #666;">&times;</span>
+        </div>
+
+        <form id="settleForm" action="" method="POST" onsubmit="submitAjaxForm(event, this, 'Trip settled and stock updated successfully')">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #64748b; font-size: 13px;">Trip Number:</span>
+                    <strong id="modalTripNo"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #64748b; font-size: 13px;">Vehicle & Driver:</span>
+                    <strong id="modalVehicle"></strong>
+                </div>
+                <hr style="margin: 8px 0; border: 0; border-top: 1px dashed #cbd5e1;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px;">
+                    <span>Loaded at Warehouse (පැටවූ):</span>
+                    <strong id="modalLoaded">0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; color: #dc2626;">
+                    <span>Delivered to Customers (දුන්):</span>
+                    <strong id="modalDelivered">0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; color: #2563eb;">
+                    <span>Collected from Customers (ගත්):</span>
+                    <strong id="modalCollected">0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1.5px solid #cbd5e1; font-size: 14px;">
+                    <strong style="color: #1e293b;">Expected Remaining Trays (ලොරියේ තිබිය යුතු ගණන):</strong>
+                    <strong id="modalExpected" style="color: #107c41; font-size: 16px;">0</strong>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="actualUnloadedQty" style="font-weight: 700; color: #1e293b;">Actual Unloaded Trays (භෞතිකව බෑ ට්‍රේ ගණන) <span style="color:red;">*</span></label>
+                <input type="number" id="actualUnloadedQty" name="actualUnloadedQty" min="0" class="form-control" style="font-size: 18px; font-weight: 800; padding: 10px;" placeholder="0" required oninput="calculateVariance()">
+            </div>
+
+            <!-- Live Variance Display -->
+            <div id="varianceBox" style="display: none; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: 700;">
+            </div>
+
+            <div class="form-group">
+                <label for="damagedQty" style="font-weight: 600;">Damaged / Broken Trays (හානි වූ ට්‍රේ ගණන - Optional)</label>
+                <input type="number" id="damagedQty" name="damagedQty" min="0" class="form-control" placeholder="0">
+            </div>
+
+            <div class="form-group">
+                <label for="settleNotes">Remarks / Settlement Notes (විශේෂ සටහන්)</label>
+                <input type="text" id="settleNotes" name="notes" class="form-control" placeholder="Any explanation if shortage occurred...">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; background-color: #107c41; border: none;">
+                    <i class="fa-solid fa-check"></i> Settle & Update Warehouse Stock
+                </button>
+                <button type="button" onclick="closeSettleModal()" class="btn btn-secondary" style="padding: 12px;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const dtInput = document.getElementById('dispatchedDate');
+        if (dtInput) dtInput.value = now.toISOString().slice(0, 16);
+    });
+
+    let currentExpectedQty = 0;
+
+    function openSettleModal(tripId, tripNo, vehicleNo, driverName, loaded, delivered, collected) {
+        const form = document.getElementById('settleForm');
+        form.action = '/lorry-trips/' + tripId + '/settle';
+
+        document.getElementById('modalTripNo').innerText = tripNo;
+        document.getElementById('modalVehicle').innerText = vehicleNo + (driverName ? ' (' + driverName + ')' : '');
+        document.getElementById('modalLoaded').innerText = loaded;
+        document.getElementById('modalDelivered').innerText = delivered;
+        document.getElementById('modalCollected').innerText = collected;
+
+        currentExpectedQty = loaded - delivered + collected;
+        document.getElementById('modalExpected').innerText = currentExpectedQty + ' Trays';
+        
+        document.getElementById('actualUnloadedQty').value = '';
+        document.getElementById('damagedQty').value = '';
+        document.getElementById('settleNotes').value = '';
+        document.getElementById('varianceBox').style.display = 'none';
+
+        document.getElementById('settleModal').style.display = 'block';
+    }
+
+    function closeSettleModal() {
+        document.getElementById('settleModal').style.display = 'none';
+    }
+
+    function calculateVariance() {
+        const actualInput = document.getElementById('actualUnloadedQty');
+        const box = document.getElementById('varianceBox');
+        if (actualInput.value === '') {
+            box.style.display = 'none';
+            return;
+        }
+
+        const actual = parseInt(actualInput.value) || 0;
+        const diff = actual - currentExpectedQty;
+
+        box.style.display = 'block';
+        if (diff === 0) {
+            box.style.background = '#dcfce7';
+            box.style.color = '#15803d';
+            box.style.border = '1px solid #86efac';
+            box.innerHTML = '<i class="fa-solid fa-circle-check"></i> පරිපූර්ණයි! ට්‍රේ ගණන 100% ගැලපේ (Variance: 0)';
+        } else if (diff < 0) {
+            box.style.background = '#fee2e2';
+            box.style.color = '#b91c1c';
+            box.style.border = '1px solid #fca5a5';
+            box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ට්‍රේ අඩුපාඩුවක් ඇත! අස්ථානගත ප්‍රමාණය: ${Math.abs(diff)} Trays (Shortage)`;
+        } else {
+            box.style.background = '#eff6ff';
+            box.style.color = '#1d4ed8';
+            box.style.border = '1px solid #93c5fd';
+            box.innerHTML = `<i class="fa-solid fa-circle-info"></i> වැඩිපුර ට්‍රේ හමුවී ඇත (Excess): +${diff} Trays`;
+        }
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('settleModal');
+        if (event.target === modal) {
+            closeSettleModal();
+        }
+    };
+</script>
+
+<%- include('partials/footer') %>

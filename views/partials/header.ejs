@@ -174,6 +174,11 @@
                                                     </li>
                                                     <% } %>
 
+                                                <!-- 4.1 Lorry Delivery Trips -->
+                                                <li class="<%= activePath.startsWith('/lorry-trips') ? 'active' : '' %>">
+                                                    <a href="/lorry-trips"><i class="fa-solid fa-truck-ramp-box"></i> Lorry Delivery Trips</a>
+                                                </li>
+
                                                         <!-- 5. Receive Stock -->
                                                         <% if (typeof hasPerm !=='function' ||
                                                             hasPerm('receive_stock_view')) { %>

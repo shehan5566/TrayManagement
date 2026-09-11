@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nelna Agri - Driver Mobile Portal</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #107c41;
+            --primary-dark: #0b592e;
+            --primary-light: #e8f5e9;
+            --accent-yellow: #f59e0b;
+            --accent-blue: #2563eb;
+            --danger: #dc2626;
+            --text-dark: #1f2937;
+            --text-light: #6b7280;
+            --bg-gray: #f3f4f6;
+            --card-bg: #ffffff;
+            --border: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            padding-bottom: 50px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #107c41 0%, #064e3b 100%);
+            color: #fff;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        .header-sub {
+            font-size: 11px;
+            color: #a7f3d0;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+        }
+
+        /* Stock Status Banner */
+        .stock-banner {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #166534;
+            text-transform: uppercase;
+        }
+
+        .stock-qty {
+            font-size: 26px;
+            font-weight: 900;
+            color: #14532d;
+            line-height: 1;
+        }
+
+        .stock-sub {
+            font-size: 11px;
+            color: #15803d;
+            margin-top: 4px;
+        }
+
+        /* Type Switch Buttons */
+        .type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .type-btn {
+            padding: 16px 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            background: #fff;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .type-btn i { font-size: 22px; }
+
+        .type-btn.active-out {
+            background: #fef2f2;
+            border-color: #dc2626;
+            color: #dc2626;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        }
+
+        .type-btn.active-in {
+            background: #eff6ff;
+            border-color: #2563eb;
+            color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 124, 65, 0.15);
+        }
+
+        /* Quick Add Quantity Chips */
+        .qty-chips {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .qty-chip {
+            padding: 6px 12px;
+            background: #f3f4f6;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+
+        .qty-chip:active {
+            background: #e5e7eb;
+        }
+
+        /* Deposit Option Chips */
+        .deposit-chips {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .deposit-chip {
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .deposit-chip.selected {
+            border-color: var(--primary);
+            background: #f0fdf4;
+            color: var(--primary-dark);
+            font-weight: 700;
+        }
+
+        .deposit-chip input[type="radio"] {
+            margin-right: 8px;
+            accent-color: var(--primary);
+        }
+
+        /* Big Submit Button */
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #107c41 0%, #059669 100%);
+            color: #fff;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 16px rgba(16, 124, 65, 0.35);
+            margin-top: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Autocomplete List */
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d1d5db;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: 0 0 8px 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+        .autocomplete-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+
+        .autocomplete-item:hover, .autocomplete-item:active {
+            background-color: #f0fdf4;
+        }
+
+        /* Recent Activity Table */
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 12.5px;
+        }
+
+        .history-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10.5px;
+            font-weight: 800;
+        }
+
+        .history-badge.out { background: #fee2e2; color: #b91c1c; }
+        .history-badge.in { background: #dbeafe; color: #1d4ed8; }
+
+        .reprint-btn {
+            background: #e5e7eb;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        /* PIN Login Modal */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: #fff;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .pin-input {
+            letter-spacing: 12px;
+            font-size: 28px;
+            text-align: center;
+            font-weight: 900;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <div class="header-title"><i class="fa-solid fa-truck-fast"></i> <%= activeVehicle || 'Nelna Agri' %></div>
+            <div class="header-sub">Driver Delivery Portal (ට්‍රේ බෙදාහැරීම)</div>
+        </div>
+        <% if (isDriverLoggedIn) { %>
+            <a href="/driver/logout" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Exit</a>
+        <% } %>
+    </div>
+
+    <!-- Login Modal (If not logged in) -->
+    <% if (!isDriverLoggedIn) { %>
+    <div class="login-overlay">
+        <div class="login-card">
+            <div style="width: 60px; height: 60px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto;">
+                <i class="fa-solid fa-truck" style="font-size: 26px; color: #107c41;"></i>
+            </div>
+            <h2 style="font-size: 18px; font-weight: 800; color: #1f2937; margin-bottom: 4px;">Driver Login</h2>
+            <p style="font-size: 12px; color: #6b7280; margin-bottom: 20px;">වාහනය තෝරා රහස් අංකය (PIN) ඇතුළත් කරන්න</p>
+
+            <% if (locals.error) { %>
+                <div style="background: #fee2e2; color: #b91c1c; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 14px; font-weight: 600;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+                </div>
+            <% } %>
+
+            <form action="/driver/login" method="POST">
+                <div class="form-group" style="text-align: left;">
+                    <label class="form-label">වාහන අංකය (Vehicle No)</label>
+                    <select name="vehicleNo" class="form-input" required>
+                        <option value="">-- ලොරිය තෝරන්න --</option>
+                        <% (vehicles || []).forEach(v => { %>
+                            <option value="<%= v %>" <%= (activeVehicle === v) ? 'selected' : '' %>><%= v %></option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="form-group" style="text-align: left;">
+                    <label class="form-label">රහස් අංකය (4-Digit PIN)</label>
+                    <input type="password" name="pin" class="form-input pin-input" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" required>
+                    <span style="font-size: 11px; color: #9ca3af; display: block; margin-top: 4px;">පෙරනිමි අංකය: 1234 (Default PIN: 1234)</span>
+                </div>
+
+                <button type="submit" class="submit-btn" style="margin-top: 20px;">
+                    <i class="fa-solid fa-lock-open"></i> ඇතුල් වන්න (Login)
+                </button>
+            </form>
+        </div>
+    </div>
+    <% } else { %>
+
+    <!-- Main Driver Content -->
+    <div class="container">
+        
+        <!-- Onboard Tray Stock Banner -->
+        <div class="stock-banner">
+            <div>
+                <div class="stock-label"><i class="fa-solid fa-layer-group"></i> ලොරියේ ඇති ට්‍රේ ගණන</div>
+                <div class="stock-sub">
+                    පැටවූ: <strong><%= activeTrip ? activeTrip.loadedQty : 0 %></strong> | 
+                    දුන්: <strong><%= activeTrip ? activeTrip.totalDeliveredQty : 0 %></strong> | 
+                    ගත්: <strong><%= activeTrip ? activeTrip.totalCollectedQty : 0 %></strong>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div class="stock-qty"><%= activeTrip ? (activeTrip.expectedRemainingQty !== undefined ? activeTrip.expectedRemainingQty : activeTrip.loadedQty) : 0 %></div>
+                <div style="font-size: 11px; font-weight: 700; color: #166534;">TRAYS</div>
+            </div>
+        </div>
+
+        <% if (!activeTrip) { %>
+            <div style="background: #fffbeb; border: 1px solid #fde68a; color: #b45309; padding: 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; font-weight: 600;">
+                <i class="fa-solid fa-circle-info"></i> මෙම ලොරිය සඳහා මේ වන විට Dispatch කර ඇති ක්‍රියාකාරී ගමනක් (Active Trip) නැත. කරුණාකර ගබඩා කළමනාකරු ලොරියට ට්‍රේ පටවා Dispatch කළ පසු refresh කරන්න.
+            </div>
+        <% } %>
+
+        <!-- Transaction Entry Card -->
+        <div class="card">
+            <form id="driverTxForm" action="/driver/transaction" method="POST" onsubmit="handleDriverSubmit(event)">
+                <input type="hidden" name="tripId" value="<%= activeTrip ? activeTrip.id : '' %>">
+                <input type="hidden" name="vehicleNo" value="<%= activeVehicle %>">
+                <input type="hidden" name="type" id="txTypeInput" value="OUT">
+
+                <!-- 1. OUT / IN Big Selector -->
+                <div class="type-selector">
+                    <div class="type-btn active-out" id="btnTypeOut" onclick="setType('OUT')">
+                        <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                        <span>📤 ට්‍රේ දුන්නා<br><small style="font-size:11px; font-weight:normal;">(Tray OUT)</small></span>
+                    </div>
+                    <div class="type-btn" id="btnTypeIn" onclick="setType('IN')">
+                        <i class="fa-solid fa-arrow-down-to-bracket"></i>
+                        <span>📥 ට්‍රේ ගත්තා<br><small style="font-size:11px; font-weight:normal;">(Tray IN)</small></span>
+                    </div>
+                </div>
+
+                <!-- 2. Customer Select with Search -->
+                <div class="form-group" style="position: relative;">
+                    <label class="form-label"><i class="fa-solid fa-user"></i> පාරිභෝගිකයා (Customer) <span style="color:red;">*</span></label>
+                    <input type="text" id="customerSearch" class="form-input" placeholder="නම හෝ Phone අංකය ටයිප් කරන්න..." autocomplete="off" required>
+                    <input type="hidden" name="customerId" id="selectedCustomerId" required>
+                    <div id="customerResults" class="autocomplete-items" style="display: none;"></div>
+                    <div id="selectedCustomerBadge" style="display: none; margin-top: 6px; font-size: 12px; color: #107c41; font-weight: 700;">
+                        <i class="fa-solid fa-check-circle"></i> <span id="selectedCustomerText"></span>
+                    </div>
+                </div>
+
+                <!-- 3. Quantity Input -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-boxes-stacked"></i> ට්‍රේ ප්‍රමාණය (Quantity) <span style="color:red;">*</span></label>
+                    <input type="number" name="count" id="trayCountInput" class="form-input" style="font-size: 20px; font-weight: 800;" min="1" placeholder="0" required oninput="calculateDeposit()">
+                    
+                    <!-- Quick Add Chips -->
+                    <div class="qty-chips">
+                        <div class="qty-chip" onclick="addQty(5)">+5</div>
+                        <div class="qty-chip" onclick="addQty(10)">+10</div>
+                        <div class="qty-chip" onclick="addQty(20)">+20</div>
+                        <div class="qty-chip" onclick="addQty(50)">+50</div>
+                        <div class="qty-chip" onclick="addQty(100)">+100</div>
+                        <div class="qty-chip" style="background:#fee2e2; color:#b91c1c;" onclick="clearQty()">Clear</div>
+                    </div>
+                </div>
+
+                <!-- 4. Deposit Selector (1-Touch Chips) -->
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                        <label class="form-label" style="margin-bottom:0;"><i class="fa-solid fa-coins"></i> තැන්පතු මුදල (Deposit)</label>
+                        <span id="expectedDepositDisplay" style="font-size: 12px; font-weight: 700; color: #107c41;">Rs. 0.00</span>
+                    </div>
+
+                    <div class="deposit-chips">
+                        <label class="deposit-chip selected" id="chipFull">
+                            <div>
+                                <input type="radio" name="depositOption" value="FULL" checked onchange="handleDepositChange('FULL')">
+                                <span id="labelFull">සම්පූර්ණ තැන්පතුව (Full Deposit)</span>
+                            </div>
+                            <span id="amountFull" style="font-weight: 700;">Rs. 0</span>
+                        </label>
+
+                        <label class="deposit-chip" id="chipZero">
+                            <div>
+                                <input type="radio" name="depositOption" value="ZERO" onchange="handleDepositChange('ZERO')">
+                                <span>මුදල් ගත්තේ නෑ (No Deposit / Credit)</span>
+                            </div>
+                            <span style="font-weight: 700; color: #6b7280;">Rs. 0</span>
+                        </label>
+
+                        <label class="deposit-chip" id="chipCustom">
+                            <div>
+                                <input type="radio" name="depositOption" value="CUSTOM" onchange="handleDepositChange('CUSTOM')">
+                                <span>වෙනත් මුදලක් (Custom Amount)</span>
+                            </div>
+                            <span style="font-size: 11px; color: #6b7280;">ටයිප් කිරීමට</span>
+                        </label>
+                    </div>
+
+                    <div id="customDepositBox" style="display: none; margin-top: 8px;">
+                        <input type="number" name="actualDeposit" id="customDepositInput" class="form-input" placeholder="ලැබුණු මුදල ඇතුළත් කරන්න (Rs.)..." step="0.01">
+                    </div>
+                </div>
+
+                <!-- 5. Remarks (Optional) -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-comment-dots"></i> සටහන් (Remarks / Optional)</label>
+                    <input type="text" name="remarks" class="form-input" placeholder="අවශ්‍ය නම් සටහනක්...">
+                </div>
+
+                <!-- 6. Big Submit & Print Button -->
+                <button type="submit" id="btnSubmit" class="submit-btn">
+                    <i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)
+                </button>
+            </form>
+        </div>
+
+        <!-- Recent Transactions on this Trip -->
+        <div class="card">
+            <div style="font-size: 14px; font-weight: 800; margin-bottom: 10px; color: #1f2937;">
+                <i class="fa-solid fa-clock-rotate-left"></i> අද නිකුත් කළ රිසිට්පත් (Today's Receipts)
+            </div>
+
+            <% if (!recentTx || recentTx.length === 0) { %>
+                <div style="text-align: center; color: #9ca3af; font-size: 12px; padding: 15px 0;">
+                    අද දිනයේ තවමත් ගනුදෙනු සිදුකර නොමැත.
+                </div>
+            <% } else { %>
+                <% recentTx.forEach(tx => { %>
+                    <div class="history-item">
+                        <div>
+                            <div style="font-weight: 700; color: #1f2937;"><%= tx.customerName %></div>
+                            <div style="font-size: 11px; color: #6b7280;">
+                                RE-<%= String(tx.receiptNo).padStart(6, '0') %> | <%= new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; align-items: center; gap: 8px;">
+                            <span class="history-badge <%= tx.type === 'OUT' ? 'out' : 'in' %>">
+                                <%= tx.type === 'OUT' ? 'OUT' : 'IN' %> <%= tx.count %>
+                            </span>
+                            <a href="/driver/receipt/<%= tx.id %>/print" class="reprint-btn" title="Re-print">🖨️ Print</a>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+
+    </div>
+    <% } %>
+
+    <script>
+        const customers = <%- JSON.stringify(customers || []) %>;
+        const depositRate = <%= depositPerTray || 2000 %>;
+
+        let currentType = 'OUT';
+
+        function setType(type) {
+            currentType = type;
+            document.getElementById('txTypeInput').value = type;
+            const btnOut = document.getElementById('btnTypeOut');
+            const btnIn = document.getElementById('btnTypeIn');
+            const labelFull = document.getElementById('labelFull');
+
+            if (type === 'OUT') {
+                btnOut.className = 'type-btn active-out';
+                btnIn.className = 'type-btn';
+                if (labelFull) labelFull.innerText = 'සම්පූර්ණ තැන්පතුව (Full Deposit Collected)';
+            } else {
+                btnIn.className = 'type-btn active-in';
+                btnOut.className = 'type-btn';
+                if (labelFull) labelFull.innerText = 'සම්පූර්ණ මුදල් ආපසු දුන්නා (Full Refund Paid)';
+            }
+            calculateDeposit();
+        }
+
+        function addQty(val) {
+            const input = document.getElementById('trayCountInput');
+            const current = parseInt(input.value) || 0;
+            input.value = current + val;
+            calculateDeposit();
+        }
+
+        function clearQty() {
+            const input = document.getElementById('trayCountInput');
+            input.value = '';
+            calculateDeposit();
+        }
+
+        function calculateDeposit() {
+            const count = parseInt(document.getElementById('trayCountInput').value) || 0;
+            const total = count * depositRate;
+            const formatted = 'Rs. ' + total.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            
+            const expDisp = document.getElementById('expectedDepositDisplay');
+            if (expDisp) expDisp.innerText = formatted;
+            
+            const amtFull = document.getElementById('amountFull');
+            if (amtFull) amtFull.innerText = 'Rs. ' + total.toLocaleString('en-US');
+        }
+
+        function handleDepositChange(option) {
+            document.getElementById('chipFull').className = option === 'FULL' ? 'deposit-chip selected' : 'deposit-chip';
+            document.getElementById('chipZero').className = option === 'ZERO' ? 'deposit-chip selected' : 'deposit-chip';
+            document.getElementById('chipCustom').className = option === 'CUSTOM' ? 'deposit-chip selected' : 'deposit-chip';
+
+            const customBox = document.getElementById('customDepositBox');
+            if (option === 'CUSTOM') {
+                customBox.style.display = 'block';
+                document.getElementById('customDepositInput').focus();
+            } else {
+                customBox.style.display = 'none';
+                document.getElementById('customDepositInput').value = '';
+            }
+        }
+
+        // Customer Autocomplete Search
+        const searchInput = document.getElementById('customerSearch');
+        const resultsDiv = document.getElementById('customerResults');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const val = this.value.trim().toLowerCase();
+                resultsDiv.innerHTML = '';
+                if (!val) {
+                    resultsDiv.style.display = 'none';
+                    return;
+                }
+
+                const matches = customers.filter(c => 
+                    (c.name && c.name.toLowerCase().includes(val)) || 
+                    (c.phone && c.phone.includes(val))
+                ).slice(0, 10);
+
+                if (matches.length === 0) {
+                    resultsDiv.innerHTML = '<div class="autocomplete-item" style="color:#9ca3af;">ගැළපෙන පාරිභෝගිකයෙකු හමු නොවීය</div>';
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+
+                matches.forEach(c => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.innerHTML = `<strong>${c.name}</strong> <span style="font-size:12px; color:#6b7280;">(${c.phone || 'No Phone'})</span><br><small style="color:#107c41; font-weight:600;">Balance: ${c.currentBalance || 0} Trays</small>`;
+                    item.addEventListener('click', function() {
+                        document.getElementById('selectedCustomerId').value = c.id;
+                        searchInput.value = c.name;
+                        resultsDiv.style.display = 'none';
+                        document.getElementById('selectedCustomerBadge').style.display = 'block';
+                        document.getElementById('selectedCustomerText').innerText = `${c.name} (Current Balance: ${c.currentBalance || 0} Trays)`;
+                    });
+                    resultsDiv.appendChild(item);
+                });
+                resultsDiv.style.display = 'block';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target !== searchInput && e.target !== resultsDiv) {
+                    resultsDiv.style.display = 'none';
+                }
+            });
+        }
+
+        async function handleDriverSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const submitBtn = document.getElementById('btnSubmit');
+
+            const customerId = document.getElementById('selectedCustomerId').value;
+            if (!customerId) {
+                alert('කරුණාකර පාරිභෝගිකයා තෝරන්න (Please select a customer)');
+                return;
+            }
+
+            const count = parseInt(document.getElementById('trayCountInput').value) || 0;
+            if (count <= 0) {
+                alert('කරුණාකර වලංගු ට්‍රේ ප්‍රමාණයක් ඇතුළත් කරන්න (Please enter valid quantity)');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> සුරකිමින් පවතී...';
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('/driver/transaction', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const json = await res.json();
+                if (json.success) {
+                    // Open thermal print receipt in new window / popup immediately
+                    if (json.printUrl) {
+                        window.location.href = json.printUrl;
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert('දෝෂයකි: ' + (json.error || 'Failed to save transaction'));
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
+                }
+            } catch (err) {
+                alert('සන්නිවේදන දෝෂයකි: ' + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
+            }
+        }
+    </script>
+</body>
+</html>

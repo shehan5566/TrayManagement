@@ -17,7 +17,7 @@ const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 const MongoStore = require('connect-mongo').MongoStore || require('connect-mongo').default || require('connect-mongo');
 
-const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting, CustomerModel } = require('./db');
+const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting, CustomerModel, LorryTrip, LorryTripModel } = require('./db');
 const smsService = require('./smsService');
 const backupService = require('./backupService');
 const cron = require('node-cron');
@@ -1263,6 +1263,327 @@ app.get('/transactions/receiptByRef/:refNo', requireAuth, async (req, res) => {
         res.redirect(`/transactions/${tx._id}/receipt`);
     } catch (err) {
         res.status(500).send('Error loading receipt');
+    }
+});
+
+// ==========================================
+// 1. LORRY DELIVERY TRIPS & RECONCILIATION
+// ==========================================
+
+// Warehouse Lorry Trips Manager View
+app.get('/lorry-trips', requireAuth, async (req, res) => {
+    try {
+        const userLoc = (req.session.user && req.session.user.locationId) || 'main';
+        const userRole = (req.session.user && req.session.user.role) || 'user';
+        const trips = await LorryTrip.getAll(userLoc, userRole);
+        
+        const loc = await LocationModel.findById(userLoc);
+        const currentStock = loc ? (loc.currentStock || 0) : 0;
+
+        const dbVehicles = await TransactionModel.distinct('vehicleNo', { vehicleNo: { $nin: ['N/A', '', null] } });
+        const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'RENTED', 'OWNOUTLET'];
+        const vehicles = Array.from(new Set([...STANDARD_VEHICLES, ...dbVehicles])).filter(v => v !== 'N/A');
+
+        res.render('lorry-trips', {
+            trips,
+            currentStock,
+            vehicles,
+            activePath: '/lorry-trips'
+        });
+    } catch (err) {
+        console.error('GET /lorry-trips error:', err);
+        res.status(500).send('Error loading lorry trips: ' + err.message);
+    }
+});
+
+// Dispatch Lorry with Trays (Warehouse Loading)
+app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, res) => {
+    const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
+    try {
+        const { vehicleNo, driverName, driverPhone, pin, loadedQty, dispatchedDate, notes } = req.body;
+        const qty = parseInt(loadedQty, 10);
+        if (!vehicleNo || isNaN(qty) || qty <= 0) {
+            if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid vehicle and tray quantity!' });
+            return res.redirect('/lorry-trips?error=invalid_qty');
+        }
+
+        // Check if vehicle already has an active trip in progress
+        const existingActive = await LorryTrip.getActiveTrip(vehicleNo);
+        if (existingActive) {
+            if (isAjax) return res.status(400).json({ success: false, error: `Vehicle ${vehicleNo} already has an active trip in progress (${existingActive.tripNo})!` });
+            return res.redirect('/lorry-trips?error=active_trip_exists');
+        }
+
+        const userLoc = (req.session.user && req.session.user.locationId) || 'main';
+        const newTrip = await LorryTrip.create({
+            vehicleNo,
+            driverName,
+            driverPhone,
+            pin: pin || '1234',
+            loadedQty: qty,
+            locationId: userLoc,
+            dispatchedDate: dispatchedDate ? new Date(dispatchedDate) : new Date(),
+            notes
+        }, req.session.user.username);
+
+        await ActivityLog.log(
+            req.session.user.username,
+            'CREATE',
+            'LorryTrip',
+            `Dispatched lorry ${vehicleNo} (Trip ${newTrip.tripNo}) loaded with ${qty} trays`
+        );
+
+        if (isAjax) return res.json({ success: true, message: `Lorry ${vehicleNo} dispatched successfully with ${qty} trays!` });
+        res.redirect('/lorry-trips');
+    } catch (err) {
+        console.error('POST /lorry-trips/dispatch error:', err);
+        if (isAjax) return res.status(500).json({ success: false, error: err.message });
+        res.redirect('/lorry-trips?error=' + encodeURIComponent(err.message));
+    }
+});
+
+// Settle & Reconcile Returned Lorry (Warehouse Unloading)
+app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, async (req, res) => {
+    const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
+    try {
+        const { actualUnloadedQty, damagedQty, notes } = req.body;
+        const unloaded = parseInt(actualUnloadedQty, 10);
+        if (isNaN(unloaded) || unloaded < 0) {
+            if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid unloaded count!' });
+            return res.redirect('/lorry-trips?error=invalid_unloaded');
+        }
+
+        const settledTrip = await LorryTrip.settle(req.params.id, {
+            actualUnloadedQty: unloaded,
+            damagedQty: parseInt(damagedQty, 10) || 0,
+            notes
+        }, req.session.user.username);
+
+        const varianceText = settledTrip.variance === 0 ? 'Exact Match' : (settledTrip.variance < 0 ? `Shortage of ${Math.abs(settledTrip.variance)} trays` : `Excess of ${settledTrip.variance} trays`);
+        await ActivityLog.log(
+            req.session.user.username,
+            'UPDATE',
+            'LorryTrip',
+            `Settled trip ${settledTrip.tripNo} (${settledTrip.vehicleNo}): Unloaded ${unloaded} trays (${varianceText})`
+        );
+
+        if (isAjax) return res.json({ success: true, message: `Trip ${settledTrip.tripNo} settled successfully! (${varianceText})` });
+        res.redirect('/lorry-trips');
+    } catch (err) {
+        console.error('POST /lorry-trips/:id/settle error:', err);
+        if (isAjax) return res.status(500).json({ success: false, error: err.message });
+        res.redirect('/lorry-trips?error=' + encodeURIComponent(err.message));
+    }
+});
+
+// Cancel Trip Dispatch
+app.post('/lorry-trips/:id/cancel', requireAuth, requireEditAccess, async (req, res) => {
+    try {
+        const cancelled = await LorryTrip.cancel(req.params.id, req.session.user.username);
+        await ActivityLog.log(
+            req.session.user.username,
+            'DELETE',
+            'LorryTrip',
+            `Cancelled dispatch of trip ${cancelled.tripNo} (${cancelled.vehicleNo}) and restored ${cancelled.loadedQty} trays`
+        );
+        res.redirect('/lorry-trips');
+    } catch (err) {
+        console.error('POST /lorry-trips/:id/cancel error:', err);
+        res.redirect('/lorry-trips?error=' + encodeURIComponent(err.message));
+    }
+});
+
+// ==========================================
+// 2. DRIVER MOBILE PORTAL & THERMAL RECEIPTS
+// ==========================================
+
+// Driver Mobile Dashboard
+app.get('/driver', async (req, res) => {
+    try {
+        const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'RENTED', 'OWNOUTLET'];
+        const dbVehicles = await TransactionModel.distinct('vehicleNo', { vehicleNo: { $nin: ['N/A', '', null] } });
+        const vehicles = Array.from(new Set([...STANDARD_VEHICLES, ...dbVehicles])).filter(v => v !== 'N/A');
+
+        const driverSession = req.session.driver;
+        if (!driverSession || !driverSession.vehicleNo) {
+            return res.render('driver-mobile', {
+                isDriverLoggedIn: false,
+                activeVehicle: null,
+                activeTrip: null,
+                vehicles,
+                customers: [],
+                recentTx: [],
+                depositPerTray: 2000,
+                error: req.query.error || null
+            });
+        }
+
+        const activeVehicle = driverSession.vehicleNo;
+        const activeTrip = await LorryTrip.getActiveTrip(activeVehicle);
+        const customers = await Customer.getAll();
+        
+        const settings = await SystemSetting.get();
+        const depositPerTray = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
+
+        // Fetch recent transactions by this trip or vehicle today
+        let recentTx = [];
+        if (activeTrip) {
+            recentTx = await TransactionModel.find({ tripId: activeTrip.id, isDeleted: { $ne: true } })
+                .sort({ receiptNo: -1 })
+                .limit(20)
+                .lean();
+        } else {
+            const todayStr = new Date().toISOString().split('T')[0];
+            recentTx = await TransactionModel.find({ 
+                vehicleNo: activeVehicle, 
+                date: { $gte: todayStr + 'T00:00:00' }, 
+                isDeleted: { $ne: true } 
+            }).sort({ receiptNo: -1 }).limit(20).lean();
+        }
+
+        res.render('driver-mobile', {
+            isDriverLoggedIn: true,
+            activeVehicle,
+            activeTrip,
+            vehicles,
+            customers,
+            recentTx: recentTx.map(t => ({ ...t, id: t._id })),
+            depositPerTray,
+            error: req.query.error || null
+        });
+    } catch (err) {
+        console.error('GET /driver error:', err);
+        res.status(500).send('Error loading driver portal: ' + err.message);
+    }
+});
+
+// Driver PIN Login
+app.post('/driver/login', async (req, res) => {
+    try {
+        const { vehicleNo, pin } = req.body;
+        if (!vehicleNo || !pin) {
+            return res.redirect('/driver?error=' + encodeURIComponent('කරුණාකර වාහනය සහ PIN අංකය ඇතුළත් කරන්න'));
+        }
+
+        // Check active trip PIN or default 1234
+        const activeTrip = await LorryTrip.getActiveTrip(vehicleNo);
+        const validPin = (activeTrip && activeTrip.pin) ? activeTrip.pin : '1234';
+
+        if (pin.trim() !== validPin.trim() && pin.trim() !== '1234') {
+            return res.redirect('/driver?error=' + encodeURIComponent('වැරදි PIN අංකයකි! නැවත උත්සාහ කරන්න (Incorrect PIN)'));
+        }
+
+        req.session.driver = {
+            vehicleNo: vehicleNo.trim(),
+            driverName: activeTrip ? activeTrip.driverName : 'Driver',
+            loggedInAt: new Date()
+        };
+
+        res.redirect('/driver');
+    } catch (err) {
+        console.error('POST /driver/login error:', err);
+        res.redirect('/driver?error=' + encodeURIComponent(err.message));
+    }
+});
+
+// Driver Logout
+app.get('/driver/logout', (req, res) => {
+    delete req.session.driver;
+    res.redirect('/driver');
+});
+
+// Save On-Route Transaction by Driver
+app.post('/driver/transaction', async (req, res) => {
+    try {
+        if (!req.session.driver || !req.session.driver.vehicleNo) {
+            return res.status(401).json({ success: false, error: 'Driver session expired. Please login again.' });
+        }
+
+        const { tripId, vehicleNo, type, customerId, count, depositOption, actualDeposit, remarks } = req.body;
+        const countVal = parseInt(count, 10);
+        if (!customerId || !type || isNaN(countVal) || countVal <= 0) {
+            return res.status(400).json({ success: false, error: 'කරුණාකර පාරිභෝගිකයා සහ වලංගු ට්‍රේ ගණනක් ඇතුළත් කරන්න!' });
+        }
+
+        const settings = await SystemSetting.get();
+        const depositPerTray = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
+
+        let activeTrip = null;
+        if (tripId) {
+            activeTrip = await LorryTrip.getById(tripId);
+        } else {
+            activeTrip = await LorryTrip.getActiveTrip(req.session.driver.vehicleNo);
+        }
+
+        const locationId = (activeTrip && activeTrip.locationId) ? activeTrip.locationId : 'main';
+
+        const txData = {
+            customerId,
+            type,
+            count: countVal,
+            depositPerTray,
+            depositOption: depositOption || 'FULL',
+            actualDeposit: actualDeposit !== '' ? actualDeposit : undefined,
+            vehicleNo: req.session.driver.vehicleNo,
+            remarks: remarks || (type === 'OUT' ? 'Lorry Delivery OUT' : 'Lorry Collection IN'),
+            tripId: activeTrip ? activeTrip.id : null,
+            locationId
+        };
+
+        const username = `Driver (${req.session.driver.vehicleNo})`;
+        const newTx = await Transaction.create(txData, username);
+
+        // Instant SMS Notification to Registered Customer Phone Number
+        try {
+            const customer = await Customer.getById(customerId);
+            if (customer && customer.phone) {
+                await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance);
+            }
+        } catch (smsErr) {
+            console.error('[SMS Delivery Warning]:', smsErr);
+        }
+
+        await ActivityLog.log(
+            username,
+            'CREATE',
+            'Transaction',
+            `Driver on ${req.session.driver.vehicleNo} created ${type} of ${countVal} trays for customer ${newTx.customerName} (Ref: RE-${String(newTx.receiptNo).padStart(6, '0')})`
+        );
+
+        res.json({
+            success: true,
+            message: 'Transaction saved successfully',
+            receiptNo: newTx.receiptNo,
+            printUrl: `/driver/receipt/${newTx.id}/print`
+        });
+    } catch (err) {
+        console.error('POST /driver/transaction error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 58mm Pocket POS Thermal Print View
+app.get('/driver/receipt/:id/print', async (req, res) => {
+    try {
+        const tx = await Transaction.getById(req.params.id);
+        if (!tx) {
+            return res.send('<script>alert("Receipt not found or deleted"); window.location.href="/driver";</script>');
+        }
+        const customer = await Customer.getById(tx.customerId);
+        if (!customer) {
+            return res.send('<script>alert("Customer record not found"); window.location.href="/driver";</script>');
+        }
+
+        const settings = await SystemSetting.get();
+
+        res.render('print-thermal-receipt', {
+            tx,
+            customer,
+            settings: settings || {}
+        });
+    } catch (err) {
+        console.error('GET /driver/receipt/:id/print error:', err);
+        res.status(500).send('Error loading thermal receipt: ' + err.message);
     }
 });
 

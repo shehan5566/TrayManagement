@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt <%= tx.receiptNo ? 'RE-' + String(tx.receiptNo).padStart(4, '0') : 'RE' %></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .receipt-container {
+            width: 58mm;
+            max-width: 100%;
+            background: #fff;
+            padding: 8px 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            font-size: 11px;
+            line-height: 1.35;
+        }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-bold { font-weight: bold; }
+        
+        .divider {
+            border-top: 1px dashed #000;
+            margin: 5px 0;
+        }
+
+        .double-divider {
+            border-top: 1px double #000;
+            margin: 5px 0;
+        }
+
+        .header-title {
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+
+        .receipt-badge {
+            display: inline-block;
+            padding: 3px 6px;
+            font-size: 12px;
+            font-weight: 900;
+            border: 1.5px solid #000;
+            margin: 4px 0;
+            letter-spacing: 1px;
+        }
+
+        .qty-box {
+            border: 1.5px solid #000;
+            padding: 6px 4px;
+            margin: 6px 0;
+            text-align: center;
+        }
+
+        .qty-number {
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        .sign-area {
+            margin-top: 18px;
+            padding-top: 4px;
+        }
+
+        .no-print {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 10px;
+            width: 58mm;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-print {
+            background-color: #107c41;
+            color: #fff;
+        }
+
+        .btn-back {
+            background-color: #4b5563;
+            color: #fff;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .receipt-container {
+                width: 58mm;
+                box-shadow: none;
+                padding: 2mm 1mm;
+            }
+            @page {
+                size: 58mm auto;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print">
+        <a href="/driver" class="btn btn-back">‹ Back</a>
+        <button onclick="window.print()" class="btn btn-print">🖨️ Print</button>
+    </div>
+
+    <div class="receipt-container">
+        <!-- Header -->
+        <div class="text-center">
+            <div class="header-title"><%= (typeof settings !== 'undefined' && settings.companyName) ? settings.companyName : 'NELNA AGRI DEVELOPMENT (PVT) LTD' %></div>
+            <div style="font-size: 9.5px; margin-top: 2px;">PLASTIC TRAY MANAGEMENT SYSTEM</div>
+            <div class="divider"></div>
+            <div style="font-weight: bold; font-size: 11.5px; letter-spacing: 0.5px;">TRAY TRANSACTION RECEIPT</div>
+            <div style="font-size: 9.5px; color: #333;"><%= tx.locationName || 'Distribution Route' %></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Meta Info -->
+        <div class="row">
+            <span>RECEIPT NO:</span>
+            <span class="text-bold"><%= tx.receiptNo ? 'RE-' + String(tx.receiptNo).padStart(6, '0') : 'RE-000000' %></span>
+        </div>
+        <div class="row">
+            <span>DATE & TIME:</span>
+            <span><%= new Date(tx.date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+        </div>
+        <div class="row">
+            <span>VEHICLE NO:</span>
+            <span class="text-bold"><%= tx.vehicleNo || 'N/A' %></span>
+        </div>
+        <% if (tx.user) { %>
+        <div class="row">
+            <span>DRIVER/USER:</span>
+            <span><%= tx.user %></span>
+        </div>
+        <% } %>
+
+        <div class="divider"></div>
+
+        <!-- Customer Info -->
+        <div class="row">
+            <span>CUSTOMER:</span>
+            <span class="text-bold" style="text-align: right; max-width: 65%; word-break: break-word;"><%= customer.name %></span>
+        </div>
+        <% if (customer.phone) { %>
+        <div class="row">
+            <span>PHONE:</span>
+            <span><%= customer.phone %></span>
+        </div>
+        <% } %>
+
+        <!-- Transaction Type Badge -->
+        <div class="text-center" style="margin: 8px 0 4px 0;">
+            <% if (tx.type === 'OUT') { %>
+                <div class="receipt-badge">>>> TRAY OUT (ISSUED) >>></div>
+            <% } else { %>
+                <div class="receipt-badge"><<< TRAY IN (RETURNED) <<<</div>
+            <% } %>
+        </div>
+
+        <!-- Quantity Highlight -->
+        <div class="qty-box">
+            <div style="font-size: 10px; text-transform: uppercase;">Transaction Quantity</div>
+            <div class="qty-number"><%= tx.count %> TRAYS</div>
+        </div>
+
+        <!-- Deposit Details -->
+        <div class="row">
+            <span>Deposit Status:</span>
+            <span class="text-bold"><%= tx.depositOption || 'FULL' %></span>
+        </div>
+        <div class="row">
+            <span><%= tx.type === 'OUT' ? 'Deposit Collected:' : 'Deposit Refunded:' %></span>
+            <span class="text-bold">Rs. <%= (tx.totalDeposit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Outstanding Balance Box -->
+        <div style="background: #f9f9f9; border: 1px solid #000; padding: 5px; text-align: center; margin: 4px 0;">
+            <div style="font-size: 9.5px; font-weight: bold; text-transform: uppercase;">Customer Total Outstanding Balance</div>
+            <div style="font-size: 15px; font-weight: 900; margin-top: 2px;"><%= customer.currentBalance %> TRAYS</div>
+        </div>
+
+        <% if (tx.remarks) { %>
+        <div style="font-size: 9.5px; margin-top: 4px;">
+            <span>NOTE: <%= tx.remarks %></span>
+        </div>
+        <% } %>
+
+        <!-- Signatures -->
+        <div class="sign-area">
+            <div class="row" style="margin-bottom: 22px;">
+                <span>Driver: ................</span>
+                <span>Customer: ..............</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Footer -->
+        <div class="text-center" style="font-size: 9px; line-height: 1.2;">
+            <div>Nelna Agri Smart Tray System</div>
+            <div style="margin-top: 2px;">*** THANK YOU! ***</div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', function () {
+            // Auto open print dialog on mobile
+            setTimeout(function() {
+                window.print();
+            }, 400);
+        });
+    </script>
+</body>
+</html>

@@ -157,6 +157,7 @@ const TransactionSchema = new mongoose.Schema({
     user: { type: String, default: 'System' },
     receiptNo: { type: Number, default: 0 },
     locationId: { type: String, default: 'main' },
+    tripId: { type: String },
     isDeleted: { type: Boolean, default: false }
 });
 
@@ -177,6 +178,34 @@ const MonthlyBalanceSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
+const LorryTripSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    tripNo: { type: String, required: true },
+    vehicleNo: { type: String, required: true },
+    driverName: { type: String, default: '' },
+    driverPhone: { type: String, default: '' },
+    pin: { type: String, default: '1234' },
+    locationId: { type: String, default: 'main' },
+    loadedQty: { type: Number, required: true, default: 0 },
+    dispatchedDate: { type: Date, default: Date.now },
+    dispatchedBy: { type: String, default: 'System' },
+    
+    // On-route delivery & collection totals
+    totalDeliveredQty: { type: Number, default: 0 }, // OUT
+    totalCollectedQty: { type: Number, default: 0 }, // IN
+    
+    // Return & Reconciliation
+    returnedDate: { type: Date },
+    receivedBy: { type: String },
+    actualUnloadedQty: { type: Number },
+    expectedRemainingQty: { type: Number, default: 0 },
+    variance: { type: Number, default: 0 },
+    damagedQty: { type: Number, default: 0 },
+    status: { type: String, enum: ['ON_ROUTE', 'COMPLETED', 'CANCELLED'], default: 'ON_ROUTE' },
+    notes: { type: String, default: '' },
+    isDeleted: { type: Boolean, default: false }
+});
+
 // Indexes for performance optimization
 StockTransferSchema.index({ fromLocationId: 1, dispatchedDate: -1 });
 StockTransferSchema.index({ toLocationId: 1, receivedDate: -1 });
@@ -187,9 +216,13 @@ CustomerSchema.index({ currentBalance: 1 });
 
 TransactionSchema.index({ customerId: 1, isDeleted: 1 });
 TransactionSchema.index({ locationId: 1, date: -1 });
+TransactionSchema.index({ tripId: 1 });
 TransactionSchema.index({ date: -1 });
 TransactionSchema.index({ isDeleted: 1 });
 TransactionSchema.index({ receiptNo: -1 });
+
+LorryTripSchema.index({ vehicleNo: 1, status: 1 });
+LorryTripSchema.index({ locationId: 1, dispatchedDate: -1 });
 
 // Compile models
 const LocationModel = mongoose.model('Location', LocationSchema);
@@ -203,6 +236,7 @@ const ActivityLogModel = mongoose.model('ActivityLog', ActivityLogSchema);
 const MonthlyBalanceModel = mongoose.model('MonthlyBalance', MonthlyBalanceSchema);
 const DamageLogModel = mongoose.model('DamageLog', DamageLogSchema);
 const SystemSettingModel = mongoose.model('SystemSetting', SystemSettingSchema);
+const LorryTripModel = mongoose.model('LorryTrip', LorryTripSchema);
 
 // Helper function to map _id to id
 const mapDoc = (doc) => {
@@ -794,22 +828,27 @@ const Transaction = {
             date: txData.date || new Date().toISOString(),
             user: username || 'System',
             receiptNo: nextReceiptNo,
-            locationId: txData.locationId || customer.locationId || 'main'
+            locationId: txData.locationId || customer.locationId || 'main',
+            tripId: txData.tripId || null
         });
 
         await newTx.save();
         await Customer.recalculateCustomerBalance(txData.customerId);
 
-        // Update branch warehouse current stock in real-time
-        const locId = newTx.locationId || 'main';
-        const loc = await LocationModel.findById(locId);
-        if (loc) {
-            if (type === 'OUT') {
-                loc.currentStock = Math.max(0, (loc.currentStock || 0) - count);
-            } else if (type === 'IN') {
-                loc.currentStock = (loc.currentStock || 0) + count;
+        if (txData.tripId) {
+            await LorryTrip.recordTransaction(txData.tripId, type, count);
+        } else {
+            // Update branch warehouse current stock in real-time (for warehouse direct counter transactions)
+            const locId = newTx.locationId || 'main';
+            const loc = await LocationModel.findById(locId);
+            if (loc) {
+                if (type === 'OUT') {
+                    loc.currentStock = Math.max(0, (loc.currentStock || 0) - count);
+                } else if (type === 'IN') {
+                    loc.currentStock = (loc.currentStock || 0) + count;
+                }
+                await loc.save();
             }
-            await loc.save();
         }
 
         return mapDoc(newTx);
@@ -820,16 +859,22 @@ const Transaction = {
             await TransactionModel.updateOne({ _id: id }, { isDeleted: true });
             await Customer.recalculateCustomerBalance(tx.customerId);
 
-            // Reverse branch warehouse stock adjustment
-            const locId = tx.locationId || 'main';
-            const loc = await LocationModel.findById(locId);
-            if (loc) {
-                if (tx.type === 'OUT') {
-                    loc.currentStock = (loc.currentStock || 0) + (tx.count || 0);
-                } else if (tx.type === 'IN') {
-                    loc.currentStock = Math.max(0, (loc.currentStock || 0) - (tx.count || 0));
+            if (tx.tripId) {
+                // Reverse trip delivered/collected qty
+                const reverseType = tx.type === 'OUT' ? 'IN' : 'OUT';
+                await LorryTrip.recordTransaction(tx.tripId, reverseType, tx.count || 0);
+            } else {
+                // Reverse branch warehouse stock adjustment
+                const locId = tx.locationId || 'main';
+                const loc = await LocationModel.findById(locId);
+                if (loc) {
+                    if (tx.type === 'OUT') {
+                        loc.currentStock = (loc.currentStock || 0) + (tx.count || 0);
+                    } else if (tx.type === 'IN') {
+                        loc.currentStock = Math.max(0, (loc.currentStock || 0) - (tx.count || 0));
+                    }
+                    await loc.save();
                 }
-                await loc.save();
             }
 
             return true;
@@ -1199,6 +1244,140 @@ const SystemSetting = {
     }
 };
 
+// Lorry Trips CRUD
+const LorryTrip = {
+    getAll: async (locationId = null, role = 'user') => {
+        let filter = { isDeleted: false };
+        if (role !== 'admin' && locationId) {
+            filter.locationId = locationId;
+        }
+        const trips = await LorryTripModel.find(filter).sort({ dispatchedDate: -1 }).lean();
+        return trips.map(mapDoc);
+    },
+    getActiveTrip: async (vehicleNo) => {
+        const trip = await LorryTripModel.findOne({ 
+            vehicleNo: vehicleNo, 
+            status: 'ON_ROUTE', 
+            isDeleted: false 
+        }).sort({ dispatchedDate: -1 }).lean();
+        return mapDoc(trip);
+    },
+    getById: async (id) => {
+        const doc = await LorryTripModel.findById(id).lean();
+        return mapDoc(doc);
+    },
+    create: async (data, username) => {
+        const loc = await LocationModel.findById(data.locationId || 'main');
+        const locCode = loc ? loc.code : 'MAIN';
+        const tripNo = await generateDocNo(locCode, 'TRP');
+        const id = 'trip_' + Date.now().toString() + '_' + Math.random().toString(36).substr(2, 5);
+
+        const loadedQty = parseInt(data.loadedQty, 10) || 0;
+        const newTrip = new LorryTripModel({
+            _id: id,
+            tripNo,
+            vehicleNo: data.vehicleNo,
+            driverName: data.driverName || '',
+            driverPhone: data.driverPhone || '',
+            pin: data.pin || '1234',
+            locationId: data.locationId || 'main',
+            loadedQty,
+            dispatchedDate: data.dispatchedDate || new Date(),
+            dispatchedBy: username || 'System',
+            expectedRemainingQty: loadedQty,
+            status: 'ON_ROUTE',
+            notes: data.notes || ''
+        });
+
+        await newTrip.save();
+
+        // Deduct loaded trays from warehouse current stock
+        if (loc) {
+            loc.currentStock = Math.max(0, (loc.currentStock || 0) - loadedQty);
+            await loc.save();
+        }
+
+        return mapDoc(newTrip);
+    },
+    recordTransaction: async (tripId, type, count) => {
+        const trip = await LorryTripModel.findById(tripId);
+        if (!trip) return null;
+
+        const qty = parseInt(count, 10) || 0;
+        if (type === 'OUT') {
+            trip.totalDeliveredQty = (trip.totalDeliveredQty || 0) + qty;
+        } else if (type === 'IN') {
+            trip.totalCollectedQty = (trip.totalCollectedQty || 0) + qty;
+        }
+        trip.expectedRemainingQty = (trip.loadedQty || 0) - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
+        await trip.save();
+        return mapDoc(trip);
+    },
+    settle: async (tripId, settleData, username) => {
+        const trip = await LorryTripModel.findById(tripId);
+        if (!trip) throw new Error('Trip not found');
+
+        const actualUnloaded = parseInt(settleData.actualUnloadedQty, 10) || 0;
+        const damaged = parseInt(settleData.damagedQty, 10) || 0;
+        const expected = (trip.loadedQty || 0) - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
+        const variance = actualUnloaded - expected;
+
+        trip.returnedDate = new Date();
+        trip.receivedBy = username || 'System';
+        trip.actualUnloadedQty = actualUnloaded;
+        trip.damagedQty = damaged;
+        trip.expectedRemainingQty = expected;
+        trip.variance = variance;
+        trip.status = 'COMPLETED';
+        if (settleData.notes) trip.notes = (trip.notes ? trip.notes + ' | ' : '') + settleData.notes;
+
+        await trip.save();
+
+        // Add actual unloaded trays back to warehouse current stock
+        const loc = await LocationModel.findById(trip.locationId || 'main');
+        if (loc) {
+            loc.currentStock = (loc.currentStock || 0) + actualUnloaded;
+            await loc.save();
+        }
+
+        // If there are damaged trays, log them in DamageLog
+        if (damaged > 0) {
+            const damageId = 'dmg_' + Date.now().toString();
+            const damageLog = new DamageLogModel({
+                _id: damageId,
+                damageNo: 'DMG-' + trip.tripNo,
+                locationId: trip.locationId || 'main',
+                locationName: loc ? loc.name : 'Main Warehouse',
+                type: 'DAMAGED',
+                qty: damaged,
+                reason: `Damaged during vehicle trip ${trip.tripNo} (${trip.vehicleNo})`,
+                reportedBy: username,
+                date: new Date()
+            });
+            await damageLog.save();
+        }
+
+        return mapDoc(trip);
+    },
+    cancel: async (tripId, username) => {
+        const trip = await LorryTripModel.findById(tripId);
+        if (!trip) throw new Error('Trip not found');
+        if (trip.status === 'COMPLETED') throw new Error('Cannot cancel completed trip');
+
+        // Restore loaded trays to warehouse stock
+        const loc = await LocationModel.findById(trip.locationId || 'main');
+        if (loc) {
+            loc.currentStock = (loc.currentStock || 0) + (trip.loadedQty || 0);
+            await loc.save();
+        }
+
+        trip.status = 'CANCELLED';
+        trip.notes = (trip.notes ? trip.notes + ' | ' : '') + `Cancelled by ${username}`;
+        await trip.save();
+        return mapDoc(trip);
+    }
+};
+
 module.exports = {
     connectDB,
     Location,
@@ -1212,6 +1391,7 @@ module.exports = {
     SystemTools,
     DamageLog,
     SystemSetting,
+    LorryTrip,
     StockTransferModel,
     ActivityLogModel,
     TransactionModel,
@@ -1220,5 +1400,6 @@ module.exports = {
     UserModel,
     DamageLogModel,
     SystemSettingModel,
-    CounterModel
+    CounterModel,
+    LorryTripModel
 };
