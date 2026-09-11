@@ -194,27 +194,55 @@
         }
 
         @media print {
-            body {
-                background: #fff;
-                padding: 0;
+            html, body {
+                background: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
+
             .no-print {
                 display: none !important;
             }
+
             .receipt-container {
-                width: 100%;
-                max-width: 58mm;
-                box-shadow: none;
-                border: none;
-                padding: 2mm 1mm;
-                font-size: 9.5pt;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 1mm 2mm !important;
+                font-size: 9pt !important;
             }
+
+            .row {
+                width: 100% !important;
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+            }
+
+            .statement-box {
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .qty-box {
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
             .receipt-logo-img {
-                max-height: 40px;
+                max-height: 38px !important;
+                display: block !important;
+                margin: 0 auto 3px auto !important;
             }
+
             @page {
                 size: auto;
-                margin: 2mm;
+                margin: 1.5mm;
             }
         }
     </style>
@@ -418,6 +446,21 @@
                 parts.push(new Uint8Array(bytes));
             }
 
+            // Helper to format two-column key-value lines spanning full 32-char width
+            function formatLine(left, right, width = 32) {
+                left = String(left || '');
+                right = String(right || '');
+                const spaces = width - left.length - right.length;
+                if (spaces > 0) {
+                    return left + ' '.repeat(spaces) + right + '\n';
+                }
+                const avail = width - right.length - 1;
+                if (avail > 2) {
+                    return left.substring(0, avail) + ' ' + right + '\n';
+                }
+                return left + '\n' + ' '.repeat(Math.max(0, width - right.length)) + right + '\n';
+            }
+
             // 1. Initialize Printer (ESC @)
             cmd([0x1B, 0x40]);
 
@@ -431,17 +474,24 @@
             text("Store Operations Log / Route\n");
             text("--------------------------------\n");
 
-            // 3. Receipt Details (Left Align)
+            // 3. Receipt Details (Left/Right Balanced across 32 cols)
             cmd([0x1B, 0x61, 0x00]); // Left align
-            text("REC NO : RE-" + String(txData.receiptNo || 0).padStart(6, '0') + "\n");
+            text(formatLine("REC NO:", "RE-" + String(txData.receiptNo || 0).padStart(6, '0')));
             const d = new Date(txData.date);
             const dateStr = d.toLocaleDateString('en-GB') + " " + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            text("DATE   : " + dateStr + "\n");
-            text("VEHICLE: " + (txData.vehicleNo || 'N/A') + "\n");
-            if (txData.user) text("CREATED: " + txData.user + "\n");
+            text(formatLine("DATE:", dateStr));
+            text(formatLine("VEHICLE:", txData.vehicleNo || 'N/A'));
+            if (txData.user) text(formatLine("CREATED:", txData.user));
             text("--------------------------------\n");
-            text("CUSTOMER:\n" + (customerData.name || '') + "\n");
-            if (customerData.phone) text("PHONE  : " + customerData.phone + "\n");
+            
+            // Customer Info
+            const custName = customerData.name || '';
+            if (custName.length <= 20) {
+                text(formatLine("CUSTOMER:", custName));
+            } else {
+                text("CUSTOMER: " + custName + "\n");
+            }
+            if (customerData.phone) text(formatLine("CONTACT:", customerData.phone));
             text("--------------------------------\n");
 
             // 4. Type & Large Quantity (Center Align)
@@ -458,7 +508,7 @@
             cmd([0x1D, 0x21, 0x00]); // Reset size
             cmd([0x1B, 0x45, 0x00]); // Bold off
 
-            // 5. System Financial Details (Left Align)
+            // 5. System Financial Details (Left/Right Balanced across 32 cols)
             cmd([0x1B, 0x61, 0x00]);
             text("--------------------------------\n");
             const rate = Number(txData.depositPerTray) || 2000;
@@ -476,44 +526,46 @@
             }
             const pending = expected - paid;
 
-            text("Rate         : Rs. " + rate.toLocaleString() + "/Tray\n");
-            const totLabel = txData.type === 'OUT' ? "Total Payable: Rs. " : "Total Refund : Rs. ";
-            text(totLabel + expected.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
-            const depLabel = txData.type === 'OUT' ? "Deposit Paid : Rs. " : "Refund Paid  : Rs. ";
-            text(depLabel + paid.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
-            const pendLabel = txData.type === 'OUT' ? "Pending Dep  : Rs. " : "Pending Ref  : Rs. ";
-            text(pendLabel + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
-            text("Payment Mode : " + (txData.depositOption || 'FULL') + "\n");
+            text(formatLine("Rate:", "Rs. " + rate.toLocaleString() + "/Tray"));
+            const totLabel = txData.type === 'OUT' ? "Total Payable:" : "Total Refund:";
+            text(formatLine(totLabel, "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            const depLabel = txData.type === 'OUT' ? "Deposit Paid:" : "Refund Paid:";
+            text(formatLine(depLabel, "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            const pendLabel = txData.type === 'OUT' ? "Pending Dep:" : "Pending Ref:";
+            text(formatLine(pendLabel, "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            text(formatLine("Payment Mode:", txData.depositOption || 'FULL'));
 
             if (txData.remarks) {
-                text("Remarks      : " + txData.remarks + "\n");
+                text(formatLine("Remarks:", txData.remarks));
             }
 
             text("--------------------------------\n");
 
-            // 6. Statement Box
-            cmd([0x1B, 0x45, 0x01]);
-            text("DEPOSIT/REFUND STATEMENT:\n");
-            cmd([0x1B, 0x45, 0x00]);
-            text("Total Val: Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
-            text("Paid Amt : Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
-            text("Pending  : Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
-            text("--------------------------------\n");
-
-            // 7. Customer Net Balance
+            // 6. Statement Box (Centered title, balanced rows)
             cmd([0x1B, 0x61, 0x01]);
-            text("CUSTOMER TOTAL OUTSTANDING:\n");
             cmd([0x1B, 0x45, 0x01]);
-            text((customerData.currentBalance || 0) + " TRAYS\n");
-            text("Pending Dep: Rs. " + totalPendingDepositVal.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
+            text("DEPOSIT/REFUND STATEMENT\n");
             cmd([0x1B, 0x45, 0x00]);
-
-            text("\n");
             cmd([0x1B, 0x61, 0x00]);
-            text("Created: ...... Checked: ......\n");
-            text("Received: ............\n");
+            text(formatLine("Total Value:", "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            text(formatLine("Paid Amount:", "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            text(formatLine("Pending Dep:", "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text("--------------------------------\n");
+
+            // 7. Customer Net Balance (Centered title, balanced rows)
             cmd([0x1B, 0x61, 0x01]);
+            cmd([0x1B, 0x45, 0x01]);
+            text("CUSTOMER OUTSTANDING\n");
+            cmd([0x1B, 0x45, 0x00]);
+            cmd([0x1B, 0x61, 0x00]);
+            text(formatLine("Net Tray Bal:", (customerData.currentBalance || 0) + " TRAYS"));
+            text(formatLine("Pending Dep:", "Rs. " + totalPendingDepositVal.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            text("--------------------------------\n");
+
+            cmd([0x1B, 0x61, 0x01]);
+            text("Created     Checked     Received\n");
+            text(".......     .......     ........\n");
+            text("--------------------------------\n");
             text("Nelna Agri Smart Tray System\n");
             text("*** THANK YOU! ***\n");
 
