@@ -84,6 +84,153 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            white-space: nowrap;
+        }
+
+        /* Bluetooth Printer Setup Header Button */
+        .printer-btn {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 6px 11px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .printer-btn:active {
+            transform: scale(0.96);
+            background: rgba(255,255,255,0.3);
+        }
+        .printer-btn.connected {
+            background: #059669;
+            border-color: #6ee7b7;
+            box-shadow: 0 0 8px rgba(110, 231, 183, 0.4);
+        }
+
+        /* Status & Alert Boxes */
+        .status-box {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+            text-align: left;
+            margin-bottom: 12px;
+        }
+        .status-box.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+        .status-box.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-weight: 600; }
+        .status-box.warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+        .status-box.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* Printer Setup Modal Styles */
+        .printer-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(3px);
+        }
+        .printer-modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: printerModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes printerModalPop {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .printer-modal-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+        }
+        .printer-modal-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            line-height: 1;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        .printer-modal-close:hover { color: #1f2937; }
+        .printer-modal-body {
+            padding: 18px;
+        }
+        .printer-status-card {
+            background: #f9fafb;
+            border: 1.5px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+        .printer-status-card.active {
+            background: #f0fdf4;
+            border: 1.5px solid #86efac;
+        }
+        .printer-act-btn {
+            padding: 12px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            width: 100%;
+            text-decoration: none;
+        }
+        .printer-act-btn.primary {
+            background: #107c41;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(16, 124, 65, 0.3);
+        }
+        .printer-act-btn.primary:active {
+            background: #0b592e;
+            transform: scale(0.98);
+        }
+        .printer-act-btn.test {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .printer-act-btn.test:active { background: #dbeafe; }
+        .printer-act-btn.forget {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        .printer-act-btn.forget:active { background: #fee2e2; }
+        .printer-help-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 14px;
         }
 
         .container {
@@ -382,7 +529,12 @@
             <div class="header-sub">Driver Delivery Portal (ට්‍රේ බෙදාහැරීම)</div>
         </div>
         <% if (isDriverLoggedIn) { %>
-            <a href="/driver/logout" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Exit</a>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="printer-btn" id="headerPrinterBtn" onclick="openPrinterModal()" title="Bluetooth Printer Setup">
+                    <i class="fa-solid fa-print"></i> <span id="headerPrinterBtnText">Add Printer</span>
+                </button>
+                <a href="/driver/logout" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Exit</a>
+            </div>
         <% } %>
     </div>
 
@@ -628,6 +780,67 @@
         </div>
 
     </div>
+
+    <!-- Bluetooth Printer Setup Modal -->
+    <div id="printerModal" class="printer-modal-overlay" style="display: none;" onclick="handleModalBackdropClick(event)">
+        <div class="printer-modal-card" onclick="event.stopPropagation()">
+            <div class="printer-modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #ecfdf5; display: flex; align-items: center; justify-content: center; color: #107c41; font-size: 16px;">
+                        <i class="fa-solid fa-print"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 15px; font-weight: 800; color: #111827; margin: 0;">Bluetooth Printer Setup</h3>
+                        <p style="font-size: 11px; color: #6b7280; margin: 2px 0 0 0;">110mm බ්ලූටූත් ප්‍රින්ටරය සම්බන්ධ කිරීම</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePrinterModal()" class="printer-modal-close" title="Close">&times;</button>
+            </div>
+
+            <div class="printer-modal-body">
+                <!-- Current Status Card -->
+                <div id="printerStatusCard" class="printer-status-card">
+                    <div style="font-size: 11px; color: #6b7280; font-weight: 700; text-transform: uppercase;">සම්බන්ධිත ප්‍රින්ටරය (Saved Printer)</div>
+                    <div id="savedPrinterName" style="font-size: 15px; font-weight: 800; color: #1f2937; margin-top: 3px;">
+                        කිසිදු Printer එකක් තෝරා නොමැත
+                    </div>
+                    <div id="savedPrinterDetails" style="font-size: 11px; color: #6b7280; margin-top: 4px; line-height: 1.4;">
+                        ප්‍රින්ටරය තෝරා Save කරගැනීමෙන් පසු සෑම Receipt එකක්ම පහසුවෙන් Print කළ හැක.
+                    </div>
+                </div>
+
+                <!-- Status Feedback Message Box -->
+                <div id="printerModalMsg" style="display: none;"></div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button type="button" id="btnScanPrinter" onclick="scanAndSavePrinter()" class="printer-act-btn primary">
+                        <i class="fa-solid fa-magnifying-glass"></i> <span id="btnScanText">Printer එකක් සොයා තෝරන්න (Select & Save)</span>
+                    </button>
+
+                    <div id="connectedPrinterActions" style="display: none; gap: 8px;">
+                        <button type="button" onclick="testPrintFromModal()" class="printer-act-btn test" style="flex: 1;">
+                            <i class="fa-solid fa-receipt"></i> Test Print
+                        </button>
+                        <button type="button" onclick="forgetPrinter()" class="printer-act-btn forget" style="flex: 1;">
+                            <i class="fa-solid fa-trash-can"></i> Disconnect
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Instructions in Sinhala -->
+                <div class="printer-help-box">
+                    <strong style="font-size: 12px; color: #1f2937;"><i class="fa-solid fa-circle-info" style="color: #107c41;"></i> උපදෙස්:</strong>
+                    <ol style="margin-left: 18px; margin-top: 6px; font-size: 11.5px; color: #4b5563; line-height: 1.55;">
+                        <li>ප්‍රථමයෙන් ඔබගේ 110mm Bluetooth Thermal Printer එක <strong>ON</strong> කරන්න.</li>
+                        <li>දුරකථනයේ <strong>Bluetooth</strong> On කර ඇත්දැයි බලන්න.</li>
+                        <li>ඉහත <strong>"Select & Save"</strong> බොත්තම ඔබා මතුවන ලැයිස්තුවෙන් ඔබගේ Printer එක තෝරන්න.</li>
+                        <li>වරක් Save කළ පසු, Transaction එක save කළ සැණින් එම Printer එකෙන්ම රිසිට්පත මුද්‍රණය වේ.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
     <% } %>
 
     <script>
@@ -863,6 +1076,291 @@
                 });
             });
         }
+
+        // ==========================================
+        // BLUETOOTH THERMAL PRINTER SETUP & SAVING
+        // ==========================================
+        const BLE_PRINTER_SERVICES = [
+            '000018f0-0000-1000-8000-00805f9b34fb',
+            'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+            '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+            '0000ff00-0000-1000-8000-00805f9b34fb',
+            '0000fee7-0000-1000-8000-00805f9b34fb',
+            '0000ae00-0000-1000-8000-00805f9b34fb',
+            '0000af00-0000-1000-8000-00805f9b34fb',
+            '0000ffe0-0000-1000-8000-00805f9b34fb',
+            '0000fff0-0000-1000-8000-00805f9b34fb',
+            '0000ffe5-0000-1000-8000-00805f9b34fb'
+        ];
+
+        function openPrinterModal() {
+            const modal = document.getElementById('printerModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                updatePrinterUI();
+            }
+        }
+
+        function closePrinterModal() {
+            const modal = document.getElementById('printerModal');
+            if (modal) {
+                modal.style.display = 'none';
+                const msgEl = document.getElementById('printerModalMsg');
+                if (msgEl) msgEl.style.display = 'none';
+            }
+        }
+
+        function handleModalBackdropClick(e) {
+            if (e.target.id === 'printerModal') {
+                closePrinterModal();
+            }
+        }
+
+        function updatePrinterUI() {
+            const savedName = localStorage.getItem('savedBluetoothPrinterName');
+            const headerBtn = document.getElementById('headerPrinterBtn');
+            const headerText = document.getElementById('headerPrinterBtnText');
+            const statusCard = document.getElementById('printerStatusCard');
+            const savedNameEl = document.getElementById('savedPrinterName');
+            const savedDetailsEl = document.getElementById('savedPrinterDetails');
+            const connActions = document.getElementById('connectedPrinterActions');
+            const scanBtnText = document.getElementById('btnScanText');
+
+            if (savedName) {
+                if (headerBtn) {
+                    headerBtn.classList.add('connected');
+                    headerBtn.title = 'Saved Printer: ' + savedName;
+                }
+                if (headerText) {
+                    const shortName = savedName.length > 12 ? savedName.substring(0, 10) + '...' : savedName;
+                    headerText.innerHTML = `<i class="fa-solid fa-check" style="font-size:10px;"></i> ${shortName}`;
+                }
+                if (statusCard) {
+                    statusCard.classList.add('active');
+                }
+                if (savedNameEl) {
+                    savedNameEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color: #059669;"></i> ${savedName}`;
+                }
+                if (savedDetailsEl) {
+                    savedDetailsEl.innerHTML = '<span style="color:#059669; font-weight:600;">✓ මෙම Printer එක Save කර ඇත.</span> රිසිට්පත් මුද්‍රණයේදී ස්වයංක්‍රීයව භාවිත වේ.';
+                }
+                if (connActions) {
+                    connActions.style.display = 'flex';
+                }
+                if (scanBtnText) {
+                    scanBtnText.innerText = 'වෙනත් Printer එකක් තෝරන්න (Change Printer)';
+                }
+            } else {
+                if (headerBtn) {
+                    headerBtn.classList.remove('connected');
+                    headerBtn.title = 'Add Bluetooth Printer';
+                }
+                if (headerText) {
+                    headerText.innerText = 'Add Printer';
+                }
+                if (statusCard) {
+                    statusCard.classList.remove('active');
+                }
+                if (savedNameEl) {
+                    savedNameEl.innerText = 'කිසිදු Printer එකක් තෝරා නොමැත';
+                }
+                if (savedDetailsEl) {
+                    savedDetailsEl.innerText = 'ප්‍රින්ටරය තෝරා Save කරගැනීමෙන් පසු සෑම Receipt එකක්ම පහසුවෙන් Print කළ හැක.';
+                }
+                if (connActions) {
+                    connActions.style.display = 'none';
+                }
+                if (scanBtnText) {
+                    scanBtnText.innerText = 'Printer එකක් සොයා තෝරන්න (Select & Save)';
+                }
+            }
+        }
+
+        async function scanAndSavePrinter() {
+            const msgEl = document.getElementById('printerModalMsg');
+            msgEl.style.display = 'block';
+            msgEl.className = 'status-box info';
+            msgEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Bluetooth Printers සොයමින් පවතී... කරුණාකර මතුවන List එකෙන් ඔබගේ Printer එක තෝරන්න.';
+
+            if (!navigator.bluetooth) {
+                msgEl.className = 'status-box error';
+                msgEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> මෙම Browser එකෙහි Web Bluetooth සහය නොදක්වයි. කරුණාකර Google Chrome භාවිත කරන්න.';
+                return;
+            }
+
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: BLE_PRINTER_SERVICES
+                });
+
+                msgEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <strong>${device.name || 'Printer'}</strong> සමඟ සම්බන්ධතාවය තහවුරු කරමින් පවතී...`;
+
+                const server = await device.gatt.connect();
+
+                // Save to localStorage
+                localStorage.setItem('savedBluetoothPrinterId', device.id);
+                localStorage.setItem('savedBluetoothPrinterName', device.name || 'Bluetooth Printer');
+
+                msgEl.className = 'status-box success';
+                msgEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>${device.name || 'Printer'}</strong> සාර්ථකව සම්බන්ධ කර Save කරන ලදී!`;
+
+                updatePrinterUI();
+
+                setTimeout(() => {
+                    if (device.gatt && device.gatt.connected) {
+                        device.gatt.disconnect();
+                    }
+                }, 1000);
+
+            } catch (err) {
+                if (err.name === 'NotFoundError') {
+                    msgEl.className = 'status-box warning';
+                    msgEl.innerHTML = '<i class="fa-solid fa-ban"></i> Printer තේරීම අවලංගු කරන ලදී (Cancelled).';
+                } else {
+                    console.error('BLE Pair Error:', err);
+                    msgEl.className = 'status-box error';
+                    msgEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> දෝෂයකි: ${err.message}`;
+                }
+            }
+        }
+
+        async function testPrintFromModal() {
+            const msgEl = document.getElementById('printerModalMsg');
+            msgEl.style.display = 'block';
+            msgEl.className = 'status-box info';
+            msgEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Test Print යවමින් පවතී...';
+
+            const savedId = localStorage.getItem('savedBluetoothPrinterId');
+            let device = null;
+
+            try {
+                if (savedId && navigator.bluetooth && navigator.bluetooth.getDevices) {
+                    try {
+                        const devices = await navigator.bluetooth.getDevices();
+                        device = devices.find(d => d.id === savedId) || null;
+                    } catch (e) {
+                        console.log('Permitted check note:', e);
+                    }
+                }
+
+                if (!device) {
+                    device = await navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true,
+                        optionalServices: BLE_PRINTER_SERVICES
+                    });
+                    localStorage.setItem('savedBluetoothPrinterId', device.id);
+                    localStorage.setItem('savedBluetoothPrinterName', device.name || 'Bluetooth Printer');
+                    updatePrinterUI();
+                }
+
+                const server = await device.gatt.connect();
+                const services = await server.getPrimaryServices();
+                let writeChar = null;
+
+                for (const s of services) {
+                    try {
+                        const chars = await s.getCharacteristics();
+                        for (const c of chars) {
+                            if (c.properties.write || c.properties.writeWithoutResponse) {
+                                writeChar = c;
+                                break;
+                            }
+                        }
+                        if (writeChar) break;
+                    } catch (e) {}
+                }
+
+                if (!writeChar) throw new Error('Data characteristic not found on this printer.');
+
+                // Short 110mm centered test receipt
+                const encoder = new TextEncoder();
+                const sideMargin = 12;
+                const innerWidth = 44;
+                const padLeft = ' '.repeat(sideMargin);
+                const divider = padLeft + '-'.repeat(innerWidth) + '\n';
+
+                const initCmds = [
+                    0x1B, 0x40, // Init
+                    0x1B, 0x4D, 0x00, // Font A
+                    0x1D, 0x4C, 0x00, 0x00, // Left margin 0
+                    0x1D, 0x57, 0x40, 0x03, // 832 dots (110mm)
+                    0x1B, 0x32 // Standard spacing
+                ];
+
+                const parts = [new Uint8Array(initCmds)];
+                function addText(str) { parts.push(encoder.encode(str)); }
+                function addCmd(b) { parts.push(new Uint8Array(b)); }
+
+                addCmd([0x1B, 0x61, 0x01]); // Center
+                addCmd([0x1B, 0x45, 0x01]); // Bold on
+                addText("NELNA SMART TRAY SYSTEM\n");
+                addCmd([0x1B, 0x45, 0x00]);
+                addText("110mm Thermal Printer Connected!\n");
+                addText(new Date().toLocaleDateString('en-GB') + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + "\n");
+                addCmd([0x1B, 0x61, 0x00]);
+                addText(divider);
+                addCmd([0x1B, 0x61, 0x01]);
+                addCmd([0x1D, 0x21, 0x11]); // Double size
+                addText("TEST PRINT OK\n");
+                addCmd([0x1D, 0x21, 0x00]);
+                addCmd([0x1B, 0x61, 0x00]);
+                addText(divider);
+                addCmd([0x1B, 0x61, 0x01]);
+                addText("*** READY TO PRINT RECEIPTS ***\n\n\n\n");
+                addCmd([0x1B, 0x64, 0x03]); // Paper feed
+
+                const totalLen = parts.reduce((acc, p) => acc + p.length, 0);
+                const combined = new Uint8Array(totalLen);
+                let offset = 0;
+                for (const p of parts) {
+                    combined.set(p, offset);
+                    offset += p.length;
+                }
+
+                const CHUNK_SIZE = 100;
+                for (let i = 0; i < combined.length; i += CHUNK_SIZE) {
+                    const chunk = combined.slice(i, i + CHUNK_SIZE);
+                    if (writeChar.properties.writeWithoutResponse) {
+                        await writeChar.writeValueWithoutResponse(chunk);
+                    } else {
+                        await writeChar.writeValue(chunk);
+                    }
+                    await new Promise(r => setTimeout(r, 30));
+                }
+
+                msgEl.className = 'status-box success';
+                msgEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Test Print එක සාර්ථකව Printer වෙත යවන ලදී!`;
+
+                setTimeout(() => {
+                    if (device.gatt && device.gatt.connected) {
+                        device.gatt.disconnect();
+                    }
+                }, 1000);
+
+            } catch (err) {
+                console.error('Test Print Error:', err);
+                msgEl.className = 'status-box error';
+                msgEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Test Print දෝෂයකි: ${err.message}`;
+            }
+        }
+
+        function forgetPrinter() {
+            if (confirm('සුරකින ලද Printer එක ඉවත් කිරීමට (Disconnect) අවශ්‍යද?')) {
+                localStorage.removeItem('savedBluetoothPrinterId');
+                localStorage.removeItem('savedBluetoothPrinterName');
+                const msgEl = document.getElementById('printerModalMsg');
+                if (msgEl) {
+                    msgEl.className = 'status-box warning';
+                    msgEl.style.display = 'block';
+                    msgEl.innerHTML = '<i class="fa-solid fa-trash-can"></i> Printer එක ඉවත් කරන ලදී.';
+                }
+                updatePrinterUI();
+            }
+        }
+
+        // Initialize UI on load
+        document.addEventListener('DOMContentLoaded', updatePrinterUI);
     </script>
 </body>
 </html>

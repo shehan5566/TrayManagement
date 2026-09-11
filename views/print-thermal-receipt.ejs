@@ -638,6 +638,19 @@
             return combined;
         }
 
+        const BLE_SERVICES = [
+            '000018f0-0000-1000-8000-00805f9b34fb',
+            'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+            '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+            '0000ff00-0000-1000-8000-00805f9b34fb',
+            '0000fee7-0000-1000-8000-00805f9b34fb',
+            '0000ae00-0000-1000-8000-00805f9b34fb',
+            '0000af00-0000-1000-8000-00805f9b34fb',
+            '0000ffe0-0000-1000-8000-00805f9b34fb',
+            '0000fff0-0000-1000-8000-00805f9b34fb',
+            '0000ffe5-0000-1000-8000-00805f9b34fb'
+        ];
+
         // Web Bluetooth Direct Connect & Print
         async function printViaBluetooth() {
             const statusBox = document.getElementById('btStatus');
@@ -653,26 +666,49 @@
             }
 
             try {
-                // Request Bluetooth Device - Triggers native Bluetooth list chooser dialog
-                const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: [
-                        '000018f0-0000-1000-8000-00805f9b34fb',
-                        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-                        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
-                        '0000ff00-0000-1000-8000-00805f9b34fb',
-                        '0000fee7-0000-1000-8000-00805f9b34fb',
-                        '0000ae00-0000-1000-8000-00805f9b34fb',
-                        '0000af00-0000-1000-8000-00805f9b34fb',
-                        '0000ffe0-0000-1000-8000-00805f9b34fb',
-                        '0000fff0-0000-1000-8000-00805f9b34fb',
-                        '0000ffe5-0000-1000-8000-00805f9b34fb'
-                    ]
-                });
+                let device = null;
+                const savedId = localStorage.getItem('savedBluetoothPrinterId');
+                const savedName = localStorage.getItem('savedBluetoothPrinterName');
+
+                // 1. If saved printer exists, try to reuse permitted device without opening chooser
+                if (savedId && navigator.bluetooth.getDevices) {
+                    try {
+                        const permittedDevices = await navigator.bluetooth.getDevices();
+                        device = permittedDevices.find(d => d.id === savedId) || null;
+                        if (device) {
+                            statusBox.innerHTML = `<i class="fa-solid fa-link fa-spin"></i> සුරකින ලද <strong>${device.name || savedName}</strong> වෙත සෘජුව සම්බන්ධ වෙමින් පවතී...`;
+                        }
+                    } catch (e) {
+                        console.log('Permitted device lookup note:', e);
+                    }
+                }
+
+                // 2. If not permitted yet or not found, open Bluetooth chooser dialog
+                if (!device) {
+                    device = await navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true,
+                        optionalServices: BLE_SERVICES
+                    });
+                    localStorage.setItem('savedBluetoothPrinterId', device.id);
+                    localStorage.setItem('savedBluetoothPrinterName', device.name || 'Printer');
+                }
 
                 statusBox.innerHTML = `<i class="fa-solid fa-link"></i> <strong>${device.name || 'Printer'}</strong> වෙත සම්බන්ධ වෙමින් පවතී...`;
 
-                const server = await device.gatt.connect();
+                let server = null;
+                try {
+                    server = await device.gatt.connect();
+                } catch (connErr) {
+                    console.warn('Direct connect to device failed, prompting picker:', connErr);
+                    device = await navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true,
+                        optionalServices: BLE_SERVICES
+                    });
+                    localStorage.setItem('savedBluetoothPrinterId', device.id);
+                    localStorage.setItem('savedBluetoothPrinterName', device.name || 'Printer');
+                    statusBox.innerHTML = `<i class="fa-solid fa-link"></i> <strong>${device.name || 'Printer'}</strong> වෙත සම්බන්ධ වෙමින් පවතී...`;
+                    server = await device.gatt.connect();
+                }
 
                 // Find writable characteristic in all primary services
                 const services = await server.getPrimaryServices();
@@ -716,6 +752,12 @@
                 statusBox.className = 'status-box success';
                 statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>${device.name || 'Printer'}</strong> වෙතින් රිසිට්පත සාර්ථකව මුද්‍රණය විය!`;
 
+                setTimeout(() => {
+                    if (device.gatt && device.gatt.connected) {
+                        device.gatt.disconnect();
+                    }
+                }, 1200);
+
             } catch (err) {
                 if (err.name === 'NotFoundError') {
                     statusBox.className = 'status-box warning';
@@ -728,6 +770,17 @@
                 }
             }
         }
+
+        // On receipt load: show detected saved printer notice
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedName = localStorage.getItem('savedBluetoothPrinterName');
+            const statusBox = document.getElementById('btStatus');
+            if (savedName && statusBox) {
+                statusBox.style.display = 'block';
+                statusBox.className = 'status-box info';
+                statusBox.innerHTML = `<i class="fa-solid fa-print"></i> සුරකින ලද ප්‍රින්ටරය: <strong>${savedName}</strong> (Print බොත්තම ඔබන්න)`;
+            }
+        });
     </script>
 </body>
 </html>
