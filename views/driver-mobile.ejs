@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Nelna Agri - Driver Mobile Portal</title>
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <link rel="manifest" href="/manifest-driver.json">
+    <meta name="theme-color" content="#107c41">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nelna Driver">
+    <link rel="apple-touch-icon" href="/images/logo.png">
+    <link rel="icon" type="image/png" href="/images/logo.png">
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -414,6 +424,17 @@
                 </button>
             </form>
 
+            <!-- PWA Install Button for Driver Mobile -->
+            <div id="pwaInstallContainer" style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed #e5e7eb;">
+                <button type="button" id="pwaInstallBtn" onclick="installDriverApp()" style="background: #f0fdf4; color: #166534; border: 1.5px solid #86efac; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fa-solid fa-mobile-screen-button" style="font-size: 16px; color: #107c41;"></i> 
+                    <span>App එකක් ලෙස දුරකථනයට දමාගන්න (Install App)</span>
+                </button>
+                <div id="iosInstallHint" style="display: none; font-size: 11px; color: #4b5563; margin-top: 8px; text-align: center; line-height: 1.4; background: #f9fafb; padding: 8px; border-radius: 6px; border: 1px solid #e5e7eb;">
+                    <i class="fa-brands fa-apple" style="color: #000;"></i> iPhone සඳහා: Safari හි පහළ ඇති Share බොත්තම (<i class="fa-solid fa-arrow-up-from-bracket"></i>) ඔබා <strong>'Add to Home Screen'</strong> තෝරන්න.
+                </div>
+            </div>
+
             <script>
                 function updateVehiclePinHint(vehicleNo) {
                     const hint = document.getElementById('pinHintText');
@@ -768,6 +789,47 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
             }
+        }
+
+        // PWA Installation & Service Worker Logic
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('pwaInstallBtn');
+            if (btn) btn.style.display = 'flex';
+        });
+
+        function installDriverApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Driver installed the app');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    const hint = document.getElementById('iosInstallHint');
+                    if (hint) {
+                        hint.style.display = 'block';
+                    } else {
+                        alert("iPhone සඳහා:\nSafari browser හි පහළ ඇති Share බොත්තම ඔබා 'Add to Home Screen' තෝරන්න.");
+                    }
+                } else {
+                    alert("මෙම App එක දුරකථනයේ ස්ථාපනය කිරීමට:\n\n1. Chrome Browser එකේ ඉහළ දකුණු කෙළවරේ ඇති තිත් 3 (⋮) ඔබන්න.\n2. 'Install app' හෝ 'Add to Home screen' (මුල් තිරයට එක් කරන්න) තෝරන්න.");
+                }
+            }
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(err => {
+                    console.log('SW registration note:', err);
+                });
+            });
         }
     </script>
 </body>

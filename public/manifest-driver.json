@@ -1,0 +1,19 @@
+{
+  "name": "Nelna Agri Driver",
+  "short_name": "Nelna Driver",
+  "description": "Nelna Agri Lorry Delivery & Tray Management Driver Portal",
+  "start_url": "/driver",
+  "scope": "/driver",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#107c41",
+  "theme_color": "#107c41",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
