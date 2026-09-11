@@ -213,7 +213,7 @@
                 margin: 0 auto !important;
                 box-shadow: none !important;
                 border: none !important;
-                padding: 1mm 2mm !important;
+                padding: 1mm 4mm !important;
                 font-size: 9pt !important;
             }
 
@@ -479,22 +479,32 @@
                 parts.push(new Uint8Array(bytes));
             }
 
-            // Helper to format two-column key-value lines spanning full width
-            function formatLine(left, right, width = lineWidth) {
+            // On 80mm (48 cols), bring details comfortably towards the center with a 4-space margin (40 cols inner width)
+            // On 58mm (32 cols), use full 32 cols
+            const sideMargin = (lineWidth >= 48) ? 4 : 0;
+            const innerWidth = lineWidth - (sideMargin * 2);
+            const padLeft = ' '.repeat(sideMargin);
+
+            // Helper to format two-column key-value lines with padding towards center
+            function formatLine(left, right, width = innerWidth) {
                 left = String(left || '');
                 right = String(right || '');
                 const spaces = width - left.length - right.length;
+                let lineStr = '';
                 if (spaces > 0) {
-                    return left + ' '.repeat(spaces) + right + '\n';
+                    lineStr = left + ' '.repeat(spaces) + right;
+                } else {
+                    const avail = width - right.length - 1;
+                    if (avail > 2) {
+                        lineStr = left.substring(0, avail) + ' ' + right;
+                    } else {
+                        lineStr = left + '\n' + padLeft + ' '.repeat(Math.max(0, width - right.length)) + right;
+                    }
                 }
-                const avail = width - right.length - 1;
-                if (avail > 2) {
-                    return left.substring(0, avail) + ' ' + right + '\n';
-                }
-                return left + '\n' + ' '.repeat(Math.max(0, width - right.length)) + right + '\n';
+                return padLeft + lineStr + '\n';
             }
 
-            const divider = "-".repeat(lineWidth) + "\n";
+            const divider = padLeft + "-".repeat(innerWidth) + "\n";
             const countQty = Number(txData.count) || 0;
 
             // 1. Initialize Printer (ESC @)
@@ -523,9 +533,10 @@
             cmd([0x1B, 0x45, 0x00]); // Bold off
             text("TRAY TRANSACTION RECEIPT\n");
             text("Store Operations Log / Route\n");
+            cmd([0x1B, 0x61, 0x00]); // Left align for divider & details
             text(divider);
 
-            // 3. Receipt Details (Left/Right Balanced across full line width)
+            // 3. Receipt Details (Balanced towards center)
             cmd([0x1B, 0x61, 0x00]); // Left align
             text(formatLine("REC NO:", "RE-" + String(txData.receiptNo || 0).padStart(6, '0')));
             const d = new Date(txData.date);
@@ -537,11 +548,11 @@
             
             // Customer Info
             const custName = customerData.name || txData.customerName || '';
-            const maxCustLen = lineWidth - 12;
+            const maxCustLen = innerWidth - 11;
             if (custName.length <= maxCustLen) {
                 text(formatLine("CUSTOMER:", custName));
             } else {
-                text("CUSTOMER: " + custName + "\n");
+                text(padLeft + "CUSTOMER: " + custName + "\n");
             }
             if (customerData.phone) text(formatLine("CONTACT:", customerData.phone));
             text(divider);
@@ -559,9 +570,10 @@
             text(countQty + " TRAYS\n");
             cmd([0x1D, 0x21, 0x00]); // Reset size
             cmd([0x1B, 0x45, 0x00]); // Bold off
+            cmd([0x1B, 0x61, 0x00]);
             text(divider);
 
-            // 5. System Financial Details (Left/Right Balanced across line width)
+            // 5. System Financial Details (Balanced towards center)
             cmd([0x1B, 0x61, 0x00]);
             const rate = Number(txData.depositPerTray) || 2000;
             const expected = Number(txData.expectedDeposit) || (countQty * rate);
@@ -621,7 +633,9 @@
                 text("Created     Checked     Received\n");
                 text(".......     .......     ........\n");
             }
+            cmd([0x1B, 0x61, 0x00]);
             text(divider);
+            cmd([0x1B, 0x61, 0x01]);
             text("Nelna Agri Smart Tray System\n");
             text("*** THANK YOU! ***\n");
 
