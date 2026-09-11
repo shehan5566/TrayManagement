@@ -287,38 +287,6 @@
             </button>
         </div>
 
-        <!-- Print Settings (Paper Size & Font Size) -->
-        <div style="display: flex; flex-direction: column; gap: 6px; background: #ffffff; padding: 8px 12px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <!-- Paper Size -->
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-weight: 700; color: #374151; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-scroll" style="color: #107c41;"></i> Printer Paper:
-                </span>
-                <div style="display: flex; gap: 14px;">
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 700; color: #1f2937;">
-                        <input type="radio" id="pw80" name="paperWidthRadio" value="80" checked onchange="setPaperWidth(80)"> 80mm (Wide)
-                    </label>
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; color: #6b7280;">
-                        <input type="radio" id="pw58" name="paperWidthRadio" value="58" onchange="setPaperWidth(58)"> 58mm (Small)
-                    </label>
-                </div>
-            </div>
-            <!-- Font Size -->
-            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px dashed #e5e7eb; padding-top: 6px;">
-                <span style="font-weight: 700; color: #374151; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-text-height" style="color: #107c41;"></i> Font Size:
-                </span>
-                <div style="display: flex; gap: 14px;">
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 700; color: #1f2937;">
-                        <input type="radio" id="fsLarge" name="fontSizeRadio" value="large" checked onchange="setFontSize('large')"> Large (විශාල)
-                    </label>
-                    <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; color: #6b7280;">
-                        <input type="radio" id="fsNormal" name="fontSizeRadio" value="normal" onchange="setFontSize('normal')"> Normal
-                    </label>
-                </div>
-            </div>
-        </div>
-
         <!-- Status Message Box -->
         <div id="btStatus" class="status-box"></div>
     </div>
@@ -493,41 +461,8 @@
         const settingsData = <%- JSON.stringify(settings || {}) %>;
         const totalPendingDepositVal = <%= custPendingDeposit %>;
 
-        function getPaperWidthCols() {
-            const saved = localStorage.getItem('thermal_paper_width');
-            return (saved === '58') ? 32 : 48;
-        }
-
-        function setPaperWidth(size) {
-            localStorage.setItem('thermal_paper_width', String(size));
-            const r80 = document.getElementById('pw80');
-            const r58 = document.getElementById('pw58');
-            if (r80) r80.checked = (size == 80);
-            if (r58) r58.checked = (size == 58);
-        }
-
-        function getFontSizeSetting() {
-            return localStorage.getItem('thermal_font_size') || 'large';
-        }
-
-        function setFontSize(size) {
-            localStorage.setItem('thermal_font_size', size);
-            const fsL = document.getElementById('fsLarge');
-            const fsN = document.getElementById('fsNormal');
-            if (fsL) fsL.checked = (size === 'large');
-            if (fsN) fsN.checked = (size === 'normal');
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedWidth = localStorage.getItem('thermal_paper_width') || '80';
-            setPaperWidth(savedWidth == '58' ? 58 : 80);
-
-            const savedFont = localStorage.getItem('thermal_font_size') || 'large';
-            setFontSize(savedFont);
-        });
-
-        // Generate Standard ESC/POS Thermal Command Buffer
-        function generateEscPosCommands(lineWidth = 48, fontSize = 'large') {
+        // Generate Standard ESC/POS Thermal Command Buffer (Default 80mm Standard with Normal Font)
+        function generateEscPosCommands() {
             const encoder = new TextEncoder();
             const parts = [];
 
@@ -538,15 +473,12 @@
                 parts.push(new Uint8Array(bytes));
             }
 
-            const isLarge = (fontSize === 'large');
-
-            // On 80mm (48 cols), bring details more into the center with 6-space margin (36 cols inner width)
-            // On 58mm (32 cols), use 32 cols with 0 margin
-            const sideMargin = (lineWidth >= 48) ? 6 : 0;
-            const innerWidth = lineWidth - (sideMargin * 2);
+            // On 80mm paper (48 columns printable), center the 32-character receipt block with 8 spaces on left and 8 on right
+            const sideMargin = 8;
+            const innerWidth = 32;
             const padLeft = ' '.repeat(sideMargin);
 
-            // Helper to format two-column key-value lines with padding towards center
+            // Helper to format two-column key-value lines centered on 80mm roll
             function formatLine(left, right, width = innerWidth) {
                 left = String(left || '');
                 right = String(right || '');
@@ -577,43 +509,25 @@
             // Set left margin to 0 (GS L 0 0)
             cmd([0x1D, 0x4C, 0x00, 0x00]);
 
-            // Set printable area width (GS W nL nH)
-            if (lineWidth >= 48) {
-                cmd([0x1D, 0x57, 0x40, 0x02]); // 576 dots
-            } else {
-                cmd([0x1D, 0x57, 0x80, 0x01]); // 384 dots
-            }
+            // Set printable area width to 576 dots (80mm width)
+            cmd([0x1D, 0x57, 0x40, 0x02]);
 
-            // Set line spacing (ESC 3 n)
-            if (isLarge) {
-                cmd([0x1B, 0x33, 0x28]); // 40 dots line spacing for double height
-            } else {
-                cmd([0x1B, 0x32]); // Default line spacing
-            }
+            // Select standard line spacing (1/6 inch)
+            cmd([0x1B, 0x32]);
 
-            // 2. Company Header (Centered across printable area)
+            // 2. Company Header (Centered)
             cmd([0x1B, 0x61, 0x01]); // Center align
             cmd([0x1B, 0x45, 0x01]); // Bold on
-            if (isLarge) {
-                cmd([0x1D, 0x21, 0x01]); // Double height for header
-            }
             const compName = settingsData.companyName || "NELNA AGRI DEVELOPMENT (PVT) LTD";
             text(compName + "\n");
-            text("TRAY TRANSACTION RECEIPT\n");
-            if (isLarge) {
-                cmd([0x1D, 0x21, 0x00]); // Reset to normal height
-            }
             cmd([0x1B, 0x45, 0x00]); // Bold off
+            text("TRAY TRANSACTION RECEIPT\n");
             text("Store Operations Log / Route\n");
             cmd([0x1B, 0x61, 0x00]); // Left align for divider & details
             text(divider);
 
-            // 3. Receipt Details (Centered with side margins & larger font)
+            // 3. Receipt Details (Centered with 8-space side margins)
             cmd([0x1B, 0x61, 0x00]); // Left align
-            if (isLarge) {
-                cmd([0x1D, 0x21, 0x01]); // Double height
-                cmd([0x1B, 0x45, 0x01]); // Bold
-            }
             text(formatLine("REC NO:", "RE-" + String(txData.receiptNo || 0).padStart(6, '0')));
             const d = new Date(txData.date);
             const dateStr = d.toLocaleDateString('en-GB') + " " + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -644,16 +558,12 @@
             // Double width & height for tray count
             cmd([0x1D, 0x21, 0x11]);
             text(countQty + " TRAYS\n");
-            if (isLarge) {
-                cmd([0x1D, 0x21, 0x01]); // Reset to double height
-            } else {
-                cmd([0x1D, 0x21, 0x00]); // Reset to normal size
-                cmd([0x1B, 0x45, 0x00]); // Bold off
-            }
+            cmd([0x1D, 0x21, 0x00]); // Reset to normal size
+            cmd([0x1B, 0x45, 0x00]); // Bold off
             cmd([0x1B, 0x61, 0x00]);
             text(divider);
 
-            // 5. System Financial Details (Centered with side margins)
+            // 5. System Financial Details (Centered with 8-space side margins)
             cmd([0x1B, 0x61, 0x00]);
             const rate = Number(txData.depositPerTray) || 2000;
             const expected = Number(txData.expectedDeposit) || (countQty * rate);
@@ -686,7 +596,9 @@
 
             // 6. Statement Box (Centered title, balanced rows)
             cmd([0x1B, 0x61, 0x01]);
+            cmd([0x1B, 0x45, 0x01]);
             text("DEPOSIT/REFUND STATEMENT\n");
+            cmd([0x1B, 0x45, 0x00]);
             cmd([0x1B, 0x61, 0x00]);
             text(formatLine("Total Value:", "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(formatLine("Paid Amount:", "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
@@ -695,32 +607,22 @@
 
             // 7. Customer Net Balance (Centered title, balanced rows)
             cmd([0x1B, 0x61, 0x01]);
+            cmd([0x1B, 0x45, 0x01]);
             text("CUSTOMER OUTSTANDING\n");
+            cmd([0x1B, 0x45, 0x00]);
             cmd([0x1B, 0x61, 0x00]);
             text(formatLine("Net Tray Bal:", (customerData.currentBalance || 0) + " TRAYS"));
             text(formatLine("Pending Dep:", "Rs. " + totalPendingDepositVal.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(divider);
 
             // 8. Signatures & Footer
-            if (isLarge) {
-                cmd([0x1D, 0x21, 0x00]); // Reset to normal size for signatures
-                cmd([0x1B, 0x45, 0x00]); // Bold off
-            }
-            cmd([0x1B, 0x61, 0x01]);
-            if (lineWidth >= 48) {
-                text("      Created      Checked      Received    \n");
-                text("     .........    .........    .........    \n");
-            } else {
-                text("Created     Checked     Received\n");
-                text(".......     .......     ........\n");
-            }
             cmd([0x1B, 0x61, 0x00]);
+            text(padLeft + "Created     Checked     Received\n");
+            text(padLeft + ".......     .......     ........\n");
             text(divider);
             cmd([0x1B, 0x61, 0x01]);
-            cmd([0x1B, 0x45, 0x01]);
             text("Nelna Agri Smart Tray System\n");
             text("*** THANK YOU! ***\n");
-            cmd([0x1B, 0x45, 0x00]);
 
             // 9. Paper Feed lines
             cmd([0x1B, 0x64, 0x04]);
@@ -797,9 +699,7 @@
 
                 statusBox.innerHTML = `<i class="fa-solid fa-print fa-bounce"></i> <strong>${device.name || 'Printer'}</strong> වෙතින් රිසිට්පත මුද්‍රණය වෙමින් පවතී...`;
 
-                const pCols = getPaperWidthCols();
-                const fSize = getFontSizeSetting();
-                const rawData = generateEscPosCommands(pCols, fSize);
+                const rawData = generateEscPosCommands();
 
                 // Send data in chunks of 100 bytes for BLE MTU safety
                 const CHUNK_SIZE = 100;
