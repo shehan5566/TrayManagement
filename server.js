@@ -1049,6 +1049,173 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
     }
 });
 
+// Bulk Import Transactions via Excel
+app.post('/transactions/import', requireEditAccess, requirePermission('transactions_create'), upload.single('excelFile'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.json({ success: false, error: 'No file uploaded. Please select an Excel or CSV file.' });
+        }
+
+        const workbook = xlsx.read(req.file.buffer, { type: 'buffer', cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = xlsx.utils.sheet_to_json(worksheet);
+
+        if (!data || data.length === 0) {
+            return res.json({ success: false, error: 'The uploaded file is empty.' });
+        }
+
+        // Fetch customers for matching
+        const allCustomers = await CustomerModel.find({}).lean();
+        const customerByPhone = new Map();
+        const customerByName = new Map();
+
+        allCustomers.forEach(c => {
+            if (c.phone) {
+                const clean = String(c.phone).replace(/[^0-9]/g, '');
+                customerByPhone.set(clean, c);
+                if (clean.length === 10 && clean.startsWith('0')) {
+                    customerByPhone.set(clean.substring(1), c);
+                }
+            }
+            if (c.name) {
+                customerByName.set(c.name.trim().toLowerCase(), c);
+            }
+        });
+
+        // Global deposit setting
+        const settings = await SystemSetting.get();
+        const defaultDepositPerTray = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
+
+        let successCount = 0;
+        let skipCount = 0;
+        const skipReasons = [];
+
+        const parseDateVal = (val) => {
+            if (!val) return new Date().toISOString();
+            if (val instanceof Date && !isNaN(val.getTime())) {
+                return val.toISOString();
+            }
+            if (typeof val === 'number') {
+                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                if (!isNaN(d.getTime())) return d.toISOString();
+            }
+            const parsed = new Date(val);
+            if (!isNaN(parsed.getTime())) {
+                return parsed.toISOString();
+            }
+            return new Date().toISOString();
+        };
+
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const rowNum = i + 2;
+
+            const phoneRaw = row['Phone'] || row['phone'] || row['PHONE'] || row['Mobile'] || row['Contact'];
+            const nameRaw = row['Customer Name'] || row['customer name'] || row['CustomerName'] || row['Name'] || row['name'];
+            const typeRaw = row['Type'] || row['type'] || row['TYPE'] || row['Transaction Type'];
+            const qtyRaw = row['Quantity'] || row['quantity'] || row['Qty'] || row['qty'] || row['Count'] || row['count'];
+            const dateRaw = row['Date'] || row['date'] || row['DATE'] || row['Date & Time'];
+            const vehicleRaw = row['Vehicle No'] || row['Vehicle'] || row['vehicleNo'] || row['vehicle'];
+            const depositRaw = row['Deposit Amount'] || row['deposit'] || row['Deposit'] || row['actualDeposit'];
+            const remarksRaw = row['Remarks'] || row['remarks'] || row['Remark'] || row['Note'] || row['note'];
+
+            // 1. Validate Quantity
+            const count = parseInt(qtyRaw, 10);
+            if (isNaN(count) || count <= 0) {
+                skipCount++;
+                skipReasons.push(`Row ${rowNum}: Invalid quantity (${qtyRaw || 'empty'})`);
+                continue;
+            }
+
+            // 2. Validate Type (IN or OUT)
+            let type = String(typeRaw || '').trim().toUpperCase();
+            if (type === 'TRAY OUT' || type === 'OUT' || type === 'ISSUE') {
+                type = 'OUT';
+            } else if (type === 'TRAY IN' || type === 'IN' || type === 'RETURN') {
+                type = 'IN';
+            } else {
+                skipCount++;
+                skipReasons.push(`Row ${rowNum}: Invalid transaction type '${typeRaw || 'empty'}' (must be OUT or IN)`);
+                continue;
+            }
+
+            // 3. Match Customer
+            let matchedCustomer = null;
+            if (phoneRaw) {
+                let cleanPhone = String(phoneRaw).replace(/[^0-9]/g, '');
+                if (cleanPhone.length === 9) cleanPhone = '0' + cleanPhone;
+                matchedCustomer = customerByPhone.get(cleanPhone) || customerByPhone.get(cleanPhone.replace(/^0/, ''));
+            }
+            if (!matchedCustomer && nameRaw) {
+                matchedCustomer = customerByName.get(String(nameRaw).trim().toLowerCase());
+            }
+
+            if (!matchedCustomer) {
+                skipCount++;
+                skipReasons.push(`Row ${rowNum}: Customer not found for '${phoneRaw || nameRaw || 'Unknown'}'`);
+                continue;
+            }
+
+            // 4. Parse Date
+            const txDate = parseDateVal(dateRaw);
+
+            // 5. Parse Deposit
+            let actualDeposit = undefined;
+            let depositOption = 'FULL';
+            if (depositRaw !== undefined && depositRaw !== null && depositRaw !== '') {
+                const parsedDep = parseFloat(depositRaw);
+                if (!isNaN(parsedDep)) {
+                    actualDeposit = parsedDep;
+                    depositOption = 'CUSTOM';
+                }
+            }
+
+            const locationId = (req.session.user && req.session.user.locationId) || matchedCustomer.locationId || 'main';
+
+            const txData = {
+                customerId: String(matchedCustomer._id),
+                type,
+                count,
+                depositPerTray: defaultDepositPerTray,
+                depositOption,
+                actualDeposit,
+                vehicleNo: vehicleRaw ? String(vehicleRaw).trim() : 'N/A',
+                remarks: remarksRaw ? String(remarksRaw).trim() : 'Bulk Excel Import',
+                date: txDate,
+                locationId
+            };
+
+            await Transaction.create(txData, req.session.user.username);
+            successCount++;
+        }
+
+        await ActivityLog.log(
+            req.session.user.username,
+            'CREATE',
+            'Transaction',
+            `Bulk imported ${successCount} transactions via Excel (Skipped ${skipCount})`
+        );
+
+        let msg = `Successfully imported ${successCount} transactions.`;
+        if (skipCount > 0) {
+            msg += ` Skipped ${skipCount} row(s): ${skipReasons.slice(0, 3).join(', ')}`;
+        }
+
+        res.json({
+            success: true,
+            message: msg,
+            successCount,
+            skipCount,
+            skipReasons: skipReasons.slice(0, 10)
+        });
+
+    } catch (err) {
+        console.error('Transaction Import Error:', err);
+        res.status(500).json({ success: false, error: 'Failed to process Excel file: ' + err.message });
+    }
+});
+
 app.post('/transactions/:id/delete', requireAuth, requirePermission('delete_records'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {

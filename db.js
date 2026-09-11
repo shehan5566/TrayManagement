@@ -778,7 +778,7 @@ const Transaction = {
         const nextReceiptNo = lastTx ? lastTx.receiptNo + 1 : 1;
         console.log('[Receipt] Last receiptNo:', lastTx ? lastTx.receiptNo : 'none', '-> Next:', nextReceiptNo);
 
-        const txId = Date.now().toString();
+        const txId = txData._id || (Date.now().toString() + '_' + Math.random().toString(36).substr(2, 6));
         const newTx = new TransactionModel({
             _id: txId,
             customerId: txData.customerId,
