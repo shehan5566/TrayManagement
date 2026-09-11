@@ -174,25 +174,22 @@
 
     <!-- On-screen Action Controls -->
     <div class="no-print">
-        <!-- 1. Select Bluetooth Printer Button -->
-        <button type="button" id="btPrintBtn" onclick="printViaBluetooth()" class="btn btn-bt">
-            <i class="fa-brands fa-bluetooth-b" style="font-size: 18px;"></i>
-            <span>Bluetooth Printer එක තෝරා Print කරන්න</span>
-        </button>
-
         <div style="display: flex; gap: 8px;">
             <a href="/driver" class="btn btn-back" style="flex: 1;">
-                <i class="fa-solid fa-arrow-left"></i> ‹ ආපසු (Back)
+                <i class="fa-solid fa-arrow-left"></i> ‹ Back
             </a>
-            <button type="button" onclick="window.print()" class="btn btn-print" style="flex: 1;">
-                <i class="fa-solid fa-print"></i> System Print
+            <button type="button" id="btPrintBtn" onclick="printViaBluetooth()" class="btn btn-print" style="flex: 1;">
+                <i class="fa-solid fa-print"></i> Print
             </button>
         </div>
 
-        <!-- RawBT app direct print helper for Android -->
-        <div style="text-align: center; margin-top: 2px;">
-            <a href="javascript:void(0)" onclick="printViaRawBT()" style="font-size: 11px; color: #4b5563; text-decoration: underline;">
-                RawBT App එක හරහා Print කිරීමට මෙතන ඔබන්න
+        <!-- Optional links for failover -->
+        <div style="display: flex; justify-content: space-around; font-size: 11px; margin-top: 4px;">
+            <a href="javascript:void(0)" onclick="window.print()" style="color: #6b7280; text-decoration: underline;">
+                System Print
+            </a>
+            <a href="javascript:void(0)" onclick="printViaRawBT()" style="color: #6b7280; text-decoration: underline;">
+                RawBT Print
             </a>
         </div>
 
@@ -415,8 +412,9 @@
             statusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Bluetooth Printers සොයමින් පවතී... (කරුණාකර List එකෙන් ඔබගේ Printer එක තෝරන්න)';
 
             if (!navigator.bluetooth) {
-                statusBox.className = 'status-box error';
-                statusBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ඔබගේ Browser එකේ Web Bluetooth සහය නොදක්වයි.<br><strong>Android Google Chrome</strong> භාවිතා කරන්න, නැතහොත් <strong>"System Print"</strong> බොත්තම ඔබන්න.';
+                statusBox.className = 'status-box warning';
+                statusBox.innerHTML = '<i class="fa-solid fa-circle-info"></i> මෙම Browser එකෙහි Web Bluetooth සහය නොදක්වන බැවින් System Print විවෘත වේ...';
+                setTimeout(() => { window.print(); }, 400);
                 return;
             }
 
