@@ -1521,6 +1521,17 @@ app.post('/driver/transaction', async (req, res) => {
             activeTrip = await LorryTrip.getActiveTrip(req.session.driver.vehicleNo);
         }
 
+        // Lorry Stock Validation: Cannot issue (OUT) more trays than current stock on the lorry
+        if (activeTrip && type === 'OUT') {
+            const currentLorryStock = (activeTrip.loadedQty || 0) - (activeTrip.totalDeliveredQty || 0) + (activeTrip.totalCollectedQty || 0);
+            if (countVal > currentLorryStock) {
+                return res.status(400).json({
+                    success: false,
+                    error: `ලොරියේ ඉතිරිව ඇත්තේ ට්‍රේ ${currentLorryStock} ක් පමණි! (ඔබ ඇතුළත් කළේ: ${countVal}). ලොරියේ ඇති ප්‍රමාණයට වඩා වැඩිපුර ට්‍රේ නිකුත් (OUT) කළ නොහැක.`
+                });
+            }
+        }
+
         const locationId = (activeTrip && activeTrip.locationId) ? activeTrip.locationId : 'main';
 
         const txData = {

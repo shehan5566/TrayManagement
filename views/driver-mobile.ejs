@@ -528,8 +528,12 @@
 
                 <!-- 3. Quantity Input -->
                 <div class="form-group">
-                    <label class="form-label"><i class="fa-solid fa-boxes-stacked"></i> ට්‍රේ ප්‍රමාණය (Quantity) <span style="color:red;">*</span></label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label class="form-label" style="margin-bottom:0;"><i class="fa-solid fa-boxes-stacked"></i> ට්‍රේ ප්‍රමාණය (Quantity) <span style="color:red;">*</span></label>
+                        <span id="stockLimitHint" style="font-size: 11.5px; font-weight: 700; color: #107c41;">ලොරියේ ඉතිරි: <%= activeTrip ? ((activeTrip.expectedRemainingQty !== undefined) ? activeTrip.expectedRemainingQty : activeTrip.loadedQty) : 0 %></span>
+                    </div>
                     <input type="number" name="count" id="trayCountInput" class="form-input" style="font-size: 20px; font-weight: 800;" min="1" placeholder="0" required oninput="calculateDeposit()">
+                    <div id="stockExceededWarning" style="display: none; color: #991b1b; background: #fee2e2; border: 1px solid #fca5a5; padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-top: 6px;"></div>
                     
                     <!-- Quick Add Chips -->
                     <div class="qty-chips">
@@ -629,6 +633,7 @@
     <script>
         const customers = <%- JSON.stringify(customers || []) %>;
         const depositRate = <%= depositPerTray || 2000 %>;
+        const currentLorryStock = <%= activeTrip ? ((activeTrip.expectedRemainingQty !== undefined) ? activeTrip.expectedRemainingQty : activeTrip.loadedQty) : 0 %>;
 
         let currentType = 'OUT';
 
@@ -674,6 +679,28 @@
             
             const amtFull = document.getElementById('amountFull');
             if (amtFull) amtFull.innerText = 'Rs. ' + total.toLocaleString('en-US');
+
+            const warningEl = document.getElementById('stockExceededWarning');
+            const submitBtn = document.getElementById('btnSubmit');
+
+            if (currentType === 'OUT' && count > currentLorryStock) {
+                if (warningEl) {
+                    warningEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ලොරියේ ඉතිරිව ඇත්තේ ට්‍රේ ${currentLorryStock} කි! ඔබ ඉල්ලූ ප්‍රමාණය (${count}) ලොරියේ ඇති ප්‍රමාණයට වඩා වැඩිය.`;
+                    warningEl.style.display = 'block';
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.6';
+                    submitBtn.style.cursor = 'not-allowed';
+                }
+            } else {
+                if (warningEl) warningEl.style.display = 'none';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+            }
         }
 
         function handleDepositChange(option) {
@@ -752,6 +779,11 @@
             const count = parseInt(document.getElementById('trayCountInput').value) || 0;
             if (count <= 0) {
                 alert('කරුණාකර වලංගු ට්‍රේ ප්‍රමාණයක් ඇතුළත් කරන්න (Please enter valid quantity)');
+                return;
+            }
+
+            if (currentType === 'OUT' && count > currentLorryStock) {
+                alert(`ලොරියේ ඉතිරිව ඇත්තේ ට්‍රේ ${currentLorryStock} ක් පමණි!\nලොරියේ ඇති ප්‍රමාණයට (${currentLorryStock}) වඩා වැඩිපුර ට්‍රේ නිකුත් (OUT) කළ නොහැක.`);
                 return;
             }
 

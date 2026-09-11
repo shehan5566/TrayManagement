@@ -860,9 +860,8 @@ const Transaction = {
             await Customer.recalculateCustomerBalance(tx.customerId);
 
             if (tx.tripId) {
-                // Reverse trip delivered/collected qty
-                const reverseType = tx.type === 'OUT' ? 'IN' : 'OUT';
-                await LorryTrip.recordTransaction(tx.tripId, reverseType, tx.count || 0);
+                // Re-sum active trip transactions so delivered/collected counts are always exact
+                await LorryTrip.recalculateTripStock(tx.tripId);
             } else {
                 // Reverse branch warehouse stock adjustment
                 const locId = tx.locationId || 'main';
@@ -1310,6 +1309,23 @@ const LorryTrip = {
             trip.totalCollectedQty = (trip.totalCollectedQty || 0) + qty;
         }
         trip.expectedRemainingQty = (trip.loadedQty || 0) - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
+        await trip.save();
+        return mapDoc(trip);
+    },
+    recalculateTripStock: async (tripId) => {
+        const trip = await LorryTripModel.findById(tripId);
+        if (!trip) return null;
+
+        const txList = await TransactionModel.find({ tripId, isDeleted: { $ne: true } }).lean();
+        let delivered = 0;
+        let collected = 0;
+        for (const t of txList) {
+            if (t.type === 'OUT') delivered += (t.count || 0);
+            if (t.type === 'IN') collected += (t.count || 0);
+        }
+        trip.totalDeliveredQty = delivered;
+        trip.totalCollectedQty = collected;
+        trip.expectedRemainingQty = (trip.loadedQty || 0) - delivered + collected;
         await trip.save();
         return mapDoc(trip);
     },
