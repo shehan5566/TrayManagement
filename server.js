@@ -1571,7 +1571,7 @@ app.post('/driver/transaction', async (req, res) => {
             success: true,
             message: 'Transaction saved successfully',
             receiptNo: newTx.receiptNo,
-            printUrl: `/transactions/${newTx.id}/receipt?from=driver`
+            printUrl: `/driver/receipt/${newTx.id}/print`
         });
     } catch (err) {
         console.error('POST /driver/transaction error:', err);
@@ -1579,9 +1579,59 @@ app.post('/driver/transaction', async (req, res) => {
     }
 });
 
-// Driver Receipt View (Redirects to standard full system receipt)
+// Driver Mobile Receipt View (System In & Out format tailored for Mobile App)
 app.get('/driver/receipt/:id/print', async (req, res) => {
-    res.redirect(`/transactions/${req.params.id}/receipt?from=driver`);
+    try {
+        const tx = await Transaction.getById(req.params.id);
+        if (!tx) {
+            return res.send('<script>alert("Receipt not found or deleted"); window.location.href="/driver";</script>');
+        }
+        const customer = await Customer.getById(tx.customerId);
+        if (!customer) {
+            return res.send('<script>alert("Customer record not found"); window.location.href="/driver";</script>');
+        }
+
+        let totalCustomerPendingDeposit = 0;
+        if (customer && (customer.id || customer._id)) {
+            const TransactionModel = require('mongoose').model('Transaction');
+            const custId = customer.id || customer._id;
+            const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
+            custTxs.forEach(t => {
+                const rate = Number(t.depositPerTray) || 2000;
+                const countQty = Number(t.count) || 0;
+                const expected = Number(t.expectedDeposit) || (countQty * rate);
+                let paid = 0;
+                if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
+                    paid = Number(t.totalDeposit);
+                } else if (t.depositOption === 'ZERO') {
+                    paid = 0;
+                } else if (t.depositOption === 'HALF') {
+                    paid = expected / 2;
+                } else {
+                    paid = expected;
+                }
+
+                if (t.type === 'OUT') {
+                    totalCustomerPendingDeposit += (expected - paid);
+                } else if (t.type === 'IN') {
+                    totalCustomerPendingDeposit -= (expected - paid);
+                }
+            });
+        }
+        if (totalCustomerPendingDeposit < 0) totalCustomerPendingDeposit = 0;
+
+        const settings = await SystemSetting.get();
+
+        res.render('print-thermal-receipt', {
+            tx,
+            customer,
+            totalCustomerPendingDeposit,
+            settings: settings || {}
+        });
+    } catch (err) {
+        console.error('GET /driver/receipt/:id/print error:', err);
+        res.status(500).send('Error loading receipt: ' + err.message);
+    }
 });
 
 app.get('/transfers/printByRef/:refNo', requireAuth, async (req, res) => {

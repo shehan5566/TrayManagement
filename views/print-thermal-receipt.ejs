@@ -11,27 +11,27 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Courier New', Courier, monospace;
-            color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Courier New', monospace;
+            color: #1f2937;
         }
 
         body {
             background-color: #f3f4f6;
-            padding: 12px 8px;
+            padding: 14px 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
 
         /* Controls Section (Hidden on paper print) */
         .no-print {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
             width: 100%;
-            max-width: 340px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 380px;
         }
 
         .btn {
@@ -47,28 +47,21 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.12);
-            font-family: inherit;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            transition: all 0.15s ease;
         }
-
-        .btn-bt {
-            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-            color: #fff;
-            font-size: 14px;
-            padding: 13px;
-            letter-spacing: 0.2px;
-        }
-        .btn-bt:active { transform: scale(0.98); }
 
         .btn-print {
             background-color: #107c41;
-            color: #fff;
+            color: #ffffff;
         }
+        .btn-print:active { transform: scale(0.98); background-color: #0b5a2f; }
 
         .btn-back {
             background-color: #4b5563;
-            color: #fff;
+            color: #ffffff;
         }
+        .btn-back:active { transform: scale(0.98); background-color: #374151; }
 
         .status-box {
             padding: 10px 12px;
@@ -76,7 +69,6 @@
             font-size: 12px;
             line-height: 1.4;
             display: none;
-            font-family: inherit;
             text-align: left;
         }
         .status-box.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
@@ -84,70 +76,121 @@
         .status-box.warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
         .status-box.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
 
-        /* 58mm Thermal Receipt Styles */
+        /* Mobile App Receipt Card */
         .receipt-container {
-            width: 58mm;
-            max-width: 100%;
-            background: #fff;
-            padding: 8px 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 11px;
-            line-height: 1.35;
+            width: 100%;
+            max-width: 380px;
+            background: #ffffff;
+            padding: 16px 14px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            font-size: 12px;
+            line-height: 1.4;
         }
 
         .text-center { text-align: center; }
         .text-right { text-align: right; }
-        .text-bold { font-weight: bold; }
+        .text-bold { font-weight: 700; }
         
         .divider {
-            border-top: 1px dashed #000;
-            margin: 5px 0;
+            border-top: 1px dashed #cbd5e1;
+            margin: 8px 0;
         }
 
-        .double-divider {
-            border-top: 1px double #000;
-            margin: 5px 0;
+        .receipt-logo-img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+            margin-bottom: 4px;
+            display: inline-block;
         }
 
         .header-title {
-            font-size: 13px;
-            font-weight: 900;
+            font-size: 13.5px;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            line-height: 1.2;
+            line-height: 1.25;
+            color: #174e3e;
         }
 
-        .receipt-badge {
-            display: inline-block;
-            padding: 3px 6px;
-            font-size: 12px;
-            font-weight: 900;
-            border: 1.5px solid #000;
-            margin: 4px 0;
-            letter-spacing: 1px;
+        .header-subtitle {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #1f2937;
+            margin-top: 2px;
         }
 
-        .qty-box {
-            border: 1.5px solid #000;
-            padding: 6px 4px;
-            margin: 6px 0;
-            text-align: center;
-        }
-
-        .qty-number {
-            font-size: 20px;
-            font-weight: 900;
+        .header-meta {
+            font-size: 9.5px;
+            color: #6b7280;
+            text-transform: uppercase;
         }
 
         .row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 3px;
+            align-items: flex-start;
+            margin-bottom: 4px;
+            font-size: 11.5px;
         }
 
-        .sign-area {
-            margin-top: 18px;
-            padding-top: 4px;
+        .row .label {
+            color: #1b5e20;
+            font-weight: 600;
+        }
+
+        .row .val {
+            font-weight: 700;
+            text-align: right;
+            max-width: 65%;
+            word-break: break-word;
+        }
+
+        .badge-out {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            border-radius: 6px;
+            background: #fffbeb;
+            color: #b45309;
+            border: 1.5px solid #f59e0b;
+        }
+
+        .badge-in {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            border-radius: 6px;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1.5px solid #22c55e;
+        }
+
+        .qty-box {
+            border: 1.5px solid #1f2937;
+            padding: 6px 4px;
+            margin: 8px 0;
+            text-align: center;
+            border-radius: 6px;
+            background: #f9fafb;
+        }
+
+        .qty-number {
+            font-size: 20px;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .statement-box {
+            margin: 8px 0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 11px;
         }
 
         @media print {
@@ -159,13 +202,19 @@
                 display: none !important;
             }
             .receipt-container {
-                width: 58mm;
+                width: 100%;
+                max-width: 58mm;
                 box-shadow: none;
+                border: none;
                 padding: 2mm 1mm;
+                font-size: 9.5pt;
+            }
+            .receipt-logo-img {
+                max-height: 40px;
             }
             @page {
-                size: 58mm auto;
-                margin: 0;
+                size: auto;
+                margin: 2mm;
             }
         }
     </style>
@@ -183,111 +232,171 @@
             </button>
         </div>
 
-
         <!-- Status Message Box -->
         <div id="btStatus" class="status-box"></div>
     </div>
 
-    <!-- 58mm Paper Receipt (Printed or previewed) -->
+    <% 
+        var isOut = (tx && tx.type === 'OUT'); 
+        var rate = Number(tx && tx.depositPerTray) || 2000; 
+        var countQty = Number(tx && tx.count) || 0; 
+        var totalTrayDeposit = Number(tx && tx.expectedDeposit) || (countQty * rate); 
+        var paidAmt = 0; 
+        if (tx && tx.totalDeposit !== undefined && tx.totalDeposit !== null && tx.totalDeposit !== '') { 
+            paidAmt = Number(tx.totalDeposit); 
+        } else if (tx && tx.depositOption === 'ZERO') { 
+            paidAmt = 0; 
+        } else if (tx && tx.depositOption === 'HALF') { 
+            paidAmt = totalTrayDeposit / 2; 
+        } else { 
+            paidAmt = totalTrayDeposit; 
+        } 
+        var pendingAmt = totalTrayDeposit - paidAmt; 
+
+        var modeText = 'Full Deposit (100%)';
+        if (tx.depositOption === 'CUSTOM' || (paidAmt > 0 && paidAmt !== totalTrayDeposit && paidAmt !== totalTrayDeposit / 2)) {
+            modeText = 'Custom';
+        } else if (tx.depositOption === 'HALF' || (paidAmt === totalTrayDeposit / 2 && paidAmt > 0)) {
+            modeText = 'Half Payment (50%)';
+        } else if (tx.depositOption === 'ZERO' || paidAmt === 0) {
+            modeText = 'No Deposit (0%)';
+        }
+
+        var custPendingDeposit = typeof totalCustomerPendingDeposit !== 'undefined' ? totalCustomerPendingDeposit : pendingAmt;
+    %>
+
+    <!-- Mobile App Receipt Card (System In & Out details formatted for Mobile) -->
     <div class="receipt-container">
         <!-- Header -->
-        <div class="text-center">
+        <div class="text-center" style="margin-bottom: 6px;">
+            <img src="/images/logo.png" alt="Nelna Logo" class="receipt-logo-img">
             <div class="header-title"><%= (typeof settings !== 'undefined' && settings.companyName) ? settings.companyName : 'NELNA AGRI DEVELOPMENT (PVT) LTD' %></div>
-            <div style="font-size: 9.5px; margin-top: 2px;">PLASTIC TRAY MANAGEMENT SYSTEM</div>
-            <div class="divider"></div>
-            <div style="font-weight: bold; font-size: 11.5px; letter-spacing: 0.5px;">TRAY TRANSACTION RECEIPT</div>
-            <div style="font-size: 9.5px; color: #333;"><%= tx.locationName || 'Distribution Route' %></div>
+            <div class="header-subtitle">Tray Transaction Receipt</div>
+            <div class="header-meta">Store Operations Log / Route</div>
         </div>
 
         <div class="divider"></div>
 
         <!-- Meta Info -->
         <div class="row">
-            <span>RECEIPT NO:</span>
-            <span class="text-bold"><%= tx.receiptNo ? 'RE-' + String(tx.receiptNo).padStart(6, '0') : 'RE-000000' %></span>
+            <span style="color: #6b7280;">RECEIPT NO:</span>
+            <span class="val text-bold">RE-<%= String(tx.receiptNo || 0).padStart(6, '0') %></span>
         </div>
         <div class="row">
-            <span>DATE & TIME:</span>
-            <span><%= new Date(tx.date).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+            <span style="color: #6b7280;">CREATED:</span>
+            <span class="val"><%= tx.user || 'Driver' %></span>
         </div>
         <div class="row">
-            <span>VEHICLE NO:</span>
-            <span class="text-bold"><%= tx.vehicleNo || 'N/A' %></span>
+            <span style="color: #6b7280;">DATE & TIME:</span>
+            <span class="val"><%= new Date(tx.date).toLocaleDateString('en-GB') %> <%= new Date(tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
         </div>
-        <% if (tx.user) { %>
         <div class="row">
-            <span>DRIVER/USER:</span>
-            <span><%= tx.user %></span>
+            <span style="color: #6b7280;">VEHICLE NO:</span>
+            <span class="val text-bold"><code><%= tx.vehicleNo || 'N/A' %></code></span>
         </div>
-        <% } %>
 
         <div class="divider"></div>
 
         <!-- Customer Info -->
         <div class="row">
-            <span>CUSTOMER:</span>
-            <span class="text-bold" style="text-align: right; max-width: 65%; word-break: break-word;"><%= customer.name %></span>
+            <span style="color: #6b7280;">CUSTOMER:</span>
+            <span class="val text-bold"><%= customer ? customer.name : tx.customerName %></span>
         </div>
-        <% if (customer.phone) { %>
         <div class="row">
-            <span>PHONE:</span>
-            <span><%= customer.phone %></span>
+            <span style="color: #6b7280;">CONTACT:</span>
+            <span class="val"><%= (customer && customer.phone) ? customer.phone : '-' %></span>
         </div>
-        <% } %>
+
+        <div class="divider"></div>
 
         <!-- Transaction Type Badge -->
-        <div class="text-center" style="margin: 8px 0 4px 0;">
-            <% if (tx.type === 'OUT') { %>
-                <div class="receipt-badge">>>> TRAY OUT (ISSUED) >>></div>
-            <% } else { %>
-                <div class="receipt-badge"><<< TRAY IN (RETURNED) <<<</div>
-            <% } %>
+        <div class="text-center" style="margin: 6px 0;">
+            <span class="<%= isOut ? 'badge-out' : 'badge-in' %>">
+                <%= isOut ? '📤 TRAY ISSUE (OUT)' : '📥 TRAY RETURN (IN)' %>
+            </span>
         </div>
 
         <!-- Quantity Highlight -->
         <div class="qty-box">
-            <div style="font-size: 10px; text-transform: uppercase;">Transaction Quantity</div>
-            <div class="qty-number"><%= tx.count %> TRAYS</div>
+            <div style="font-size: 9.5px; text-transform: uppercase; color: #4b5563; font-weight: bold;">Tray Quantity</div>
+            <div class="qty-number"><%= countQty %> TRAYS</div>
         </div>
 
-        <!-- Deposit Details -->
+        <!-- Exact System In & Out Receipt Fields -->
         <div class="row">
-            <span>Deposit Status:</span>
-            <span class="text-bold"><%= tx.depositOption || 'FULL' %></span>
+            <span class="label">Rate:</span>
+            <span class="val">Rs. <%= rate.toLocaleString() %> / Tray</span>
         </div>
         <div class="row">
-            <span><%= tx.type === 'OUT' ? 'Deposit Collected:' : 'Deposit Refunded:' %></span>
-            <span class="text-bold">Rs. <%= (tx.totalDeposit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+            <span class="label"><%= isOut ? 'Total Payable Amount:' : 'Total Refundable Amount:' %></span>
+            <span class="val text-bold">Rs. <%= totalTrayDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></span>
         </div>
-
-        <div class="divider"></div>
-
-        <!-- Outstanding Balance Box -->
-        <div style="background: #f9f9f9; border: 1px solid #000; padding: 5px; text-align: center; margin: 4px 0;">
-            <div style="font-size: 9.5px; font-weight: bold; text-transform: uppercase;">Customer Total Outstanding Balance</div>
-            <div style="font-size: 15px; font-weight: 900; margin-top: 2px;"><%= customer.currentBalance %> TRAYS</div>
+        <div class="row">
+            <span class="label"><%= isOut ? 'Deposit Amount:' : 'Refund Amount:' %></span>
+            <span class="val text-bold" style="color: <%= isOut ? '#b45309' : '#15803d' %>; font-size: 13px;">Rs. <%= paidAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></span>
         </div>
-
+        <div class="row">
+            <span class="label"><%= isOut ? 'Pending Deposit Balance:' : 'Pending Refund Balance:' %></span>
+            <span class="val text-bold" style="color: <%= pendingAmt > 0 ? '#dc2626' : '#15803d' %>;">
+                Rs. <%= Math.abs(pendingAmt).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                <% if (pendingAmt === 0) { %><span style="font-size: 9.5px; font-weight: normal; color: #6b7280;">(Fully <%= isOut ? 'Paid' : 'Refunded' %>)</span><% } %>
+            </span>
+        </div>
+        <div class="row">
+            <span class="label">Payment Mode:</span>
+            <span class="val"><%= modeText %></span>
+        </div>
         <% if (tx.remarks) { %>
-        <div style="font-size: 9.5px; margin-top: 4px;">
-            <span>NOTE: <%= tx.remarks %></span>
+        <div class="row" style="margin-top: 3px;">
+            <span class="label">Remarks:</span>
+            <span class="val" style="font-style: italic;"><%= tx.remarks %></span>
         </div>
         <% } %>
 
-        <!-- Signatures -->
-        <div class="sign-area">
-            <div class="row" style="margin-bottom: 22px;">
-                <span>Driver: ................</span>
-                <span>Customer: ..............</span>
+        <!-- Deposit & Refund Statement Highlight Box -->
+        <div class="statement-box" style="background-color: <%= isOut ? '#fffbea' : '#f0fdf4' %>; border: 1.5px solid <%= isOut ? '#f59e0b' : '#22c55e' %>;">
+            <div style="font-size: 11px; font-weight: 700; color: #1f2937;">
+                <%= isOut ? '🪙 Deposit Statement (Paid & Pending):' : '💵 Refund Statement (Paid & Pending):' %>
+            </div>
+            <div style="font-size: 10px; color: #4b5563; margin-top: 3px;">
+                Total Value: <%= countQty %> Trays × Rs. <%= rate.toLocaleString() %> = <strong>Rs. <%= totalTrayDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></strong>
+            </div>
+            <div style="font-size: 10.5px; margin-top: 2px; color: <%= pendingAmt > 0 ? '#dc2626' : '#15803d' %>; font-weight: bold;">
+                <%= isOut ? 'Pending Unpaid Deposit' : 'Pending Unrefunded Balance' %>: Rs. <%= Math.abs(pendingAmt).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 4px; border-top: 1px dashed <%= isOut ? '#f59e0b' : '#22c55e' %>;">
+                <span style="font-size: 9.5px; font-weight: bold; text-transform: uppercase; color: #6b7280;"><%= isOut ? 'Paid Amount:' : 'Refunded Amount:' %></span>
+                <span style="font-size: 15px; font-weight: 900; color: <%= isOut ? '#b45309' : '#15803d' %>;">Rs. <%= paidAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></span>
             </div>
         </div>
 
-        <div class="divider"></div>
+        <!-- Customer Outstanding Net Balance Box -->
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 6px 8px; text-align: center; margin: 6px 0; border-radius: 6px;">
+            <div>
+                <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #4b5563;">Customer Net Tray Balance: </span>
+                <strong style="font-size: 12px; color: <%= (customer && customer.currentBalance > 0) ? '#dc2626' : '#15803d' %>;"><%= customer ? customer.currentBalance : 0 %> Trays Outstanding</strong>
+            </div>
+            <div style="margin-top: 2px;">
+                <span style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #4b5563;">Pending Deposit Balance: </span>
+                <strong style="font-size: 12px; color: <%= custPendingDeposit > 0 ? '#dc2626' : '#15803d' %>;">Rs. <%= custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></strong>
+            </div>
+        </div>
+
+        <!-- 3 Signature Lines (Identical to System Receipt) -->
+        <div style="margin-top: 22px; padding-top: 4px;">
+            <div style="display: flex; justify-content: space-between; text-align: center; font-size: 9.5px; color: #4b5563;">
+                <div style="border-top: 1px dotted #9ca3af; width: 30%; padding-top: 3px;">Created By</div>
+                <div style="border-top: 1px dotted #9ca3af; width: 30%; padding-top: 3px;">Checked By</div>
+                <div style="border-top: 1px dotted #9ca3af; width: 30%; padding-top: 3px;">Received By</div>
+            </div>
+        </div>
+
+        <div class="divider" style="margin-top: 12px;"></div>
 
         <!-- Footer -->
-        <div class="text-center" style="font-size: 9px; line-height: 1.2;">
+        <div class="text-center" style="font-size: 9px; line-height: 1.3; color: #6b7280;">
             <div>Nelna Agri Smart Tray System</div>
-            <div style="margin-top: 2px;">*** THANK YOU! ***</div>
+            <div style="margin-top: 1px; font-weight: bold; color: #174e3e;">*** THANK YOU! ***</div>
         </div>
     </div>
 
@@ -295,6 +404,7 @@
         const txData = <%- JSON.stringify(tx) %>;
         const customerData = <%- JSON.stringify(customer) %>;
         const settingsData = <%- JSON.stringify(settings || {}) %>;
+        const totalPendingDepositVal = <%= custPendingDeposit %>;
 
         // Generate Standard ESC/POS Thermal Command Buffer
         function generateEscPosCommands() {
@@ -317,12 +427,8 @@
             const compName = settingsData.companyName || "NELNA AGRI DEVELOPMENT (PVT) LTD";
             text(compName + "\n");
             cmd([0x1B, 0x45, 0x00]); // Bold off
-            text("PLASTIC TRAY MANAGEMENT SYSTEM\n");
-            text("--------------------------------\n");
-            cmd([0x1B, 0x45, 0x01]);
             text("TRAY TRANSACTION RECEIPT\n");
-            cmd([0x1B, 0x45, 0x00]);
-            text((txData.locationName || "Distribution Route") + "\n");
+            text("Store Operations Log / Route\n");
             text("--------------------------------\n");
 
             // 3. Receipt Details (Left Align)
@@ -332,7 +438,7 @@
             const dateStr = d.toLocaleDateString('en-GB') + " " + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             text("DATE   : " + dateStr + "\n");
             text("VEHICLE: " + (txData.vehicleNo || 'N/A') + "\n");
-            if (txData.user) text("DRIVER : " + txData.user + "\n");
+            if (txData.user) text("CREATED: " + txData.user + "\n");
             text("--------------------------------\n");
             text("CUSTOMER:\n" + (customerData.name || '') + "\n");
             if (customerData.phone) text("PHONE  : " + customerData.phone + "\n");
@@ -342,9 +448,9 @@
             cmd([0x1B, 0x61, 0x01]);
             cmd([0x1B, 0x45, 0x01]);
             if (txData.type === 'OUT') {
-                text(">>> TRAY OUT (ISSUED) >>>\n");
+                text(">>> TRAY ISSUE (OUT) >>>\n");
             } else {
-                text("<<< TRAY IN (RETURNED) <<<\n");
+                text("<<< TRAY RETURN (IN) <<<\n");
             }
             // Double width & height for tray count
             cmd([0x1D, 0x21, 0x11]);
@@ -352,36 +458,66 @@
             cmd([0x1D, 0x21, 0x00]); // Reset size
             cmd([0x1B, 0x45, 0x00]); // Bold off
 
-            // 5. Deposit Details (Left Align)
+            // 5. System Financial Details (Left Align)
             cmd([0x1B, 0x61, 0x00]);
             text("--------------------------------\n");
-            text("Deposit Status : " + (txData.depositOption || 'FULL') + "\n");
-            const depLabel = txData.type === 'OUT' ? "Deposit Paid   : Rs." : "Deposit Refund : Rs.";
-            const depAmt = (txData.totalDeposit || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
-            text(depLabel + depAmt + "\n");
+            const rate = Number(txData.depositPerTray) || 2000;
+            const countQty = Number(txData.count) || 0;
+            const expected = Number(txData.expectedDeposit) || (countQty * rate);
+            let paid = 0;
+            if (txData.totalDeposit !== undefined && txData.totalDeposit !== null && txData.totalDeposit !== '') {
+                paid = Number(txData.totalDeposit);
+            } else if (txData.depositOption === 'ZERO') {
+                paid = 0;
+            } else if (txData.depositOption === 'HALF') {
+                paid = expected / 2;
+            } else {
+                paid = expected;
+            }
+            const pending = expected - paid;
+
+            text("Rate         : Rs. " + rate.toLocaleString() + "/Tray\n");
+            const totLabel = txData.type === 'OUT' ? "Total Payable: Rs. " : "Total Refund : Rs. ";
+            text(totLabel + expected.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
+            const depLabel = txData.type === 'OUT' ? "Deposit Paid : Rs. " : "Refund Paid  : Rs. ";
+            text(depLabel + paid.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
+            const pendLabel = txData.type === 'OUT' ? "Pending Dep  : Rs. " : "Pending Ref  : Rs. ";
+            text(pendLabel + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
+            text("Payment Mode : " + (txData.depositOption || 'FULL') + "\n");
+
+            if (txData.remarks) {
+                text("Remarks      : " + txData.remarks + "\n");
+            }
+
             text("--------------------------------\n");
 
-            // 6. Outstanding Balance (Center Align)
+            // 6. Statement Box
+            cmd([0x1B, 0x45, 0x01]);
+            text("DEPOSIT/REFUND STATEMENT:\n");
+            cmd([0x1B, 0x45, 0x00]);
+            text("Total Val: Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
+            text("Paid Amt : Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
+            text("Pending  : Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
+            text("--------------------------------\n");
+
+            // 7. Customer Net Balance
             cmd([0x1B, 0x61, 0x01]);
             text("CUSTOMER TOTAL OUTSTANDING:\n");
             cmd([0x1B, 0x45, 0x01]);
-            text(customerData.currentBalance + " TRAYS\n");
+            text((customerData.currentBalance || 0) + " TRAYS\n");
+            text("Pending Dep: Rs. " + totalPendingDepositVal.toLocaleString('en-US', { minimumFractionDigits: 2 }) + "\n");
             cmd([0x1B, 0x45, 0x00]);
-
-            if (txData.remarks) {
-                cmd([0x1B, 0x61, 0x00]);
-                text("NOTE: " + txData.remarks + "\n");
-            }
 
             text("\n");
             cmd([0x1B, 0x61, 0x00]);
-            text("Driver: .......... Customer: ..........\n");
+            text("Created: ...... Checked: ......\n");
+            text("Received: ............\n");
             text("--------------------------------\n");
             cmd([0x1B, 0x61, 0x01]);
             text("Nelna Agri Smart Tray System\n");
             text("*** THANK YOU! ***\n");
 
-            // 7. Paper Feed lines
+            // 8. Paper Feed lines
             cmd([0x1B, 0x64, 0x04]);
 
             // Combine all Uint8Array parts
@@ -480,25 +616,9 @@
                 } else {
                     console.error('Bluetooth Print Error:', err);
                     statusBox.className = 'status-box error';
-                    statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Bluetooth දෝෂයකි: ${err.message}.<br>කරුණාකර <strong>"System Print"</strong> භාවිතා කරන්න.`;
+                    statusBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Bluetooth දෝෂයකි: ${err.message}.<br>කරුණාකර <strong>System Print</strong> භාවිතා කරන්න.`;
+                    setTimeout(() => { window.print(); }, 1200);
                 }
-            }
-        }
-
-        // RawBT Android App Integration Helper
-        function printViaRawBT() {
-            try {
-                const rawData = generateEscPosCommands();
-                let binary = '';
-                const bytes = new Uint8Array(rawData);
-                const len = bytes.byteLength;
-                for (let i = 0; i < len; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                const base64 = window.btoa(binary);
-                window.location.href = 'rawbt:data:application/octet-stream;base64,' + base64;
-            } catch (err) {
-                alert('RawBT දෝෂයකි: ' + err.message);
             }
         }
     </script>

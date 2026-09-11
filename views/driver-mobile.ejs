@@ -620,7 +620,7 @@
                             <span class="history-badge <%= tx.type === 'OUT' ? 'out' : 'in' %>">
                                 <%= tx.type === 'OUT' ? 'OUT' : 'IN' %> <%= tx.count %>
                             </span>
-                            <a href="/transactions/<%= tx.id %>/receipt?from=driver" class="reprint-btn" title="Re-print">🖨️ Print</a>
+                            <a href="/driver/receipt/<%= tx.id %>/print" class="reprint-btn" title="Re-print">🖨️ Print</a>
                         </div>
                     </div>
                 <% }) %>
