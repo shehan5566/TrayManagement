@@ -812,6 +812,18 @@ const Transaction = {
         const nextReceiptNo = lastTx ? lastTx.receiptNo + 1 : 1;
         console.log('[Receipt] Last receiptNo:', lastTx ? lastTx.receiptNo : 'none', '-> Next:', nextReceiptNo);
 
+        let tripId = txData.tripId || null;
+        if (!tripId && txData.vehicleNo && txData.vehicleNo !== 'N/A') {
+            const activeTrip = await LorryTripModel.findOne({ 
+                vehicleNo: txData.vehicleNo.trim(), 
+                status: 'ON_ROUTE', 
+                isDeleted: false 
+            });
+            if (activeTrip) {
+                tripId = activeTrip._id;
+            }
+        }
+
         const txId = txData._id || (Date.now().toString() + '_' + Math.random().toString(36).substr(2, 6));
         const newTx = new TransactionModel({
             _id: txId,
@@ -829,14 +841,14 @@ const Transaction = {
             user: username || 'System',
             receiptNo: nextReceiptNo,
             locationId: txData.locationId || customer.locationId || 'main',
-            tripId: txData.tripId || null
+            tripId: tripId
         });
 
         await newTx.save();
         await Customer.recalculateCustomerBalance(txData.customerId);
 
-        if (txData.tripId) {
-            await LorryTrip.recordTransaction(txData.tripId, type, count);
+        if (tripId) {
+            await LorryTrip.recordTransaction(tripId, type, count);
         } else {
             // Update branch warehouse current stock in real-time (for warehouse direct counter transactions)
             const locId = newTx.locationId || 'main';
@@ -862,6 +874,15 @@ const Transaction = {
             if (tx.tripId) {
                 // Re-sum active trip transactions so delivered/collected counts are always exact
                 await LorryTrip.recalculateTripStock(tx.tripId);
+            } else if (tx.vehicleNo && tx.vehicleNo !== 'N/A') {
+                const activeTrip = await LorryTripModel.findOne({ 
+                    vehicleNo: tx.vehicleNo.trim(), 
+                    status: 'ON_ROUTE', 
+                    isDeleted: false 
+                });
+                if (activeTrip) {
+                    await LorryTrip.recalculateTripStock(activeTrip._id);
+                }
             } else {
                 // Reverse branch warehouse stock adjustment
                 const locId = tx.locationId || 'main';
@@ -937,6 +958,19 @@ const Transaction = {
         await Customer.recalculateCustomerBalance(tx.customerId);
         if (oldCustomerId !== tx.customerId) {
             await Customer.recalculateCustomerBalance(oldCustomerId);
+        }
+
+        if (tx.tripId) {
+            await LorryTrip.recalculateTripStock(tx.tripId);
+        } else if (tx.vehicleNo && tx.vehicleNo !== 'N/A') {
+            const activeTrip = await LorryTripModel.findOne({ 
+                vehicleNo: tx.vehicleNo.trim(), 
+                status: 'ON_ROUTE', 
+                isDeleted: false 
+            });
+            if (activeTrip) {
+                await LorryTrip.recalculateTripStock(activeTrip._id);
+            }
         }
 
         return mapDoc(tx);
@@ -1250,7 +1284,26 @@ const LorryTrip = {
         if (role !== 'admin' && locationId) {
             filter.locationId = locationId;
         }
-        const trips = await LorryTripModel.find(filter).sort({ dispatchedDate: -1 }).lean();
+        const trips = await LorryTripModel.find(filter).sort({ dispatchedDate: -1 });
+
+        // Synchronize active trips dynamically with actual non-deleted transactions
+        for (const trip of trips) {
+            if (trip.status === 'ON_ROUTE') {
+                const txList = await TransactionModel.find({ tripId: trip._id, isDeleted: { $ne: true } }).lean();
+                let del = 0, col = 0;
+                for (const t of txList) {
+                    if (t.type === 'OUT') del += (t.count || 0);
+                    if (t.type === 'IN') col += (t.count || 0);
+                }
+                if (trip.totalDeliveredQty !== del || trip.totalCollectedQty !== col) {
+                    trip.totalDeliveredQty = del;
+                    trip.totalCollectedQty = col;
+                    trip.expectedRemainingQty = (trip.loadedQty || 0) - del + col;
+                    await trip.save();
+                }
+            }
+        }
+
         return trips.map(mapDoc);
     },
     getActiveTrip: async (vehicleNo) => {
@@ -1258,7 +1311,22 @@ const LorryTrip = {
             vehicleNo: vehicleNo, 
             status: 'ON_ROUTE', 
             isDeleted: false 
-        }).sort({ dispatchedDate: -1 }).lean();
+        }).sort({ dispatchedDate: -1 });
+        if (!trip) return null;
+
+        const txList = await TransactionModel.find({ tripId: trip._id, isDeleted: { $ne: true } }).lean();
+        let del = 0, col = 0;
+        for (const t of txList) {
+            if (t.type === 'OUT') del += (t.count || 0);
+            if (t.type === 'IN') col += (t.count || 0);
+        }
+        if (trip.totalDeliveredQty !== del || trip.totalCollectedQty !== col) {
+            trip.totalDeliveredQty = del;
+            trip.totalCollectedQty = col;
+            trip.expectedRemainingQty = (trip.loadedQty || 0) - del + col;
+            await trip.save();
+        }
+
         return mapDoc(trip);
     },
     getById: async (id) => {
