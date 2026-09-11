@@ -209,7 +209,7 @@
 
             .receipt-container {
                 width: 100% !important;
-                max-width: 100% !important;
+                max-width: 95mm !important;
                 margin: 0 auto !important;
                 box-shadow: none !important;
                 border: none !important;
@@ -461,7 +461,7 @@
         const settingsData = <%- JSON.stringify(settings || {}) %>;
         const totalPendingDepositVal = <%= custPendingDeposit %>;
 
-        // Generate Standard ESC/POS Thermal Command Buffer (Default 80mm Standard with Normal Font)
+        // Generate Standard ESC/POS Thermal Command Buffer (Configured for 110mm Thermal Paper)
         function generateEscPosCommands() {
             const encoder = new TextEncoder();
             const parts = [];
@@ -473,12 +473,13 @@
                 parts.push(new Uint8Array(bytes));
             }
 
-            // On 80mm paper (48 columns printable), center the 32-character receipt block with 8 spaces on left and 8 on right
-            const sideMargin = 8;
-            const innerWidth = 32;
+            // On 110mm paper (832 dots / ~69 columns printable width):
+            // Center the 44-character receipt block with 12 spaces on left and 13 on right
+            const sideMargin = 12;
+            const innerWidth = 44;
             const padLeft = ' '.repeat(sideMargin);
 
-            // Helper to format two-column key-value lines centered on 80mm roll
+            // Helper to format two-column key-value lines centered on 110mm roll
             function formatLine(left, right, width = innerWidth) {
                 left = String(left || '');
                 right = String(right || '');
@@ -509,13 +510,13 @@
             // Set left margin to 0 (GS L 0 0)
             cmd([0x1D, 0x4C, 0x00, 0x00]);
 
-            // Set printable area width to 576 dots (80mm width)
-            cmd([0x1D, 0x57, 0x40, 0x02]);
+            // Set printable area width to 832 dots (110mm width: 0x0340)
+            cmd([0x1D, 0x57, 0x40, 0x03]);
 
             // Select standard line spacing (1/6 inch)
             cmd([0x1B, 0x32]);
 
-            // 2. Company Header (Centered)
+            // 2. Company Header (Centered across 110mm roll)
             cmd([0x1B, 0x61, 0x01]); // Center align
             cmd([0x1B, 0x45, 0x01]); // Bold on
             const compName = settingsData.companyName || "NELNA AGRI DEVELOPMENT (PVT) LTD";
@@ -526,7 +527,7 @@
             cmd([0x1B, 0x61, 0x00]); // Left align for divider & details
             text(divider);
 
-            // 3. Receipt Details (Centered with 8-space side margins)
+            // 3. Receipt Details (Centered with balanced side margins)
             cmd([0x1B, 0x61, 0x00]); // Left align
             text(formatLine("REC NO:", "RE-" + String(txData.receiptNo || 0).padStart(6, '0')));
             const d = new Date(txData.date);
@@ -563,7 +564,7 @@
             cmd([0x1B, 0x61, 0x00]);
             text(divider);
 
-            // 5. System Financial Details (Centered with 8-space side margins)
+            // 5. System Financial Details (Centered with balanced side margins)
             cmd([0x1B, 0x61, 0x00]);
             const rate = Number(txData.depositPerTray) || 2000;
             const expected = Number(txData.expectedDeposit) || (countQty * rate);
@@ -617,8 +618,8 @@
 
             // 8. Signatures & Footer
             cmd([0x1B, 0x61, 0x00]);
-            text(padLeft + "Created     Checked     Received\n");
-            text(padLeft + ".......     .......     ........\n");
+            text(padLeft + "   Created        Checked        Received   \n");
+            text(padLeft + "  .........      .........      .........   \n");
             text(divider);
             cmd([0x1B, 0x61, 0x01]);
             text("Nelna Agri Smart Tray System\n");
