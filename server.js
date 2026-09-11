@@ -1140,25 +1140,25 @@ app.post('/transactions/import', requireEditAccess, requirePermission('transacti
                 continue;
             }
 
-            // 3. Match Customer
+            // 3. Match Customer (Primary: Customer Name)
             let matchedCustomer = null;
-            if (phoneRaw) {
+            if (nameRaw) {
+                matchedCustomer = customerByName.get(String(nameRaw).trim().toLowerCase());
+            }
+            if (!matchedCustomer && phoneRaw) {
                 let cleanPhone = String(phoneRaw).replace(/[^0-9]/g, '');
                 if (cleanPhone.length === 9) cleanPhone = '0' + cleanPhone;
                 matchedCustomer = customerByPhone.get(cleanPhone) || customerByPhone.get(cleanPhone.replace(/^0/, ''));
             }
-            if (!matchedCustomer && nameRaw) {
-                matchedCustomer = customerByName.get(String(nameRaw).trim().toLowerCase());
-            }
 
             if (!matchedCustomer) {
                 skipCount++;
-                skipReasons.push(`Row ${rowNum}: Customer not found for '${phoneRaw || nameRaw || 'Unknown'}'`);
+                skipReasons.push(`Row ${rowNum}: Customer not found for '${nameRaw || phoneRaw || 'Unknown'}'`);
                 continue;
             }
 
-            // 4. Parse Date
-            const txDate = parseDateVal(dateRaw);
+            // 4. Transaction Date & Time: Always use current upload time
+            const txDate = dateRaw ? parseDateVal(dateRaw) : new Date().toISOString();
 
             // 5. Parse Deposit
             let actualDeposit = undefined;
