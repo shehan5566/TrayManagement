@@ -1764,6 +1764,10 @@ footer strong {
         padding-left: 65px !important;
     }
 
+    .login-layout main {
+        padding-left: 15px !important;
+    }
+
     .box-header {
         flex-direction: column;
         align-items: flex-start;
@@ -2053,4 +2057,21 @@ footer strong {
 .btn-send-animated.sent .sent-content {
     opacity: 1;
     transform: scale(1);
+}
+
+/* Mobile screen enhancement for Receipt View */
+@media screen and (max-width: 600px) {
+    .receipt-card {
+        margin: 10px auto !important;
+        padding: 18px 14px !important;
+        border-radius: 12px !important;
+    }
+    .receipt-details-table td {
+        padding: 8px 6px !important;
+        font-size: 13px !important;
+    }
+    .print-actions {
+        padding: 0 10px;
+        flex-wrap: wrap;
+    }
 }

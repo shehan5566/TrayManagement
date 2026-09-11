@@ -1571,7 +1571,7 @@ app.post('/driver/transaction', async (req, res) => {
             success: true,
             message: 'Transaction saved successfully',
             receiptNo: newTx.receiptNo,
-            printUrl: `/driver/receipt/${newTx.id}/print`
+            printUrl: `/transactions/${newTx.id}/receipt?from=driver`
         });
     } catch (err) {
         console.error('POST /driver/transaction error:', err);
@@ -1579,29 +1579,9 @@ app.post('/driver/transaction', async (req, res) => {
     }
 });
 
-// 58mm Pocket POS Thermal Print View
+// Driver Receipt View (Redirects to standard full system receipt)
 app.get('/driver/receipt/:id/print', async (req, res) => {
-    try {
-        const tx = await Transaction.getById(req.params.id);
-        if (!tx) {
-            return res.send('<script>alert("Receipt not found or deleted"); window.location.href="/driver";</script>');
-        }
-        const customer = await Customer.getById(tx.customerId);
-        if (!customer) {
-            return res.send('<script>alert("Customer record not found"); window.location.href="/driver";</script>');
-        }
-
-        const settings = await SystemSetting.get();
-
-        res.render('print-thermal-receipt', {
-            tx,
-            customer,
-            settings: settings || {}
-        });
-    } catch (err) {
-        console.error('GET /driver/receipt/:id/print error:', err);
-        res.status(500).send('Error loading thermal receipt: ' + err.message);
-    }
+    res.redirect(`/transactions/${req.params.id}/receipt?from=driver`);
 });
 
 app.get('/transfers/printByRef/:refNo', requireAuth, async (req, res) => {
@@ -1617,11 +1597,14 @@ app.get('/transfers/printByRef/:refNo', requireAuth, async (req, res) => {
     }
 });
 
-app.get('/transactions/:id/receipt', requireAuth, async (req, res) => {
+app.get('/transactions/:id/receipt', async (req, res) => {
     try {
+        if (!req.session.user && !req.session.driver) {
+            return res.redirect('/login');
+        }
         const tx = await Transaction.getById(req.params.id);
         if (!tx) {
-            return res.redirect('/transactions');
+            return res.redirect(req.session.driver ? '/driver' : '/transactions');
         }
         const customer = await Customer.getById(tx.customerId);
 
@@ -1654,7 +1637,10 @@ app.get('/transactions/:id/receipt', requireAuth, async (req, res) => {
         }
         if (totalCustomerPendingDeposit < 0) totalCustomerPendingDeposit = 0;
 
-        res.render('receipt', { tx, customer, totalCustomerPendingDeposit });
+        const isDriver = !!req.session.driver || req.query.from === 'driver';
+        const backUrl = isDriver ? '/driver' : '/transactions';
+
+        res.render('receipt', { tx, customer, totalCustomerPendingDeposit, isDriver, backUrl });
     } catch (err) {
         console.error('Error loading receipt:', err);
         res.status(500).send('Error loading receipt');
