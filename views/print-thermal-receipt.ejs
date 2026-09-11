@@ -279,7 +279,7 @@
     <!-- On-screen Action Controls -->
     <div class="no-print">
         <div style="display: flex; gap: 8px;">
-            <a href="/driver" class="btn btn-back" style="flex: 1;">
+            <a href="/driver" class="btn btn-back" style="flex: 1;" onclick="handleBackClick(event)">
                 <i class="fa-solid fa-arrow-left"></i> ‹ Back
             </a>
             <button type="button" id="btPrintBtn" onclick="printViaBluetooth()" class="btn btn-print" style="flex: 1;">
@@ -651,12 +651,36 @@
             '0000ffe5-0000-1000-8000-00805f9b34fb'
         ];
 
+        // Handle Back button click (closes modal if inside iframe)
+        function handleBackClick(e) {
+            if (window.parent && window.parent !== window && typeof window.parent.closeReceiptPreviewModal === 'function') {
+                e.preventDefault();
+                window.parent.closeReceiptPreviewModal();
+            }
+        }
+
         // Web Bluetooth Direct Connect & Print
         async function printViaBluetooth() {
             const statusBox = document.getElementById('btStatus');
             statusBox.style.display = 'block';
             statusBox.className = 'status-box info';
-            statusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Bluetooth Printers සොයමින් පවතී... (කරුණාකර List එකෙන් ඔබගේ Printer එක තෝරන්න)';
+            statusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Bluetooth Printers සොයමින් පවතී...';
+
+            // 1. If running inside the Driver Portal modal, print via parent window's active Bluetooth connection
+            if (window.parent && window.parent !== window && typeof window.parent.printViaConnectedBluetooth === 'function') {
+                try {
+                    const printerName = localStorage.getItem('savedBluetoothPrinterName') || 'Printer';
+                    statusBox.innerHTML = `<i class="fa-solid fa-print fa-bounce"></i> <strong>${printerName}</strong> වෙතින් රිසිට්පත මුද්‍රණය වෙමින් පවතී...`;
+                    const rawData = generateEscPosCommands();
+                    await window.parent.printViaConnectedBluetooth(rawData);
+                    statusBox.className = 'status-box success';
+                    statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>${printerName}</strong> වෙතින් රිසිට්පත සාර්ථකව මුද්‍රණය විය!`;
+                    return;
+                } catch (parentErr) {
+                    console.warn('Parent print failed, trying local connection:', parentErr);
+                    // Fall through to local connection
+                }
+            }
 
             if (!navigator.bluetooth) {
                 statusBox.className = 'status-box warning';
@@ -752,11 +776,7 @@
                 statusBox.className = 'status-box success';
                 statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>${device.name || 'Printer'}</strong> වෙතින් රිසිට්පත සාර්ථකව මුද්‍රණය විය!`;
 
-                setTimeout(() => {
-                    if (device.gatt && device.gatt.connected) {
-                        device.gatt.disconnect();
-                    }
-                }, 1200);
+                // Do not disconnect! Keep connected for next print!
 
             } catch (err) {
                 if (err.name === 'NotFoundError') {
@@ -771,14 +791,20 @@
             }
         }
 
-        // On receipt load: show detected saved printer notice
+        // On receipt load: show detected saved printer notice & trigger autoprint if requested
         document.addEventListener('DOMContentLoaded', function() {
             const savedName = localStorage.getItem('savedBluetoothPrinterName');
             const statusBox = document.getElementById('btStatus');
             if (savedName && statusBox) {
                 statusBox.style.display = 'block';
                 statusBox.className = 'status-box info';
-                statusBox.innerHTML = `<i class="fa-solid fa-print"></i> සුරකින ලද ප්‍රින්ටරය: <strong>${savedName}</strong> (Print බොත්තම ඔබන්න)`;
+                statusBox.innerHTML = `<i class="fa-solid fa-print"></i> සුරකින ලද ප්‍රින්ටරය: <strong>${savedName}</strong>`;
+            }
+
+            if (window.location.search.includes('autoprint=1')) {
+                setTimeout(() => {
+                    printViaBluetooth();
+                }, 400);
             }
         });
     </script>

@@ -233,6 +233,50 @@
             margin-top: 14px;
         }
 
+        /* Receipt Print Preview In-Page Modal */
+        .receipt-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .receipt-preview-dialog {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 440px;
+            height: 94vh;
+            max-height: 850px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            animation: printerModalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .receipt-preview-bar {
+            padding: 10px 14px;
+            background: #107c41;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .receipt-preview-frame {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #f3f4f6;
+        }
+
         .container {
             padding: 16px;
             max-width: 500px;
@@ -772,7 +816,7 @@
                             <span class="history-badge <%= tx.type === 'OUT' ? 'out' : 'in' %>">
                                 <%= tx.type === 'OUT' ? 'OUT' : 'IN' %> <%= tx.count %>
                             </span>
-                            <a href="/driver/receipt/<%= tx.id %>/print" class="reprint-btn" title="Re-print">🖨️ Print</a>
+                            <a href="/driver/receipt/<%= tx.id %>/print" onclick="openReceiptPreviewFromList(event, '/driver/receipt/<%= tx.id %>/print')" class="reprint-btn" title="Re-print">🖨️ Print</a>
                         </div>
                     </div>
                 <% }) %>
@@ -839,6 +883,19 @@
                     </ol>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Receipt Print Preview Modal (In-Page to maintain active Bluetooth connection) -->
+    <div id="receiptPreviewModal" class="receipt-preview-overlay" style="display: none;" onclick="handleReceiptBackdropClick(event)">
+        <div class="receipt-preview-dialog" onclick="event.stopPropagation()">
+            <div class="receipt-preview-bar">
+                <div style="font-size: 13px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-receipt"></i> Receipt Print Preview
+                </div>
+                <button type="button" onclick="closeReceiptPreviewModal()" class="printer-modal-close" style="color: #ffffff;" title="Close">&times;</button>
+            </div>
+            <iframe id="receiptPreviewIframe" class="receipt-preview-frame" src="about:blank"></iframe>
         </div>
     </div>
     <% } %>
@@ -1018,12 +1075,10 @@
 
                 const json = await res.json();
                 if (json.success) {
-                    // Open thermal print receipt in new window / popup immediately
                     if (json.printUrl) {
-                        window.location.href = json.printUrl;
-                    } else {
-                        window.location.reload();
+                        openReceiptPreviewModal(json.printUrl + '?autoprint=1');
                     }
+                    resetDriverFormAfterSuccess(data);
                 } else {
                     alert('දෝෂයකි: ' + (json.error || 'Failed to save transaction'));
                     submitBtn.disabled = false;
@@ -1078,8 +1133,12 @@
         }
 
         // ==========================================
-        // BLUETOOTH THERMAL PRINTER SETUP & SAVING
+        // PERSISTENT BLUETOOTH PRINTER MANAGEMENT
         // ==========================================
+        window.activeBluetoothDevice = null;
+        window.activeGattServer = null;
+        window.activeWriteChar = null;
+
         const BLE_PRINTER_SERVICES = [
             '000018f0-0000-1000-8000-00805f9b34fb',
             'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
@@ -1092,6 +1151,140 @@
             '0000fff0-0000-1000-8000-00805f9b34fb',
             '0000ffe5-0000-1000-8000-00805f9b34fb'
         ];
+
+        async function findWriteChar(server) {
+            const services = await server.getPrimaryServices();
+            for (const service of services) {
+                try {
+                    const chars = await service.getCharacteristics();
+                    for (const c of chars) {
+                        if (c.properties.write || c.properties.writeWithoutResponse) {
+                            return c;
+                        }
+                    }
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        async function getOrCreatePrinterConnection() {
+            if (window.activeWriteChar && window.activeGattServer && window.activeGattServer.connected) {
+                return window.activeWriteChar;
+            }
+
+            if (window.activeBluetoothDevice) {
+                try {
+                    const server = await window.activeBluetoothDevice.gatt.connect();
+                    window.activeGattServer = server;
+                    const writeChar = await findWriteChar(server);
+                    if (writeChar) {
+                        window.activeWriteChar = writeChar;
+                        return writeChar;
+                    }
+                } catch (e) {
+                    console.warn('In-memory reconnect failed:', e);
+                }
+            }
+
+            const savedId = localStorage.getItem('savedBluetoothPrinterId');
+            if (savedId && navigator.bluetooth && navigator.bluetooth.getDevices) {
+                try {
+                    const devices = await navigator.bluetooth.getDevices();
+                    const dev = devices.find(d => d.id === savedId);
+                    if (dev) {
+                        window.activeBluetoothDevice = dev;
+                        const server = await dev.gatt.connect();
+                        window.activeGattServer = server;
+                        const writeChar = await findWriteChar(server);
+                        if (writeChar) {
+                            window.activeWriteChar = writeChar;
+                            return writeChar;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('getDevices reconnect failed:', e);
+                }
+            }
+
+            const device = await navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: BLE_PRINTER_SERVICES
+            });
+            localStorage.setItem('savedBluetoothPrinterId', device.id);
+            localStorage.setItem('savedBluetoothPrinterName', device.name || 'Bluetooth Printer');
+            window.activeBluetoothDevice = device;
+            updatePrinterUI();
+
+            const server = await device.gatt.connect();
+            window.activeGattServer = server;
+            const writeChar = await findWriteChar(server);
+            if (!writeChar) throw new Error('Printer write characteristic not found');
+            window.activeWriteChar = writeChar;
+            return writeChar;
+        }
+
+        window.printViaConnectedBluetooth = async function(rawData) {
+            const writeChar = await getOrCreatePrinterConnection();
+            const CHUNK_SIZE = 100;
+            for (let i = 0; i < rawData.length; i += CHUNK_SIZE) {
+                const chunk = rawData.slice(i, i + CHUNK_SIZE);
+                if (writeChar.properties.writeWithoutResponse) {
+                    await writeChar.writeValueWithoutResponse(chunk);
+                } else {
+                    await writeChar.writeValue(chunk);
+                }
+                await new Promise(r => setTimeout(r, 35));
+            }
+            return true;
+        };
+
+        function openReceiptPreviewModal(url) {
+            const modal = document.getElementById('receiptPreviewModal');
+            const iframe = document.getElementById('receiptPreviewIframe');
+            if (modal && iframe) {
+                iframe.src = url;
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeReceiptPreviewModal() {
+            const modal = document.getElementById('receiptPreviewModal');
+            const iframe = document.getElementById('receiptPreviewIframe');
+            if (modal) modal.style.display = 'none';
+            if (iframe) iframe.src = 'about:blank';
+        }
+
+        function handleReceiptBackdropClick(e) {
+            if (e.target.id === 'receiptPreviewModal') {
+                closeReceiptPreviewModal();
+            }
+        }
+
+        function openReceiptPreviewFromList(e, url) {
+            if (e) e.preventDefault();
+            openReceiptPreviewModal(url);
+        }
+
+        function resetDriverFormAfterSuccess(data) {
+            const submitBtn = document.getElementById('btnSubmit');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
+            }
+            const trayInput = document.getElementById('trayCountInput');
+            if (trayInput) trayInput.value = '';
+            const custSearch = document.getElementById('customerSearch');
+            if (custSearch) custSearch.value = '';
+            const selCust = document.getElementById('selectedCustomerId');
+            if (selCust) selCust.value = '';
+            const badge = document.getElementById('selectedCustomerBadge');
+            if (badge) badge.style.display = 'none';
+            const customDepositInput = document.getElementById('customDepositInput');
+            if (customDepositInput) customDepositInput.value = '';
+            const remarksInput = document.querySelector('input[name="remarks"]');
+            if (remarksInput) remarksInput.value = '';
+            calculateDeposit();
+        }
 
         function openPrinterModal() {
             const modal = document.getElementById('printerModal');
@@ -1197,6 +1390,12 @@
                 msgEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <strong>${device.name || 'Printer'}</strong> සමඟ සම්බන්ධතාවය තහවුරු කරමින් පවතී...`;
 
                 const server = await device.gatt.connect();
+                const writeChar = await findWriteChar(server);
+
+                // Save connection in memory for instantaneous printing
+                window.activeBluetoothDevice = device;
+                window.activeGattServer = server;
+                window.activeWriteChar = writeChar;
 
                 // Save to localStorage
                 localStorage.setItem('savedBluetoothPrinterId', device.id);
@@ -1206,12 +1405,7 @@
                 msgEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>${device.name || 'Printer'}</strong> සාර්ථකව සම්බන්ධ කර Save කරන ලදී!`;
 
                 updatePrinterUI();
-
-                setTimeout(() => {
-                    if (device.gatt && device.gatt.connected) {
-                        device.gatt.disconnect();
-                    }
-                }, 1000);
+                // KEEP CONNECTED IN MEMORY! Do not disconnect!
 
             } catch (err) {
                 if (err.name === 'NotFoundError') {
@@ -1231,48 +1425,7 @@
             msgEl.className = 'status-box info';
             msgEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Test Print යවමින් පවතී...';
 
-            const savedId = localStorage.getItem('savedBluetoothPrinterId');
-            let device = null;
-
             try {
-                if (savedId && navigator.bluetooth && navigator.bluetooth.getDevices) {
-                    try {
-                        const devices = await navigator.bluetooth.getDevices();
-                        device = devices.find(d => d.id === savedId) || null;
-                    } catch (e) {
-                        console.log('Permitted check note:', e);
-                    }
-                }
-
-                if (!device) {
-                    device = await navigator.bluetooth.requestDevice({
-                        acceptAllDevices: true,
-                        optionalServices: BLE_PRINTER_SERVICES
-                    });
-                    localStorage.setItem('savedBluetoothPrinterId', device.id);
-                    localStorage.setItem('savedBluetoothPrinterName', device.name || 'Bluetooth Printer');
-                    updatePrinterUI();
-                }
-
-                const server = await device.gatt.connect();
-                const services = await server.getPrimaryServices();
-                let writeChar = null;
-
-                for (const s of services) {
-                    try {
-                        const chars = await s.getCharacteristics();
-                        for (const c of chars) {
-                            if (c.properties.write || c.properties.writeWithoutResponse) {
-                                writeChar = c;
-                                break;
-                            }
-                        }
-                        if (writeChar) break;
-                    } catch (e) {}
-                }
-
-                if (!writeChar) throw new Error('Data characteristic not found on this printer.');
-
                 // Short 110mm centered test receipt
                 const encoder = new TextEncoder();
                 const sideMargin = 12;
@@ -1318,25 +1471,10 @@
                     offset += p.length;
                 }
 
-                const CHUNK_SIZE = 100;
-                for (let i = 0; i < combined.length; i += CHUNK_SIZE) {
-                    const chunk = combined.slice(i, i + CHUNK_SIZE);
-                    if (writeChar.properties.writeWithoutResponse) {
-                        await writeChar.writeValueWithoutResponse(chunk);
-                    } else {
-                        await writeChar.writeValue(chunk);
-                    }
-                    await new Promise(r => setTimeout(r, 30));
-                }
+                await window.printViaConnectedBluetooth(combined);
 
                 msgEl.className = 'status-box success';
                 msgEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Test Print එක සාර්ථකව Printer වෙත යවන ලදී!`;
-
-                setTimeout(() => {
-                    if (device.gatt && device.gatt.connected) {
-                        device.gatt.disconnect();
-                    }
-                }, 1000);
 
             } catch (err) {
                 console.error('Test Print Error:', err);
@@ -1347,6 +1485,12 @@
 
         function forgetPrinter() {
             if (confirm('සුරකින ලද Printer එක ඉවත් කිරීමට (Disconnect) අවශ්‍යද?')) {
+                if (window.activeBluetoothDevice && window.activeBluetoothDevice.gatt && window.activeBluetoothDevice.gatt.connected) {
+                    window.activeBluetoothDevice.gatt.disconnect();
+                }
+                window.activeBluetoothDevice = null;
+                window.activeGattServer = null;
+                window.activeWriteChar = null;
                 localStorage.removeItem('savedBluetoothPrinterId');
                 localStorage.removeItem('savedBluetoothPrinterName');
                 const msgEl = document.getElementById('printerModalMsg');
