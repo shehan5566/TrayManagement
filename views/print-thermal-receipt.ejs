@@ -260,6 +260,21 @@
             </button>
         </div>
 
+        <!-- Paper Size Selector (Defaults to 80mm Standard) -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 7px 12px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <span style="font-weight: 700; color: #374151; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-scroll" style="color: #107c41;"></i> Printer Paper:
+            </span>
+            <div style="display: flex; gap: 14px;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 700; color: #1f2937;">
+                    <input type="radio" id="pw80" name="paperWidthRadio" value="80" checked onchange="setPaperWidth(80)"> 80mm (Wide)
+                </label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 600; color: #6b7280;">
+                    <input type="radio" id="pw58" name="paperWidthRadio" value="58" onchange="setPaperWidth(58)"> 58mm (Small)
+                </label>
+            </div>
+        </div>
+
         <!-- Status Message Box -->
         <div id="btStatus" class="status-box"></div>
     </div>
@@ -434,8 +449,26 @@
         const settingsData = <%- JSON.stringify(settings || {}) %>;
         const totalPendingDepositVal = <%= custPendingDeposit %>;
 
+        function getPaperWidthCols() {
+            const saved = localStorage.getItem('thermal_paper_width');
+            return (saved === '58') ? 32 : 48;
+        }
+
+        function setPaperWidth(size) {
+            localStorage.setItem('thermal_paper_width', String(size));
+            const r80 = document.getElementById('pw80');
+            const r58 = document.getElementById('pw58');
+            if (r80) r80.checked = (size == 80);
+            if (r58) r58.checked = (size == 58);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('thermal_paper_width') || '80';
+            setPaperWidth(saved == '58' ? 58 : 80);
+        });
+
         // Generate Standard ESC/POS Thermal Command Buffer
-        function generateEscPosCommands() {
+        function generateEscPosCommands(lineWidth = 48) {
             const encoder = new TextEncoder();
             const parts = [];
 
@@ -446,8 +479,8 @@
                 parts.push(new Uint8Array(bytes));
             }
 
-            // Helper to format two-column key-value lines spanning full 32-char width
-            function formatLine(left, right, width = 32) {
+            // Helper to format two-column key-value lines spanning full width
+            function formatLine(left, right, width = lineWidth) {
                 left = String(left || '');
                 right = String(right || '');
                 const spaces = width - left.length - right.length;
@@ -461,10 +494,28 @@
                 return left + '\n' + ' '.repeat(Math.max(0, width - right.length)) + right + '\n';
             }
 
+            const divider = "-".repeat(lineWidth) + "\n";
+            const countQty = Number(txData.count) || 0;
+
             // 1. Initialize Printer (ESC @)
             cmd([0x1B, 0x40]);
 
-            // 2. Company Header (Centered & Bold)
+            // Select Font A (12x24 dots per char)
+            cmd([0x1B, 0x4D, 0x00]);
+
+            // Set left margin to 0 (GS L 0 0)
+            cmd([0x1D, 0x4C, 0x00, 0x00]);
+
+            // Set printable area width (GS W nL nH)
+            // 80mm: 576 dots (0x0240 -> nL=0x40, nH=0x02) => 48 cols
+            // 58mm: 384 dots (0x0180 -> nL=0x80, nH=0x01) => 32 cols
+            if (lineWidth >= 48) {
+                cmd([0x1D, 0x57, 0x40, 0x02]);
+            } else {
+                cmd([0x1D, 0x57, 0x80, 0x01]);
+            }
+
+            // 2. Company Header (Centered & Bold across full printable area)
             cmd([0x1B, 0x61, 0x01]); // Center align
             cmd([0x1B, 0x45, 0x01]); // Bold on
             const compName = settingsData.companyName || "NELNA AGRI DEVELOPMENT (PVT) LTD";
@@ -472,9 +523,9 @@
             cmd([0x1B, 0x45, 0x00]); // Bold off
             text("TRAY TRANSACTION RECEIPT\n");
             text("Store Operations Log / Route\n");
-            text("--------------------------------\n");
+            text(divider);
 
-            // 3. Receipt Details (Left/Right Balanced across 32 cols)
+            // 3. Receipt Details (Left/Right Balanced across full line width)
             cmd([0x1B, 0x61, 0x00]); // Left align
             text(formatLine("REC NO:", "RE-" + String(txData.receiptNo || 0).padStart(6, '0')));
             const d = new Date(txData.date);
@@ -482,17 +533,18 @@
             text(formatLine("DATE:", dateStr));
             text(formatLine("VEHICLE:", txData.vehicleNo || 'N/A'));
             if (txData.user) text(formatLine("CREATED:", txData.user));
-            text("--------------------------------\n");
+            text(divider);
             
             // Customer Info
-            const custName = customerData.name || '';
-            if (custName.length <= 20) {
+            const custName = customerData.name || txData.customerName || '';
+            const maxCustLen = lineWidth - 12;
+            if (custName.length <= maxCustLen) {
                 text(formatLine("CUSTOMER:", custName));
             } else {
                 text("CUSTOMER: " + custName + "\n");
             }
             if (customerData.phone) text(formatLine("CONTACT:", customerData.phone));
-            text("--------------------------------\n");
+            text(divider);
 
             // 4. Type & Large Quantity (Center Align)
             cmd([0x1B, 0x61, 0x01]);
@@ -504,15 +556,14 @@
             }
             // Double width & height for tray count
             cmd([0x1D, 0x21, 0x11]);
-            text(txData.count + " TRAYS\n");
+            text(countQty + " TRAYS\n");
             cmd([0x1D, 0x21, 0x00]); // Reset size
             cmd([0x1B, 0x45, 0x00]); // Bold off
+            text(divider);
 
-            // 5. System Financial Details (Left/Right Balanced across 32 cols)
+            // 5. System Financial Details (Left/Right Balanced across line width)
             cmd([0x1B, 0x61, 0x00]);
-            text("--------------------------------\n");
             const rate = Number(txData.depositPerTray) || 2000;
-            const countQty = Number(txData.count) || 0;
             const expected = Number(txData.expectedDeposit) || (countQty * rate);
             let paid = 0;
             if (txData.totalDeposit !== undefined && txData.totalDeposit !== null && txData.totalDeposit !== '') {
@@ -539,7 +590,7 @@
                 text(formatLine("Remarks:", txData.remarks));
             }
 
-            text("--------------------------------\n");
+            text(divider);
 
             // 6. Statement Box (Centered title, balanced rows)
             cmd([0x1B, 0x61, 0x01]);
@@ -550,7 +601,7 @@
             text(formatLine("Total Value:", "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(formatLine("Paid Amount:", "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(formatLine("Pending Dep:", "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
-            text("--------------------------------\n");
+            text(divider);
 
             // 7. Customer Net Balance (Centered title, balanced rows)
             cmd([0x1B, 0x61, 0x01]);
@@ -560,12 +611,17 @@
             cmd([0x1B, 0x61, 0x00]);
             text(formatLine("Net Tray Bal:", (customerData.currentBalance || 0) + " TRAYS"));
             text(formatLine("Pending Dep:", "Rs. " + totalPendingDepositVal.toLocaleString('en-US', { minimumFractionDigits: 2 })));
-            text("--------------------------------\n");
+            text(divider);
 
             cmd([0x1B, 0x61, 0x01]);
-            text("Created     Checked     Received\n");
-            text(".......     .......     ........\n");
-            text("--------------------------------\n");
+            if (lineWidth >= 48) {
+                text("    Created         Checked         Received    \n");
+                text("   ..........      ..........      ..........   \n");
+            } else {
+                text("Created     Checked     Received\n");
+                text(".......     .......     ........\n");
+            }
+            text(divider);
             text("Nelna Agri Smart Tray System\n");
             text("*** THANK YOU! ***\n");
 
@@ -644,7 +700,8 @@
 
                 statusBox.innerHTML = `<i class="fa-solid fa-print fa-bounce"></i> <strong>${device.name || 'Printer'}</strong> වෙතින් රිසිට්පත මුද්‍රණය වෙමින් පවතී...`;
 
-                const rawData = generateEscPosCommands();
+                const pCols = getPaperWidthCols();
+                const rawData = generateEscPosCommands(pCols);
 
                 // Send data in chunks of 100 bytes for BLE MTU safety
                 const CHUNK_SIZE = 100;
