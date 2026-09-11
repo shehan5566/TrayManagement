@@ -438,7 +438,7 @@
         </div>
 
         <!-- 3 Signature Lines (Identical to System Receipt) -->
-        <div style="margin-top: 22px; padding-top: 4px;">
+        <div style="margin-top: 38px; padding-top: 4px;">
             <div style="display: flex; justify-content: space-between; text-align: center; font-size: 9.5px; color: #4b5563;">
                 <div style="border-top: 1px dotted #9ca3af; width: 30%; padding-top: 3px;">Created By</div>
                 <div style="border-top: 1px dotted #9ca3af; width: 30%; padding-top: 3px;">Checked By</div>
@@ -616,8 +616,9 @@
             text(formatLine("Pending Dep:", "Rs. " + totalPendingDepositVal.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(divider);
 
-            // 8. Signatures & Footer
+            // 8. Signatures & Footer (With vertical space so signature lines sit downwards)
             cmd([0x1B, 0x61, 0x00]);
+            text("\n\n\n");
             text(padLeft + "   Created        Checked        Received   \n");
             text(padLeft + "  .........      .........      .........   \n");
             text(divider);
