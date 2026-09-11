@@ -616,11 +616,11 @@
             text(formatLine("Pending Dep:", "Rs. " + totalPendingDepositVal.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(divider);
 
-            // 8. Signatures & Footer (With vertical space so signature lines sit downwards)
+            // 8. Signatures & Footer (Dotted lines on top, labels below - matching preview)
             cmd([0x1B, 0x61, 0x00]);
             text("\n\n\n");
-            text(padLeft + "   Created        Checked        Received   \n");
-            text(padLeft + "  .........      .........      .........   \n");
+            text(padLeft + "  ..........     ..........     ..........  \n");
+            text(padLeft + "  Created By     Checked By    Received By  \n");
             text(divider);
             cmd([0x1B, 0x61, 0x01]);
             text("Nelna Agri Smart Tray System\n");
