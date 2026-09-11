@@ -17,7 +17,7 @@ const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 const MongoStore = require('connect-mongo').MongoStore || require('connect-mongo').default || require('connect-mongo');
 
-const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting, CustomerModel, LorryTrip, LorryTripModel } = require('./db');
+const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting, CustomerModel, LorryTrip, LorryTripModel, LocationModel } = require('./db');
 const smsService = require('./smsService');
 const backupService = require('./backupService');
 const cron = require('node-cron');
@@ -1277,7 +1277,7 @@ app.get('/lorry-trips', requireAuth, async (req, res) => {
         const userRole = (req.session.user && req.session.user.role) || 'user';
         const trips = await LorryTrip.getAll(userLoc, userRole);
         
-        const loc = await LocationModel.findById(userLoc);
+        const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc));
         const currentStock = loc ? (loc.currentStock || 0) : 0;
 
         const dbVehicles = await TransactionModel.distinct('vehicleNo', { vehicleNo: { $nin: ['N/A', '', null] } });

@@ -1401,5 +1401,6 @@ module.exports = {
     DamageLogModel,
     SystemSettingModel,
     CounterModel,
-    LorryTripModel
+    LorryTripModel,
+    LocationModel
 };
