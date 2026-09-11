@@ -39,17 +39,6 @@
             </div>
 
             <div class="form-group">
-                <label for="driverPhone">Driver Phone (දුරකථන අංකය)</label>
-                <input type="tel" id="driverPhone" name="driverPhone" placeholder="0771234567" pattern="[0-9]{10}">
-            </div>
-
-            <div class="form-group">
-                <label for="pin">Driver Login PIN (රහස් අංකය)</label>
-                <input type="text" id="pin" name="pin" value="1234" maxlength="4" placeholder="1234" required>
-                <span style="font-size: 11px; color: var(--text-light);">Driver uses this PIN to login on mobile (/driver)</span>
-            </div>
-
-            <div class="form-group">
                 <label for="loadedQty">Loaded Tray Quantity (පටවන ට්‍රේ ගණන) <span style="color:red;">*</span></label>
                 <input type="number" id="loadedQty" name="loadedQty" min="1" placeholder="Enter tray count..." required>
             </div>
@@ -110,7 +99,7 @@
                             <td><strong><%= t.tripNo %></strong></td>
                             <td>
                                 <strong style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck"></i> <%= t.vehicleNo %></strong>
-                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'N/A' %> (<%= t.driverPhone || 'PIN: ' + t.pin %>)</div>
+                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %> &bull; <span style="color: #0284c7; font-weight: 600;">PIN: <%= t.pin %></span></div>
                             </td>
                             <td>
                                 <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>

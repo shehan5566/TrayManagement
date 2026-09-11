@@ -395,7 +395,7 @@
             <form action="/driver/login" method="POST">
                 <div class="form-group" style="text-align: left;">
                     <label class="form-label">වාහන අංකය (Vehicle No)</label>
-                    <select name="vehicleNo" class="form-input" required>
+                    <select id="loginVehicleSelect" name="vehicleNo" class="form-input" required onchange="updateVehiclePinHint(this.value)">
                         <option value="">-- ලොරිය තෝරන්න --</option>
                         <% (vehicles || []).forEach(v => { %>
                             <option value="<%= v %>" <%= (activeVehicle === v) ? 'selected' : '' %>><%= v %></option>
@@ -405,14 +405,47 @@
 
                 <div class="form-group" style="text-align: left;">
                     <label class="form-label">රහස් අංකය (4-Digit PIN)</label>
-                    <input type="password" name="pin" class="form-input pin-input" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" required>
-                    <span style="font-size: 11px; color: #9ca3af; display: block; margin-top: 4px;">පෙරනිමි අංකය: 1234 (Default PIN: 1234)</span>
+                    <input type="password" id="driverPinInput" name="pin" class="form-input pin-input" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" required>
+                    <span id="pinHintText" style="font-size: 11.5px; color: #6b7280; display: block; margin-top: 5px;">වාහන අංකයේ අවසාන ඉලක්කම් 4 (උදා: LK-3945 නම් 3945)</span>
                 </div>
 
                 <button type="submit" class="submit-btn" style="margin-top: 20px;">
                     <i class="fa-solid fa-lock-open"></i> ඇතුල් වන්න (Login)
                 </button>
             </form>
+
+            <script>
+                function updateVehiclePinHint(vehicleNo) {
+                    const hint = document.getElementById('pinHintText');
+                    const pinInput = document.getElementById('driverPinInput');
+                    if (!vehicleNo) {
+                        hint.innerHTML = 'වාහන අංකයේ අවසාන ඉලක්කම් 4 (උදා: LK-3945 නම් 3945)';
+                        hint.style.color = '#6b7280';
+                        return;
+                    }
+                    const digits = vehicleNo.replace(/\D/g, '');
+                    if (digits.length >= 4) {
+                        const pin = digits.slice(-4);
+                        hint.innerHTML = `<i class="fa-solid fa-key" style="color:#059669;"></i> මෙම වාහනයේ PIN අංකය: <strong style="color:#059669; font-size:13px;">${pin}</strong>`;
+                        if (pinInput && !pinInput.value) {
+                            pinInput.placeholder = pin;
+                        }
+                    } else if (digits.length > 0) {
+                        const pin = digits.padStart(4, '0');
+                        hint.innerHTML = `<i class="fa-solid fa-key" style="color:#059669;"></i> මෙම වාහනයේ PIN අංකය: <strong style="color:#059669; font-size:13px;">${pin}</strong>`;
+                        if (pinInput && !pinInput.value) {
+                            pinInput.placeholder = pin;
+                        }
+                    } else {
+                        hint.innerHTML = 'වාහන අංකයේ අවසාන ඉලක්කම් 4 හෝ 1234 ඇතුළත් කරන්න';
+                        hint.style.color = '#6b7280';
+                    }
+                }
+                document.addEventListener('DOMContentLoaded', function() {
+                    const sel = document.getElementById('loginVehicleSelect');
+                    if (sel && sel.value) updateVehiclePinHint(sel.value);
+                });
+            </script>
         </div>
     </div>
     <% } else { %>

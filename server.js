@@ -1300,7 +1300,7 @@ app.get('/lorry-trips', requireAuth, async (req, res) => {
 app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
-        const { vehicleNo, driverName, driverPhone, pin, loadedQty, dispatchedDate, notes } = req.body;
+        const { vehicleNo, driverName, loadedQty, dispatchedDate, notes } = req.body;
         const qty = parseInt(loadedQty, 10);
         if (!vehicleNo || isNaN(qty) || qty <= 0) {
             if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid vehicle and tray quantity!' });
@@ -1314,12 +1314,15 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, re
             return res.redirect('/lorry-trips?error=active_trip_exists');
         }
 
+        // Auto-generate PIN from the last 4 digits of the vehicle number
+        const digits = (vehicleNo || '').replace(/\D/g, '');
+        const autoPin = digits.length >= 4 ? digits.slice(-4) : (digits ? digits.padStart(4, '0') : '1234');
+
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
         const newTrip = await LorryTrip.create({
             vehicleNo,
-            driverName,
-            driverPhone,
-            pin: pin || '1234',
+            driverName: driverName ? driverName.trim() : 'Driver',
+            pin: autoPin,
             loadedQty: qty,
             locationId: userLoc,
             dispatchedDate: dispatchedDate ? new Date(dispatchedDate) : new Date(),
@@ -1465,12 +1468,15 @@ app.post('/driver/login', async (req, res) => {
             return res.redirect('/driver?error=' + encodeURIComponent('කරුණාකර වාහනය සහ PIN අංකය ඇතුළත් කරන්න'));
         }
 
-        // Check active trip PIN or default 1234
+        // Check active trip PIN, vehicle's last 4 digits, or default 1234
         const activeTrip = await LorryTrip.getActiveTrip(vehicleNo);
-        const validPin = (activeTrip && activeTrip.pin) ? activeTrip.pin : '1234';
+        const digits = (vehicleNo || '').replace(/\D/g, '');
+        const vehiclePin = digits.length >= 4 ? digits.slice(-4) : (digits ? digits.padStart(4, '0') : '1234');
+        const validTripPin = (activeTrip && activeTrip.pin) ? activeTrip.pin : vehiclePin;
 
-        if (pin.trim() !== validPin.trim() && pin.trim() !== '1234') {
-            return res.redirect('/driver?error=' + encodeURIComponent('වැරදි PIN අංකයකි! නැවත උත්සාහ කරන්න (Incorrect PIN)'));
+        const inputPin = pin.trim();
+        if (inputPin !== validTripPin && inputPin !== vehiclePin && inputPin !== '1234') {
+            return res.redirect('/driver?error=' + encodeURIComponent('වැරදි PIN අංකයකි! වාහන අංකයේ අවසාන ඉලක්කම් 4 ඇතුළත් කරන්න'));
         }
 
         req.session.driver = {
