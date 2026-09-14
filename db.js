@@ -155,6 +155,7 @@ const TransactionSchema = new mongoose.Schema({
     remarks: { type: String, default: '' },
     date: { type: String },
     user: { type: String, default: 'System' },
+    driverName: { type: String, default: '' },
     receiptNo: { type: Number, default: 0 },
     locationId: { type: String, default: 'main' },
     tripId: { type: String },
@@ -793,7 +794,12 @@ const Transaction = {
     getPaginated: async (page = 1, limit = 50, search = '', locationId = null, role = 'user') => {
         let query = { isDeleted: { $ne: true } };
         if (search) {
-            query.customerName = { $regex: search, $options: 'i' };
+            query.$or = [
+                { customerName: { $regex: search, $options: 'i' } },
+                { driverName: { $regex: search, $options: 'i' } },
+                { vehicleNo: { $regex: search, $options: 'i' } },
+                { user: { $regex: search, $options: 'i' } }
+            ];
         }
         if (role !== 'admin' && locationId) {
             query.locationId = locationId;
@@ -801,8 +807,26 @@ const Transaction = {
         const total = await TransactionModel.countDocuments(query);
         const skip = (page - 1) * limit;
         const docs = await TransactionModel.find(query).sort({ date: -1 }).skip(skip).limit(limit).lean();
+
+        // Collect tripIds to lookup driverName from LorryTripModel for records that don't have it
+        const tripIds = docs.map(d => d.tripId).filter(Boolean);
+        const tripMap = {};
+        if (tripIds.length > 0) {
+            const trips = await LorryTripModel.find({ _id: { $in: tripIds } }, 'driverName').lean();
+            trips.forEach(tr => {
+                if (tr.driverName) tripMap[String(tr._id)] = tr.driverName;
+            });
+        }
+
+        const transactions = docs.map(d => {
+            const item = mapDoc(d);
+            const lookupDriver = item.tripId ? tripMap[String(item.tripId)] : null;
+            item.driverName = (item.driverName && item.driverName.trim()) ? item.driverName.trim() : (lookupDriver || '');
+            return item;
+        });
+
         return {
-            transactions: docs.map(mapDoc),
+            transactions,
             total,
             page,
             totalPages: Math.ceil(total / limit)
@@ -858,7 +882,11 @@ const Transaction = {
         console.log('[Receipt] Last receiptNo:', lastTx ? lastTx.receiptNo : 'none', '-> Next:', nextReceiptNo);
 
         let tripId = txData.tripId || null;
-        if (!tripId && txData.vehicleNo && txData.vehicleNo !== 'N/A') {
+        let driverName = txData.driverName || '';
+        if (tripId && !driverName) {
+            const tr = await LorryTripModel.findById(tripId).lean();
+            if (tr && tr.driverName) driverName = tr.driverName;
+        } else if (!tripId && txData.vehicleNo && txData.vehicleNo !== 'N/A') {
             const activeTrip = await LorryTripModel.findOne({ 
                 vehicleNo: txData.vehicleNo.trim(), 
                 status: 'ON_ROUTE', 
@@ -866,6 +894,7 @@ const Transaction = {
             });
             if (activeTrip) {
                 tripId = activeTrip._id;
+                if (!driverName && activeTrip.driverName) driverName = activeTrip.driverName;
             }
         }
 
@@ -883,7 +912,8 @@ const Transaction = {
             vehicleNo: txData.vehicleNo || 'N/A',
             remarks: txData.remarks || '',
             date: txData.date || new Date().toISOString(),
-            user: username || 'System',
+            user: username || (driverName ? driverName : 'System'),
+            driverName: driverName,
             receiptNo: nextReceiptNo,
             locationId: txData.locationId || customer.locationId || 'main',
             tripId: tripId

@@ -1867,6 +1867,10 @@ app.post('/driver/transaction', async (req, res) => {
             }
         }
 
+        const driverName = (activeTrip && activeTrip.driverName && activeTrip.driverName.trim()) 
+            ? activeTrip.driverName.trim() 
+            : (req.session.driver.driverName || '');
+
         const locationId = (activeTrip && activeTrip.locationId) ? activeTrip.locationId : 'main';
 
         const txData = {
@@ -1879,10 +1883,11 @@ app.post('/driver/transaction', async (req, res) => {
             vehicleNo: req.session.driver.vehicleNo,
             remarks: remarks || (type === 'OUT' ? 'Lorry Delivery OUT' : 'Lorry Collection IN'),
             tripId: activeTrip ? activeTrip.id : null,
+            driverName: driverName,
             locationId
         };
 
-        const username = `Driver (${req.session.driver.vehicleNo})`;
+        const username = driverName || `Driver (${req.session.driver.vehicleNo})`;
         const newTx = await Transaction.create(txData, username);
 
         // Instant SMS Notification to Registered Customer Phone Number

@@ -153,7 +153,7 @@
                         <form method="GET" action="/transactions" class="search-container"
                             style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <input type="text" name="search" class="search-input"
-                                value="<%= locals.searchQuery || '' %>" placeholder="Search logs by customer name..."
+                                value="<%= locals.searchQuery || '' %>" placeholder="Search logs by customer, driver, or vehicle..."
                                 style="flex-grow: 1;">
                             <button type="submit" class="btn btn-primary" style="padding: 10px 20px;"><i
                                     class="fa-solid fa-search"></i> Search</button>
@@ -227,7 +227,14 @@
                                                     </td>
                                                     <td><code><%= tx.vehicleNo %></code></td>
                                                     <td>
-                                                        <%= tx.user %>
+                                                        <% if (tx.driverName) { %>
+                                                            <strong style="color: var(--primary-green-dark);"><%= tx.driverName %></strong>
+                                                            <% if (tx.user && tx.user !== tx.driverName && !tx.user.startsWith('Driver (')) { %>
+                                                                <div style="font-size: 11px; color: var(--text-light);">(<%= tx.user %>)</div>
+                                                            <% } %>
+                                                        <% } else { %>
+                                                            <%= tx.user %>
+                                                        <% } %>
                                                     </td>
                                                     <td><span style="font-size: 13px; color: var(--text-light);">
                                                             <%= tx.remarks || '-' %>
