@@ -28,6 +28,27 @@ const formatPhoneNumber = (phone) => {
 };
 
 /**
+ * Format a phone number to international format for WhatsApp (e.g. 94770889714)
+ */
+const formatWhatsAppNumber = (phone) => {
+    if (!phone) return null;
+    let digits = String(phone).replace(/\D/g, '');
+    if (digits.startsWith('940') && digits.length === 12) {
+        return '94' + digits.substring(3);
+    }
+    if (digits.startsWith('94') && digits.length === 11) {
+        return digits;
+    }
+    if (digits.startsWith('0') && digits.length === 10) {
+        return '94' + digits.substring(1);
+    }
+    if (digits.length === 9) {
+        return '94' + digits;
+    }
+    return digits;
+};
+
+/**
  * Send an SMS via MacroDroid Webhook over the internet
  * @param {string} phone - Target phone number
  * @param {string} message - SMS message content
@@ -56,8 +77,14 @@ const sendSMS = async (phone, message) => {
     try {
         // Construct the URL with query parameters for the webhook
         const url = new URL(webhookUrl);
+        const waNumber = formatWhatsAppNumber(phone);
         url.searchParams.append('number', formattedPhone);
+        if (waNumber) {
+            url.searchParams.append('wa_number', waNumber);
+            url.searchParams.append('phone', waNumber);
+        }
         url.searchParams.append('msg', message);
+        url.searchParams.append('text', message);
 
         console.log(`Triggering MacroDroid webhook to send alert to ${formattedPhone}...`);
         
@@ -128,21 +155,11 @@ Thank you!`;
     return await sendSMS(phone, msg);
 };
 
-/**
- * Send an alert for Special Transaction Approval to Sales Manager via MacroDroid (WhatsApp / SMS)
- */
-const sendApprovalAlert = async (phone, details, approvalUrl, pin) => {
-    const formattedPhone = formatPhoneNumber(phone);
-    const targetPhone = formattedPhone || phone;
-    if (!targetPhone) {
-        console.error('Invalid phone number for approval alert:', phone);
-        return false;
-    }
-
+const buildApprovalMessage = (details, approvalUrl, pin) => {
     const pendingDepStr = (Number(details.pendingDepositBalance) || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
     const refundOutStr = (Number(details.refundableOutstanding) || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
 
-    const msg = `*--- NELNA SPECIAL APPROVAL REQUEST ---*
+    return `*--- NELNA SPECIAL APPROVAL REQUEST ---*
 Customer: ${details.customerName}
 Contact Number: ${details.customerPhone || 'N/A'}
 Due Trays: ${details.currentBalance} Trays
@@ -157,11 +174,32 @@ ${details.vehicleNo && details.vehicleNo !== 'N/A' ? `Vehicle: ${details.vehicle
 ${approvalUrl}
 
 (Or Override PIN: *${pin}*)`;
+};
 
+/**
+ * Send an alert for Special Transaction Approval to Sales Manager via MacroDroid (WhatsApp / SMS)
+ */
+const sendApprovalAlert = async (phone, details, approvalUrl, pin) => {
+    const formattedPhone = formatPhoneNumber(phone);
+    const targetPhone = formattedPhone || phone;
+    if (!targetPhone) {
+        console.error('Invalid phone number for approval alert:', phone);
+        return false;
+    }
+
+    const msg = buildApprovalMessage(details, approvalUrl, pin);
     return await sendSMS(targetPhone, msg);
 };
 
-module.exports = { sendSMS, formatPhoneNumber, sendTransactionSMS, sendManualSMS, sendApprovalAlert };
+module.exports = { 
+    sendSMS, 
+    formatPhoneNumber, 
+    formatWhatsAppNumber, 
+    buildApprovalMessage, 
+    sendTransactionSMS, 
+    sendManualSMS, 
+    sendApprovalAlert 
+};
 
 
 

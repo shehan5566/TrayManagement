@@ -1422,20 +1422,27 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
         const approvalUrl = `${protocol}://${host}/approval/${approval.token}`;
 
         const managerPhone = settings.salesManagerPhone || '0770000000';
+        const waNumber = smsService.formatWhatsAppNumber(managerPhone) || '94770000000';
+
+        const alertDetails = {
+            customerName: customer.name,
+            customerPhone: customer.phone || 'N/A',
+            currentBalance: customer.currentBalance,
+            requestedQty: approval.requestedQty,
+            pendingDepositBalance,
+            refundableOutstanding,
+            txType: approval.txType,
+            locationName: loc.name,
+            requestedBy: req.session.user.username,
+            vehicleNo: txData.vehicleNo
+        };
+
+        const messageText = smsService.buildApprovalMessage(alertDetails, approvalUrl, approval.pin);
+        const whatsAppUrl = `https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(messageText)}`;
+
         setImmediate(async () => {
             try {
-                await smsService.sendApprovalAlert(managerPhone, {
-                    customerName: customer.name,
-                    customerPhone: customer.phone || 'N/A',
-                    currentBalance: customer.currentBalance,
-                    requestedQty: approval.requestedQty,
-                    pendingDepositBalance,
-                    refundableOutstanding,
-                    txType: approval.txType,
-                    locationName: loc.name,
-                    requestedBy: req.session.user.username,
-                    vehicleNo: txData.vehicleNo
-                }, approvalUrl, approval.pin);
+                await smsService.sendApprovalAlert(managerPhone, alertDetails, approvalUrl, approval.pin);
             } catch (notifyErr) {
                 console.error('[APPROVAL NOTIFY ERROR]:', notifyErr);
             }
@@ -1448,6 +1455,8 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
             pin: approval.pin,
             managerPhone,
             approvalUrl,
+            whatsAppUrl,
+            messageText,
             expiresAt: approval.expiresAt
         });
     } catch (err) {

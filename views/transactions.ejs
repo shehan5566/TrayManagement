@@ -800,6 +800,13 @@
                         let timerSeconds = 600; // 10 minutes timeout
                         let timerInterval = null;
 
+                        // Automatically open WhatsApp in new tab so operator can simply press Send
+                        if (data.whatsAppUrl) {
+                            try {
+                                window.open(data.whatsAppUrl, '_blank');
+                            } catch(e) {}
+                        }
+
                         Swal.fire({
                             title: 'Waiting for Sales Manager Approval',
                             html: `
@@ -818,6 +825,17 @@
                                         <div style="font-weight: 700; color: #1e293b; margin-bottom: 2px;">Customer: ${cust.name} ${cust.phone ? `(${cust.phone})` : ''}</div>
                                         <div style="color: #475569;">Due Trays: <strong style="color: #dc2626;">${cust.currentBalance}</strong> | Request: <strong style="color: #15803d;">${count} Trays</strong></div>
                                     </div>
+                                    
+                                    ${data.whatsAppUrl ? `
+                                    <div style="margin-bottom: 14px;">
+                                        <a href="${data.whatsAppUrl}" target="_blank" style="background: #25d366; color: #fff; font-weight: 700; font-size: 14px; padding: 11px 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.35);">
+                                            <i class="fa-brands fa-whatsapp" style="font-size: 20px;"></i> Click to Send via WhatsApp (${managerPhone})
+                                        </a>
+                                        <div style="font-size: 11px; color: #64748b; margin-top: 5px;">
+                                            Click above to open WhatsApp directly with the pre-filled approval link.
+                                        </div>
+                                    </div>
+                                    ` : ''}
                                     
                                     <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 14px; border-radius: 10px; margin-top: 10px; text-align: left;">
                                         <span style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 6px;">
