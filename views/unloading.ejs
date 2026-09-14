@@ -31,9 +31,10 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Date & Time</th>
                         <th>Loading No</th>
                         <th>Vehicle & Driver</th>
-                        <th>Dispatched</th>
+                        <th>Warehouse</th>
                         <th style="text-align: right;">Loaded</th>
                         <th style="text-align: right;">Delivered (OUT)</th>
                         <th style="text-align: right;">Collected (IN)</th>
@@ -44,14 +45,19 @@
                 <tbody>
                     <% activeTrips.forEach(t => { %>
                         <tr>
+                            <td>
+                                <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
+                                <small style="color: var(--text-light);"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                            </td>
                             <td><strong><%= t.tripNo %></strong></td>
                             <td>
                                 <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong>
                                 <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %></div>
                             </td>
                             <td>
-                                <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
-                                <small style="color: var(--text-light);"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                                <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">
+                                    <%= t.locationName || 'Head Office' %>
+                                </span>
                             </td>
                             <td style="text-align: right; font-weight: 700;"><%= t.loadedQty %></td>
                             <td style="text-align: right; color: #dc2626; font-weight: 700;"><%= t.totalDeliveredQty || 0 %></td>
@@ -62,8 +68,8 @@
                             <td style="text-align: center;">
                                 <button onclick="openSettleModal('<%= t.id %>', '<%= t.tripNo %>', '<%= t.vehicleNo %>', '<%= t.driverName %>', <%= t.loadedQty %>, <%= t.totalDeliveredQty || 0 %>, <%= t.totalCollectedQty || 0 %>)" 
                                         class="btn btn-primary" 
-                                        style="padding: 6px 14px; font-size: 12px; background: #059669; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                                    <i class="fa-solid fa-box-archive"></i> Unload & Settle
+                                        style="padding: 6px 14px; font-size: 12px; background: #144d37; color: #ffffff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; border-radius: 6px;">
+                                    <i class="fa-solid fa-truck-ramp-box"></i> Unload
                                 </button>
                             </td>
                         </tr>
@@ -74,15 +80,15 @@
     <% } %>
 </div>
 
-<!-- 2. Completed Trips History & Reconciliation Log -->
+<!-- 2. Unloading History -->
 <div class="content-box">
     <div class="box-header">
-        <span class="box-title"><i class="fa-solid fa-clock-rotate-left"></i> Completed Trips History & Reconciliation Log</span>
+        <span class="box-title"><i class="fa-solid fa-clock-rotate-left"></i> Unloading History</span>
     </div>
 
     <% const completedTrips = (trips || []).filter(t => t.status === 'COMPLETED' || t.status === 'CANCELLED'); %>
     <% if (completedTrips.length === 0) { %>
-        <p style="text-align: center; color: var(--text-light); padding: 20px 0;">No completed trip records yet.</p>
+        <p style="text-align: center; color: var(--text-light); padding: 20px 0;">No unloading history records yet.</p>
     <% } else { %>
         <div class="table-responsive">
             <table id="completedTripsTable" class="display" style="width: 100%;">
