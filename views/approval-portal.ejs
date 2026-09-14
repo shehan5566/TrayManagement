@@ -459,9 +459,11 @@
         const loadingState = document.getElementById('loadingState');
         const notes = document.getElementById('managerNotes') ? document.getElementById('managerNotes').value : '';
 
+        let finalNotes = notes;
         if (action === 'REJECT') {
-            const confirmReject = confirm("Are you sure you want to REJECT this transaction request?");
-            if (!confirmReject) return;
+            const reason = prompt("Please enter the reason for REJECTING this request (or click OK to proceed):", notes || "Previous outstanding trays must be returned first.");
+            if (reason === null) return; // Manager cancelled prompt
+            finalNotes = reason.trim() || 'Rejected by Sales Manager';
         }
 
         btnContainer.style.display = 'none';
@@ -471,7 +473,7 @@
             const res = await fetch('/approval/<%= (approval && approval.token) ? approval.token : "" %>/action', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, notes, approverName: 'Sales Manager' })
+                body: JSON.stringify({ action, notes: finalNotes, approverName: 'Sales Manager' })
             });
 
             const result = await res.json();
