@@ -606,22 +606,11 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <span class="box-title"><i class="fa-solid fa-truck-loading" style="color: var(--primary-green);"></i> Detailed Lorry Loading Log</span>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <button
-                        onclick="printReportToPDF(`Lorry Loading Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportLoadingTable')"
-                        class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
-                    </button>
+                <div>
                     <button onclick="exportTableToExcel('reportLoadingTable', 'Lorry_Loading_Report')" class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
                     </button>
-                    <a href="/reports/export/loading-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
-                        class="btn btn-sm"
-                        style="background-color: #0284c7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-                        <i class="fa-solid fa-download"></i> Export CSV
-                    </a>
                 </div>
             </div>
 
@@ -721,22 +710,11 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <span class="box-title"><i class="fa-solid fa-truck-ramp-box" style="color: var(--primary-green);"></i> Detailed Lorry Unloading & Settle Log</span>
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <button
-                        onclick="printReportToPDF(`Lorry Unloading & Settle Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportUnloadingTable')"
-                        class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
-                    </button>
+                <div>
                     <button onclick="exportTableToExcel('reportUnloadingTable', 'Lorry_Unloading_Report')" class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
                     </button>
-                    <a href="/reports/export/unloading-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
-                        class="btn btn-sm"
-                        style="background-color: #0284c7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-                        <i class="fa-solid fa-download"></i> Export CSV
-                    </a>
                 </div>
             </div>
 
