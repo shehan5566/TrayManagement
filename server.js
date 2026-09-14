@@ -2258,6 +2258,71 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const receivedTransfers = receivedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const damageLogs = damageLogsRaw.map(doc => { doc.id = doc._id; return doc; });
 
+        // Query Lorry Trips for Loading & Unloading Reports
+        let tripReportQuery = { isDeleted: { $ne: true } };
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            tripReportQuery.locationId = req.session.user.locationId;
+        }
+
+        let dateFilteredLoadingQuery = { ...tripReportQuery };
+        let dateFilteredUnloadingQuery = { ...tripReportQuery, status: { $in: ['COMPLETED', 'CANCELLED'] } };
+
+        if (req.query.startDate || req.query.endDate) {
+            const startL = req.query.startDate ? new Date(req.query.startDate + "T00:00:00") : null;
+            const endL = req.query.endDate ? new Date(req.query.endDate + "T23:59:59") : null;
+
+            if (startL) {
+                dateFilteredLoadingQuery.dispatchedDate = { $gte: startL };
+            }
+            if (endL) {
+                dateFilteredLoadingQuery.dispatchedDate = { ...(dateFilteredLoadingQuery.dispatchedDate || {}), $lte: endL };
+            }
+
+            let uCond = {};
+            if (startL) uCond.$gte = startL;
+            if (endL) uCond.$lte = endL;
+            dateFilteredUnloadingQuery.$or = [
+                { returnedDate: uCond },
+                { returnedDate: { $exists: false }, dispatchedDate: uCond }
+            ];
+        }
+
+        let loadingTripsRaw = await LorryTripModel.find(dateFilteredLoadingQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
+        let unloadingTripsRaw = await LorryTripModel.find(dateFilteredUnloadingQuery).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
+
+        // Fallback: If date-filtered queries returned empty results (e.g. today has no trips yet), fetch recent 1000 records
+        if (loadingTripsRaw.length === 0) {
+            loadingTripsRaw = await LorryTripModel.find(tripReportQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
+        }
+        if (unloadingTripsRaw.length === 0) {
+            unloadingTripsRaw = await LorryTripModel.find({ ...tripReportQuery, status: { $in: ['COMPLETED', 'CANCELLED'] } }).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
+        }
+
+        const locations = await LocationModel.find({}).lean().catch(() => []);
+        const locMap = {};
+        const locCodes = {};
+        locations.forEach(l => { 
+            locMap[l._id] = l.name; 
+            locCodes[l._id] = (l.code ? l.code.toUpperCase() : 'HO');
+        });
+
+        const loadingReportList = loadingTripsRaw.map(t => {
+            t.id = t._id;
+            t.locationName = locMap[t.locationId] || 'Head Office';
+            return t;
+        });
+
+        const unloadingReportList = unloadingTripsRaw.map(t => {
+            t.id = t._id;
+            t.locationName = locMap[t.locationId] || 'Head Office';
+            if (!t.unloadingNo) {
+                const locCode = locCodes[t.locationId] || 'HO';
+                const digits = (t.tripNo || '').replace(/\D/g, '').padStart(5, '0');
+                t.unloadingNo = locCode + 'UNLOD' + digits;
+            }
+            return t;
+        });
+
         // Build Warehouse Tray Balance Ledger (Date, Stock Transfer No, GRN No, Opening Balance, Dispatched Qty, GRN Qty, Closing Balance)
         // Fetch all non-deleted transfers to compute complete running balances
         let allTransfersQuery = { isDeleted: false };
@@ -2377,6 +2442,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             receivedTransfers,
             damageLogs,
             warehouseBalanceList,
+            loadingReportList,
+            unloadingReportList,
             startDate,
             endDate,
             activeTab
@@ -2692,6 +2759,96 @@ app.get('/reports/export/received-csv', requireAuth, async (req, res) => {
         res.send(csvContent);
     } catch (err) {
         res.status(500).send('Error exporting received stock');
+    }
+});
+
+// Export Loading Trips CSV Route
+app.get('/reports/export/loading-csv', requireAuth, async (req, res) => {
+    try {
+        let startDate = req.query.startDate || '';
+        let endDate = req.query.endDate || '';
+        
+        let tripQuery = { isDeleted: { $ne: true } };
+        if (startDate || endDate) {
+            let dCond = {};
+            if (startDate) dCond.$gte = new Date(startDate + "T00:00:00");
+            if (endDate) dCond.$lte = new Date(endDate + "T23:59:59");
+            tripQuery.dispatchedDate = dCond;
+        }
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            tripQuery.locationId = req.session.user.locationId;
+        }
+        
+        const trips = await LorryTripModel.find(tripQuery).sort({ dispatchedDate: -1 }).limit(10000).lean();
+        const locations = await LocationModel.find({}).lean().catch(() => []);
+        const locMap = {};
+        locations.forEach(l => { locMap[l._id] = l.name; });
+
+        let csvContent = '\uFEFF';
+        csvContent += 'Date & Time,Loading No,Vehicle No,Driver Name,Warehouse,Created By,Status,Loaded Qty,Remarks\n';
+        
+        trips.forEach(t => {
+            const locName = locMap[t.locationId] || 'Head Office';
+            csvContent += `"${new Date(t.dispatchedDate).toLocaleString()}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${locName}","${t.dispatchedBy || ''}","${t.status || ''}",${t.loadedQty || 0},"${(t.notes || '').replace(/"/g, '""')}"\n`;
+        });
+        
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="Lorry_Loading_Report_${startDate || 'all'}_to_${endDate || 'all'}.csv"`);
+        res.send(csvContent);
+    } catch (err) {
+        res.status(500).send('Error exporting loading trips');
+    }
+});
+
+// Export Unloading Trips CSV Route
+app.get('/reports/export/unloading-csv', requireAuth, async (req, res) => {
+    try {
+        let startDate = req.query.startDate || '';
+        let endDate = req.query.endDate || '';
+        
+        let tripQuery = { isDeleted: { $ne: true }, status: { $in: ['COMPLETED', 'CANCELLED'] } };
+        if (startDate || endDate) {
+            let dCond = {};
+            if (startDate) dCond.$gte = new Date(startDate + "T00:00:00");
+            if (endDate) dCond.$lte = new Date(endDate + "T23:59:59");
+            tripQuery.$or = [
+                { returnedDate: dCond },
+                { returnedDate: { $exists: false }, dispatchedDate: dCond }
+            ];
+        }
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            tripQuery.locationId = req.session.user.locationId;
+        }
+        
+        const trips = await LorryTripModel.find(tripQuery).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(10000).lean();
+        const locations = await LocationModel.find({}).lean().catch(() => []);
+        const locMap = {};
+        const locCodes = {};
+        locations.forEach(l => { 
+            locMap[l._id] = l.name; 
+            locCodes[l._id] = (l.code ? l.code.toUpperCase() : 'HO');
+        });
+
+        let csvContent = '\uFEFF';
+        csvContent += 'Date & Time,Unloading No,Loading No,Vehicle No,Driver Name,Warehouse,Loaded Qty,OUT (Delivered),IN (Collected),Expected Qty,Unloaded Qty,Variance,Received By,Remarks\n';
+        
+        trips.forEach(t => {
+            const locName = locMap[t.locationId] || 'Head Office';
+            let unlNo = t.unloadingNo;
+            if (!unlNo) {
+                const locCode = locCodes[t.locationId] || 'HO';
+                const digits = (t.tripNo || '').replace(/\D/g, '').padStart(5, '0');
+                unlNo = locCode + 'UNLOD' + digits;
+            }
+            const dateStr = t.returnedDate ? new Date(t.returnedDate).toLocaleString() : (t.dispatchedDate ? new Date(t.dispatchedDate).toLocaleString() : '-');
+            csvContent += `"${dateStr}","${unlNo}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${locName}",${t.loadedQty || 0},${t.totalDeliveredQty || 0},${t.totalCollectedQty || 0},${t.expectedRemainingQty || 0},${t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : ''},${t.variance || 0},"${t.receivedBy || ''}","${(t.notes || '').replace(/"/g, '""')}"\n`;
+        });
+        
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="Lorry_Unloading_Report_${startDate || 'all'}_to_${endDate || 'all'}.csv"`);
+        res.send(csvContent);
+    } catch (err) {
+        res.status(500).send('Error exporting unloading trips');
     }
 });
 

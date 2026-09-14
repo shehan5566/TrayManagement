@@ -177,6 +177,8 @@
             Transfer</button>
         <button class="tab-btn" data-tab="receiveStockReport"><i class="fa-solid fa-boxes-packing"></i> Receive
             Stock</button>
+        <button class="tab-btn" data-tab="loadingReport"><i class="fa-solid fa-truck-loading"></i> Lorry Loading</button>
+        <button class="tab-btn" data-tab="unloadingReport"><i class="fa-solid fa-truck-ramp-box"></i> Lorry Unloading</button>
         <button class="tab-btn" data-tab="warehouseBalanceReport"><i class="fa-solid fa-warehouse"></i> Warehouse Tray Balance</button>
         <button class="tab-btn" data-tab="damagesReport"><i class="fa-solid fa-boxes-stacked"></i> Tray Damages & Loss</button>
     </div>
@@ -599,6 +601,269 @@
         </div>
     </div>
 
+    <!-- 5.1. Lorry Loading Report Tab -->
+    <div id="loadingReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span class="box-title"><i class="fa-solid fa-truck-loading" style="color: var(--primary-green);"></i> Detailed Lorry Loading Log</span>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button
+                        onclick="printReportToPDF(`Lorry Loading Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportLoadingTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button onclick="exportTableToExcel('reportLoadingTable', 'Lorry_Loading_Report')" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                    <a href="/reports/export/loading-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
+                        class="btn btn-sm"
+                        style="background-color: #0284c7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                        <i class="fa-solid fa-download"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <!-- Loading Metrics Summary Cards -->
+            <% 
+                const loadingList = typeof loadingReportList !== 'undefined' ? loadingReportList : [];
+                let totalTraysLoaded = 0;
+                let activeOnRouteCount = 0;
+                let completedLoadingCount = 0;
+                loadingList.forEach(t => {
+                    totalTraysLoaded += (t.loadedQty || 0);
+                    if (t.status === 'ON_ROUTE') activeOnRouteCount++;
+                    if (t.status === 'COMPLETED') completedLoadingCount++;
+                });
+            %>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px;">
+                    <div style="font-size: 12px; color: var(--text-light); font-weight: 600; text-transform: uppercase;">Total Dispatched Trips</div>
+                    <div style="font-size: 22px; font-weight: 800; color: #1e293b; margin-top: 4px;"><%= loadingList.length %></div>
+                </div>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px;">
+                    <div style="font-size: 12px; color: #166534; font-weight: 600; text-transform: uppercase;">Total Trays Loaded</div>
+                    <div style="font-size: 22px; font-weight: 800; color: #15803d; margin-top: 4px;"><%= totalTraysLoaded.toLocaleString() %></div>
+                </div>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px;">
+                    <div style="font-size: 12px; color: #1e40af; font-weight: 600; text-transform: uppercase;">On-Route Trips</div>
+                    <div style="font-size: 22px; font-weight: 800; color: #2563eb; margin-top: 4px;"><%= activeOnRouteCount %></div>
+                </div>
+                <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px 16px;">
+                    <div style="font-size: 12px; color: #6b21a8; font-weight: 600; text-transform: uppercase;">Completed Trips</div>
+                    <div style="font-size: 22px; font-weight: 800; color: #7e22ce; margin-top: 4px;"><%= completedLoadingCount %></div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="reportLoadingTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th style="white-space: nowrap;">Date & Time</th>
+                            <th style="white-space: nowrap;">Loading No</th>
+                            <th style="white-space: nowrap;">Vehicle & Driver</th>
+                            <th style="white-space: nowrap;">Warehouse</th>
+                            <th style="white-space: nowrap;">Created By</th>
+                            <th style="text-align: center; white-space: nowrap;">Status</th>
+                            <th style="text-align: right; white-space: nowrap;">Loaded Qty</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% loadingList.forEach(t => { %>
+                            <tr>
+                                <td data-order="<%= new Date(t.dispatchedDate).getTime() %>" style="white-space: nowrap;">
+                                    <%= new Date(t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                </td>
+                                <td style="white-space: nowrap;">
+                                    <strong style="color: #1e293b;"><%= t.tripNo %></strong>
+                                </td>
+                                <td style="white-space: nowrap;">
+                                    <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                </td>
+                                <td style="white-space: nowrap;">
+                                    <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
+                                        <%= t.locationName || 'Head Office' %>
+                                    </span>
+                                </td>
+                                <td style="white-space: nowrap;"><%= t.dispatchedBy || 'System' %></td>
+                                <td style="text-align: center; white-space: nowrap;">
+                                    <% if (t.status === 'COMPLETED') { %>
+                                        <span class="badge badge-in" style="font-size: 10px; padding: 2px 6px; background: #dcfce7; color: #166534; border: 1px solid #86efac; white-space: nowrap;">COMPLETED</span>
+                                    <% } else if (t.status === 'CANCELLED') { %>
+                                        <span class="badge badge-out" style="font-size: 10px; padding: 2px 6px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; white-space: nowrap;">CANCELLED</span>
+                                    <% } else { %>
+                                        <span class="badge" style="font-size: 10px; padding: 2px 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; white-space: nowrap;">ON ROUTE</span>
+                                    <% } %>
+                                </td>
+                                <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 800; font-size: 14px; color: #107c41; white-space: nowrap;">
+                                    <%= (t.loadedQty || 0).toLocaleString() %>
+                                </td>
+                                <td><%= t.notes || '-' %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold; background: #f8fafc; border-top: 2px solid #cbd5e1;">
+                            <td colspan="6" style="text-align: right; padding: 10px;">Total Loaded Trays:</td>
+                            <td style="text-align: right; font-size: 15px; color: #107c41; padding: 10px;"><%= totalTraysLoaded.toLocaleString() %></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5.2. Lorry Unloading & Reconciliation Report Tab -->
+    <div id="unloadingReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span class="box-title"><i class="fa-solid fa-truck-ramp-box" style="color: var(--primary-green);"></i> Detailed Lorry Unloading & Settle Log</span>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button
+                        onclick="printReportToPDF(`Lorry Unloading & Settle Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportUnloadingTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button onclick="exportTableToExcel('reportUnloadingTable', 'Lorry_Unloading_Report')" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                    <a href="/reports/export/unloading-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
+                        class="btn btn-sm"
+                        style="background-color: #0284c7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                        <i class="fa-solid fa-download"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+
+            <!-- Unloading Metrics Summary Cards -->
+            <% 
+                const unloadingList = typeof unloadingReportList !== 'undefined' ? unloadingReportList : [];
+                let totalUnloadLoaded = 0;
+                let totalUnloadDelivered = 0;
+                let totalUnloadCollected = 0;
+                let totalUnloadExpected = 0;
+                let totalUnloadActual = 0;
+                let totalUnloadVariance = 0;
+                unloadingList.forEach(t => {
+                    totalUnloadLoaded += (t.loadedQty || 0);
+                    totalUnloadDelivered += (t.totalDeliveredQty || 0);
+                    totalUnloadCollected += (t.totalCollectedQty || 0);
+                    totalUnloadExpected += (t.expectedRemainingQty || 0);
+                    if (t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null) {
+                        totalUnloadActual += Number(t.actualUnloadedQty);
+                    }
+                    totalUnloadVariance += (t.variance || 0);
+                });
+            %>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
+                    <div style="font-size: 11px; color: var(--text-light); font-weight: 600; text-transform: uppercase;">Total Unload Trips</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #1e293b; margin-top: 4px;"><%= unloadingList.length %></div>
+                </div>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px;">
+                    <div style="font-size: 11px; color: #166534; font-weight: 600; text-transform: uppercase;">Total Loaded</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #15803d; margin-top: 4px;"><%= totalUnloadLoaded.toLocaleString() %></div>
+                </div>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px;">
+                    <div style="font-size: 11px; color: #991b1b; font-weight: 600; text-transform: uppercase;">Total Delivered (OUT)</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 4px;"><%= totalUnloadDelivered.toLocaleString() %></div>
+                </div>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 14px;">
+                    <div style="font-size: 11px; color: #1e40af; font-weight: 600; text-transform: uppercase;">Total Collected (IN)</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #2563eb; margin-top: 4px;"><%= totalUnloadCollected.toLocaleString() %></div>
+                </div>
+                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px 14px;">
+                    <div style="font-size: 11px; color: #065f46; font-weight: 600; text-transform: uppercase;">Total Unloaded</div>
+                    <div style="font-size: 20px; font-weight: 800; color: #059669; margin-top: 4px;"><%= totalUnloadActual.toLocaleString() %></div>
+                </div>
+                <div style="background: <%= totalUnloadVariance === 0 ? '#f0fdf4' : (totalUnloadVariance < 0 ? '#fef2f2' : '#eff6ff') %>; border: 1px solid <%= totalUnloadVariance === 0 ? '#bbf7d0' : (totalUnloadVariance < 0 ? '#fecaca' : '#bfdbfe') %>; border-radius: 8px; padding: 12px 14px;">
+                    <div style="font-size: 11px; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#991b1b' : '#1e40af') %>; font-weight: 600; text-transform: uppercase;">Net Variance</div>
+                    <div style="font-size: 20px; font-weight: 800; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#dc2626' : '#2563eb') %>; margin-top: 4px;"><%= totalUnloadVariance > 0 ? ('+' + totalUnloadVariance) : totalUnloadVariance %></div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="reportUnloadingTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th style="white-space: nowrap;">Date & Time</th>
+                            <th style="white-space: nowrap;">Unloading No</th>
+                            <th style="white-space: nowrap;">Loading No</th>
+                            <th style="white-space: nowrap;">Vehicle & Driver</th>
+                            <th style="white-space: nowrap;">Warehouse</th>
+                            <th style="text-align: right; white-space: nowrap;">Loaded</th>
+                            <th style="text-align: right; white-space: nowrap;">OUT</th>
+                            <th style="text-align: right; white-space: nowrap;">IN</th>
+                            <th style="text-align: right; white-space: nowrap;">Expected</th>
+                            <th style="text-align: right; white-space: nowrap;">Unloaded</th>
+                            <th style="text-align: right; white-space: nowrap;">Variance</th>
+                            <th style="white-space: nowrap;">Received By</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% unloadingList.forEach(t => { %>
+                            <tr>
+                                <td data-order="<%= t.returnedDate ? new Date(t.returnedDate).getTime() : (t.dispatchedDate ? new Date(t.dispatchedDate).getTime() : 0) %>" style="white-space: nowrap;">
+                                    <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                </td>
+                                <td style="white-space: nowrap;"><strong style="color: #1e293b;"><%= t.unloadingNo || '-' %></strong></td>
+                                <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
+                                <td style="white-space: nowrap;">
+                                    <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                </td>
+                                <td style="white-space: nowrap;">
+                                    <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
+                                        <%= t.locationName || 'Head Office' %>
+                                    </span>
+                                </td>
+                                <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 700; white-space: nowrap;"><%= t.loadedQty || 0 %></td>
+                                <td data-order="<%= t.totalDeliveredQty || 0 %>" style="text-align: right; color: #dc2626; font-weight: 700; white-space: nowrap;"><%= t.totalDeliveredQty || 0 %></td>
+                                <td data-order="<%= t.totalCollectedQty || 0 %>" style="text-align: right; color: #2563eb; font-weight: 700; white-space: nowrap;"><%= t.totalCollectedQty || 0 %></td>
+                                <td data-order="<%= t.expectedRemainingQty || 0 %>" style="text-align: right; font-weight: 800; white-space: nowrap;"><%= t.expectedRemainingQty || 0 %></td>
+                                <td data-order="<%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : -1 %>" style="text-align: right; font-weight: 800; color: #107c41; white-space: nowrap;">
+                                    <%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : '-' %>
+                                </td>
+                                <td data-order="<%= t.variance || 0 %>" style="text-align: right; white-space: nowrap;">
+                                    <% if (t.status === 'COMPLETED') { %>
+                                        <% if (t.variance === 0) { %>
+                                            <span class="badge badge-in" style="background:#dcfce7; color:#166534; border:1px solid #86efac; font-weight: 700; white-space: nowrap; padding: 3px 8px;">0</span>
+                                        <% } else if (t.variance < 0) { %>
+                                            <span class="badge badge-out" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 700; white-space: nowrap; padding: 3px 8px;"><%= t.variance %></span>
+                                        <% } else { %>
+                                            <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; font-weight: 700; white-space: nowrap; padding: 3px 8px;">+<%= t.variance %></span>
+                                        <% } %>
+                                    <% } else { %>
+                                        <span style="color: #9ca3af;">-</span>
+                                    <% } %>
+                                </td>
+                                <td style="white-space: nowrap;"><%= t.receivedBy || '-' %></td>
+                                <td><%= t.notes || '-' %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold; background: #f8fafc; border-top: 2px solid #cbd5e1;">
+                            <td colspan="5" style="text-align: right; padding: 10px;">Period Totals:</td>
+                            <td style="text-align: right; padding: 10px;"><%= totalUnloadLoaded.toLocaleString() %></td>
+                            <td style="text-align: right; color: #dc2626; padding: 10px;"><%= totalUnloadDelivered.toLocaleString() %></td>
+                            <td style="text-align: right; color: #2563eb; padding: 10px;"><%= totalUnloadCollected.toLocaleString() %></td>
+                            <td style="text-align: right; padding: 10px;"><%= totalUnloadExpected.toLocaleString() %></td>
+                            <td style="text-align: right; color: #107c41; padding: 10px;"><%= totalUnloadActual.toLocaleString() %></td>
+                            <td style="text-align: right; padding: 10px; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#dc2626' : '#2563eb') %>;"><%= totalUnloadVariance > 0 ? ('+' + totalUnloadVariance) : totalUnloadVariance %></td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- 5.5. Warehouse Tray Balance Report Tab -->
     <div id="warehouseBalanceReport" class="tab-content">
         <div class="content-box">
@@ -800,6 +1065,8 @@
             $('#reportInTable').DataTable(tableConfig);
             $('#stockTransferTable').DataTable(tableConfig);
             $('#receiveStockTable').DataTable(tableConfig);
+            $('#reportLoadingTable').DataTable(tableConfig);
+            $('#reportUnloadingTable').DataTable(tableConfig);
             $('#warehouseBalanceTable').DataTable(tableConfig);
             $('#damagesReportTable').DataTable(tableConfig);
 
@@ -1288,6 +1555,18 @@
             if (damagesTable) {
                 const ws4 = XLSX.utils.table_to_sheet(damagesTable);
                 XLSX.utils.book_append_sheet(wb, ws4, "Tray Damages & Loss");
+            }
+
+            const loadingTable = document.getElementById('reportLoadingTable');
+            if (loadingTable) {
+                const wsLoading = XLSX.utils.table_to_sheet(loadingTable);
+                XLSX.utils.book_append_sheet(wb, wsLoading, "Lorry Loading");
+            }
+
+            const unloadingTable = document.getElementById('reportUnloadingTable');
+            if (unloadingTable) {
+                const wsUnload = XLSX.utils.table_to_sheet(unloadingTable);
+                XLSX.utils.book_append_sheet(wb, wsUnload, "Lorry Unloading");
             }
 
             const whTable = document.getElementById('warehouseBalanceTable');
