@@ -15,7 +15,7 @@
 <% if (typeof hasPerm !== 'function' || hasPerm('transactions_create')) { %>
 <div class="content-box" style="border-top: 4px solid var(--primary-green);">
     <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <span class="box-title"><i class="fa-solid fa-truck-loading"></i> New Lorry Dispatch (ලොරියට ට්‍රේ පැටවීම)</span>
+        <span class="box-title"><i class="fa-solid fa-truck-loading"></i> Loading</span>
         <span style="font-size: 13px; font-weight: 700; color: var(--primary-green-dark); background: #dcfce7; padding: 4px 12px; border-radius: 20px; border: 1px solid #86efac;">
             <i class="fa-solid fa-warehouse"></i> Warehouse Stock: <%= (typeof currentStock !== 'undefined') ? currentStock : 0 %> Trays
         </span>
@@ -24,7 +24,7 @@
     <form action="/lorry-trips/dispatch" method="POST" onsubmit="submitAjaxForm(event, this, 'Lorry dispatched successfully')">
         <div class="form-grid">
             <div class="form-group">
-                <label for="vehicleNo">Vehicle Number (වාහන අංකය) <span style="color:red;">*</span></label>
+                <label for="vehicleNo">Vehicle Number <span style="color:red;">*</span></label>
                 <select id="vehicleNo" name="vehicleNo" required>
                     <option value="">Select Vehicle</option>
                     <% (vehicles || []).forEach(v => { %>
@@ -34,12 +34,12 @@
             </div>
 
             <div class="form-group">
-                <label for="driverName">Driver Name (රියදුරුගේ නම)</label>
+                <label for="driverName">Driver Name</label>
                 <input type="text" id="driverName" name="driverName" placeholder="e.g. Nuwan Kumara" required>
             </div>
 
             <div class="form-group">
-                <label for="loadedQty">Loaded Tray Quantity (පටවන ට්‍රේ ගණන) <span style="color:red;">*</span></label>
+                <label for="loadedQty">Loaded Tray Quantity <span style="color:red;">*</span></label>
                 <input type="number" id="loadedQty" name="loadedQty" min="1" placeholder="Enter tray count..." required>
             </div>
 
@@ -50,13 +50,13 @@
         </div>
 
         <div class="form-group" style="margin-bottom: 20px;">
-            <label for="notes">Dispatch Notes / Destination Route (ගමන් මාර්ගය හෝ සටහන්)</label>
+            <label for="notes">Dispatch Notes / Destination Route</label>
             <input type="text" id="notes" name="notes" placeholder="e.g. Gampaha - Negombo Delivery Route">
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
-                <i class="fa-solid fa-paper-plane"></i> Dispatch Lorry with Trays (පැටවීම තහවුරු කරන්න)
+                <i class="fa-solid fa-paper-plane"></i> Dispatch Lorry with Trays
             </button>
             <a href="/driver" target="_blank" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                 <i class="fa-solid fa-mobile-screen-button"></i> Open Driver Mobile Portal (/driver)
@@ -69,14 +69,14 @@
 <!-- 2. Active Trips on Route -->
 <div class="content-box">
     <div class="box-header">
-        <span class="box-title"><i class="fa-solid fa-route"></i> Active Lorry Trips on Route (ගමන් මාර්ගයේ ඇති ලොරි)</span>
+        <span class="box-title"><i class="fa-solid fa-route"></i> Active Lorry Trips on Route</span>
     </div>
 
     <% const activeTrips = (trips || []).filter(t => t.status === 'ON_ROUTE'); %>
     <% if (activeTrips.length === 0) { %>
         <p style="text-align: center; color: var(--text-light); padding: 30px 0;">
             <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 24px; display: block; margin-bottom: 8px;"></i>
-            දැනට ගමන් මාර්ගයේ ලොරි නොමැත. සියලුම ලොරි බා ගලපා අවසන් කර ඇත.
+            No active lorry trips on route. All lorries have been unloaded and reconciled.
         </p>
     <% } else { %>
         <div class="table-responsive">
@@ -116,9 +116,9 @@
                                     <button onclick="openSettleModal('<%= t.id %>', '<%= t.tripNo %>', '<%= t.vehicleNo %>', '<%= t.driverName %>', <%= t.loadedQty %>, <%= t.totalDeliveredQty || 0 %>, <%= t.totalCollectedQty || 0 %>)" 
                                             class="btn btn-primary" 
                                             style="padding: 6px 12px; font-size: 12px; background: #059669; border: none; cursor: pointer;">
-                                        <i class="fa-solid fa-box-archive"></i> Unload & Settle (බෑම)
+                                        <i class="fa-solid fa-box-archive"></i> Unload & Settle
                                     </button>
-                                    <form action="/lorry-trips/<%= t.id %>/cancel" method="POST" onsubmit="return confirm('මෙම Trip එක අවලංගු කර පටවන ලද ට්‍රේ ගබඩා තොගයට නැවත එකතු කිරීමට ඔබට සහතිකද?');" style="display:inline;">
+                                    <form action="/lorry-trips/<%= t.id %>/cancel" method="POST" onsubmit="return confirm('Are you sure you want to cancel this trip and return the loaded trays to warehouse stock?');" style="display:inline;">
                                         <button type="submit" class="btn btn-secondary" style="padding: 6px 8px; font-size: 12px; color: #dc2626;" title="Cancel Dispatch">
                                             <i class="fa-solid fa-ban"></i>
                                         </button>
@@ -141,7 +141,7 @@
 
     <% const completedTrips = (trips || []).filter(t => t.status === 'COMPLETED' || t.status === 'CANCELLED'); %>
     <% if (completedTrips.length === 0) { %>
-        <p style="text-align: center; color: var(--text-light); padding: 20px 0;">තවමත් අවසන් කළ ගමන් වාර්තා නොමැත.</p>
+        <p style="text-align: center; color: var(--text-light); padding: 20px 0;">No completed trip records yet.</p>
     <% } else { %>
         <div class="table-responsive">
             <table>
@@ -221,25 +221,25 @@
                 </div>
                 <hr style="margin: 8px 0; border: 0; border-top: 1px dashed #cbd5e1;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px;">
-                    <span>Loaded at Warehouse (පැටවූ):</span>
+                    <span>Loaded at Warehouse:</span>
                     <strong id="modalLoaded">0</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; color: #dc2626;">
-                    <span>Delivered to Customers (දුන්):</span>
+                    <span>Delivered to Customers:</span>
                     <strong id="modalDelivered">0</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 13px; color: #2563eb;">
-                    <span>Collected from Customers (ගත්):</span>
+                    <span>Collected from Customers:</span>
                     <strong id="modalCollected">0</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1.5px solid #cbd5e1; font-size: 14px;">
-                    <strong style="color: #1e293b;">Expected Remaining Trays (ලොරියේ තිබිය යුතු ගණන):</strong>
+                    <strong style="color: #1e293b;">Expected Remaining Trays:</strong>
                     <strong id="modalExpected" style="color: #107c41; font-size: 16px;">0</strong>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="actualUnloadedQty" style="font-weight: 700; color: #1e293b;">Actual Unloaded Trays (භෞතිකව බෑ ට්‍රේ ගණන) <span style="color:red;">*</span></label>
+                <label for="actualUnloadedQty" style="font-weight: 700; color: #1e293b;">Actual Unloaded Trays <span style="color:red;">*</span></label>
                 <input type="number" id="actualUnloadedQty" name="actualUnloadedQty" min="0" class="form-control" style="font-size: 18px; font-weight: 800; padding: 10px;" placeholder="0" required oninput="calculateVariance()">
             </div>
 
@@ -248,12 +248,12 @@
             </div>
 
             <div class="form-group">
-                <label for="damagedQty" style="font-weight: 600;">Damaged / Broken Trays (හානි වූ ට්‍රේ ගණන - Optional)</label>
+                <label for="damagedQty" style="font-weight: 600;">Damaged / Broken Trays (Optional)</label>
                 <input type="number" id="damagedQty" name="damagedQty" min="0" class="form-control" placeholder="0">
             </div>
 
             <div class="form-group">
-                <label for="settleNotes">Remarks / Settlement Notes (විශේෂ සටහන්)</label>
+                <label for="settleNotes">Remarks / Settlement Notes</label>
                 <input type="text" id="settleNotes" name="notes" class="form-control" placeholder="Any explanation if shortage occurred...">
             </div>
 
@@ -320,17 +320,17 @@
             box.style.background = '#dcfce7';
             box.style.color = '#15803d';
             box.style.border = '1px solid #86efac';
-            box.innerHTML = '<i class="fa-solid fa-circle-check"></i> පරිපූර්ණයි! ට්‍රේ ගණන 100% ගැලපේ (Variance: 0)';
+            box.innerHTML = '<i class="fa-solid fa-circle-check"></i> Perfect! Tray count matches 100% (Variance: 0)';
         } else if (diff < 0) {
             box.style.background = '#fee2e2';
             box.style.color = '#b91c1c';
             box.style.border = '1px solid #fca5a5';
-            box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ට්‍රේ අඩුපාඩුවක් ඇත! අස්ථානගත ප්‍රමාණය: ${Math.abs(diff)} Trays (Shortage)`;
+            box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Tray shortage detected! Missing count: ${Math.abs(diff)} Trays (Shortage)`;
         } else {
             box.style.background = '#eff6ff';
             box.style.color = '#1d4ed8';
             box.style.border = '1px solid #93c5fd';
-            box.innerHTML = `<i class="fa-solid fa-circle-info"></i> වැඩිපුර ට්‍රේ හමුවී ඇත (Excess): +${diff} Trays`;
+            box.innerHTML = `<i class="fa-solid fa-circle-info"></i> Excess trays found: +${diff} Trays (Excess)`;
         }
     }
 
