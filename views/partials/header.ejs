@@ -174,26 +174,26 @@
                                                     </li>
                                                     <% } %>
 
-                                                <!-- 4.1 Loading -->
+                                                <!-- 5. Receive Stock -->
+                                                <% if (typeof hasPerm !=='function' ||
+                                                    hasPerm('receive_stock_view')) { %>
+                                                    <li
+                                                        class="<%= activePath.startsWith('/receive-stock') ? 'active' : '' %>">
+                                                        <a href="/receive-stock"><i
+                                                                class="fa-solid fa-boxes-packing"></i> Receive
+                                                            Stock</a>
+                                                    </li>
+                                                    <% } %>
+
+                                                <!-- 6. Loading -->
                                                 <li class="<%= activePath.startsWith('/loading') ? 'active' : '' %>">
                                                     <a href="/loading"><i class="fa-solid fa-truck-loading"></i> Loading</a>
                                                 </li>
 
-                                                <!-- 4.2 Unloading -->
+                                                <!-- 7. Unloading -->
                                                 <li class="<%= activePath.startsWith('/unloading') ? 'active' : '' %>">
                                                     <a href="/unloading"><i class="fa-solid fa-truck-ramp-box"></i> Unloading</a>
                                                 </li>
-
-                                                        <!-- 5. Receive Stock -->
-                                                        <% if (typeof hasPerm !=='function' ||
-                                                            hasPerm('receive_stock_view')) { %>
-                                                            <li
-                                                                class="<%= activePath.startsWith('/receive-stock') ? 'active' : '' %>">
-                                                                <a href="/receive-stock"><i
-                                                                        class="fa-solid fa-boxes-packing"></i> Receive
-                                                                    Stock</a>
-                                                            </li>
-                                                            <% } %>
 
                                                                 <!-- 6. Damage & Audit Log -->
                                                                 <li
