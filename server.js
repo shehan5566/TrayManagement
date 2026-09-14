@@ -1573,6 +1573,117 @@ app.post('/loading/:id/delete', requireAuth, requireEditAccess, async (req, res)
     }
 });
 
+// Print Unloading Note & Gate Pass
+app.get('/unloading/:id/print', requireAuth, async (req, res) => {
+    try {
+        const trip = await LorryTrip.getById(req.params.id);
+        if (!trip) return res.status(404).send('Unloading record not found');
+        
+        const loc = (await Location.getById(trip.locationId || 'main')) || (await LocationModel.findById(trip.locationId || 'main'));
+        trip.locationName = loc ? loc.name : 'Head Office';
+
+        res.render('print-unloading', {
+            trip,
+            activePath: '/unloading'
+        });
+    } catch (err) {
+        console.error('GET /unloading/:id/print error:', err);
+        res.status(500).send('Error loading unloading print note: ' + err.message);
+    }
+});
+
+// Edit Unloading Record
+app.post('/unloading/:id/edit', requireAuth, requireEditAccess, async (req, res) => {
+    const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
+    try {
+        const { actualUnloadedQty, notes } = req.body;
+        const newUnloaded = parseInt(actualUnloadedQty, 10);
+        if (isNaN(newUnloaded) || newUnloaded < 0) {
+            if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid unloaded quantity!' });
+            return res.redirect('/unloading?error=invalid_qty');
+        }
+
+        const trip = await LorryTripModel.findById(req.params.id);
+        if (!trip || trip.isDeleted) {
+            if (isAjax) return res.status(404).json({ success: false, error: 'Trip record not found' });
+            return res.redirect('/unloading?error=not_found');
+        }
+
+        const oldUnloaded = trip.actualUnloadedQty || 0;
+        const stockDiff = newUnloaded - oldUnloaded;
+
+        if (trip.status === 'COMPLETED' && stockDiff !== 0) {
+            const loc = (await LocationModel.findById(trip.locationId || 'main')) || (await Location.getById(trip.locationId || 'main'));
+            if (loc) {
+                loc.currentStock = Math.max(0, (loc.currentStock || 0) + stockDiff);
+                await loc.save();
+            }
+        }
+
+        trip.actualUnloadedQty = newUnloaded;
+        const expected = (trip.loadedQty || 0) - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
+        trip.expectedRemainingQty = expected;
+        trip.variance = newUnloaded - expected;
+        if (notes !== undefined) trip.notes = notes.trim();
+
+        await trip.save();
+
+        await ActivityLog.log(
+            req.session.user.username,
+            'UPDATE',
+            'LorryTrip',
+            `Edited unloading record ${trip.unloadingNo || trip.tripNo} (${trip.vehicleNo}): Unloaded ${oldUnloaded} -> ${newUnloaded}`
+        );
+
+        if (isAjax) return res.json({ success: true, message: `Unloading record updated successfully!` });
+        res.redirect('/unloading');
+    } catch (err) {
+        console.error('POST /unloading/:id/edit error:', err);
+        if (isAjax) return res.status(500).json({ success: false, error: err.message });
+        res.redirect('/unloading?error=' + encodeURIComponent(err.message));
+    }
+});
+
+// Delete Unloading Record
+app.post('/unloading/:id/delete', requireAuth, requireEditAccess, async (req, res) => {
+    const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
+    try {
+        const trip = await LorryTripModel.findById(req.params.id);
+        if (!trip || trip.isDeleted) {
+            if (isAjax) return res.status(404).json({ success: false, error: 'Trip record not found' });
+            return res.redirect('/unloading?error=not_found');
+        }
+
+        // Deduct unloaded trays from warehouse stock
+        if (trip.status === 'COMPLETED') {
+            const loc = (await LocationModel.findById(trip.locationId || 'main')) || (await Location.getById(trip.locationId || 'main'));
+            if (loc) {
+                loc.currentStock = Math.max(0, (loc.currentStock || 0) - (trip.actualUnloadedQty || 0));
+                await loc.save();
+            }
+        }
+
+        trip.isDeleted = true;
+        trip.status = 'CANCELLED';
+        trip.notes = (trip.notes ? trip.notes + ' | ' : '') + `Deleted by ${req.session.user.username}`;
+        await trip.save();
+
+        await ActivityLog.log(
+            req.session.user.username,
+            'DELETE',
+            'LorryTrip',
+            `Deleted unloading record ${trip.unloadingNo || trip.tripNo} (${trip.vehicleNo})`
+        );
+
+        if (isAjax) return res.json({ success: true, message: `Unloading record deleted successfully!` });
+        res.redirect('/unloading');
+    } catch (err) {
+        console.error('POST /unloading/:id/delete error:', err);
+        if (isAjax) return res.status(500).json({ success: false, error: err.message });
+        res.redirect('/unloading?error=' + encodeURIComponent(err.message));
+    }
+});
+
 // ==========================================
 // 2. DRIVER MOBILE PORTAL & THERMAL RECEIPTS
 // ==========================================

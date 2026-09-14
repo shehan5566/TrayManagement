@@ -106,6 +106,7 @@
                         <th style="text-align: right;">Unloaded</th>
                         <th style="text-align: right;">Variance</th>
                         <th style="text-align: center;">Status</th>
+                        <th style="text-align: center; width: 140px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -152,6 +153,25 @@
                                 <span class="badge <%= t.status === 'COMPLETED' ? 'badge-in' : 'badge-out' %>" style="font-size: 11px; padding: 3px 8px;">
                                     <%= t.status %>
                                 </span>
+                            </td>
+                            <td style="text-align: center; white-space: nowrap;">
+                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
+                                    <a href="/unloading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Unloading Note">
+                                        <i class="fa-solid fa-print"></i> Print
+                                    </a>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('transactions_edit')))) { %>
+                                        <button onclick='openEditUnloadModal(<%- JSON.stringify(t).replace(/'/g, "\\'") %>)' class="btn btn-action-edit" title="Edit Unloading Record" type="button">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                    <% } %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('transactions_delete') || hasPerm('delete_records'))))) { %>
+                                        <form action="/unloading/<%= t.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'unloading record')" style="display: inline-flex; margin: 0; padding: 0;">
+                                            <button type="submit" class="btn btn-action-delete" title="Delete Record">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </div>
                             </td>
                         </tr>
                     <% }) %>
@@ -224,6 +244,52 @@
     </div>
 </div>
 
+<!-- Edit Unloading Modal -->
+<div id="editUnloadModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div style="background-color: #fff; margin: 5% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-top: 5px solid #107c41;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: var(--primary-green-dark);"><i class="fa-solid fa-pen-to-square"></i> Edit Unloading Record</h3>
+            <span onclick="closeEditUnloadModal()" style="font-size: 24px; font-weight: bold; cursor: pointer; color: #666;">&times;</span>
+        </div>
+
+        <form id="editUnloadForm" action="" method="POST" onsubmit="submitAjaxForm(event, this, 'Unloading record updated successfully')">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="color: #64748b;">Unloading No:</span>
+                    <strong id="editUnloadNo"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="color: #64748b;">Loading No:</span>
+                    <strong id="editTripNo"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #64748b;">Vehicle:</span>
+                    <strong id="editVehicleNo"></strong>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="editActualUnloadedQty" style="font-weight: 700;">Actual Unloaded Trays <span style="color:red;">*</span></label>
+                <input type="number" id="editActualUnloadedQty" name="actualUnloadedQty" min="0" required class="form-control" style="font-size: 18px; font-weight: 800; padding: 8px;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="editNotes" style="font-weight: 600;">Remarks</label>
+                <input type="text" id="editNotes" name="notes" class="form-control">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; background-color: #107c41; border: none;">
+                    <i class="fa-solid fa-check"></i> Save Changes
+                </button>
+                <button type="button" onclick="closeEditUnloadModal()" class="btn btn-secondary" style="padding: 12px;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     let currentExpectedQty = 0;
 
@@ -252,6 +318,20 @@
 
     function closeSettleModal() {
         document.getElementById('settleModal').style.display = 'none';
+    }
+
+    function openEditUnloadModal(trip) {
+        document.getElementById('editUnloadForm').action = '/unloading/' + trip.id + '/edit';
+        document.getElementById('editUnloadNo').innerText = trip.unloadingNo || '-';
+        document.getElementById('editTripNo').innerText = trip.tripNo || '-';
+        document.getElementById('editVehicleNo').innerText = trip.vehicleNo || '-';
+        document.getElementById('editActualUnloadedQty').value = trip.actualUnloadedQty !== undefined ? trip.actualUnloadedQty : '';
+        document.getElementById('editNotes').value = trip.notes || '';
+        document.getElementById('editUnloadModal').style.display = 'block';
+    }
+
+    function closeEditUnloadModal() {
+        document.getElementById('editUnloadModal').style.display = 'none';
     }
 
     function calculateVariance() {
@@ -285,9 +365,13 @@
     }
 
     window.onclick = function(event) {
-        const modal = document.getElementById('settleModal');
-        if (event.target === modal) {
+        const settleModal = document.getElementById('settleModal');
+        const editModal = document.getElementById('editUnloadModal');
+        if (event.target === settleModal) {
             closeSettleModal();
+        }
+        if (event.target === editModal) {
+            closeEditUnloadModal();
         }
     };
 </script>
@@ -300,7 +384,10 @@
         if ($('#completedTripsTable').length) {
             $('#completedTripsTable').DataTable({
                 pageLength: 25,
-                order: [[0, 'desc']] // Sort by Date & Time descending
+                order: [[0, 'desc']], // Sort by Date & Time descending
+                columnDefs: [
+                    { orderable: false, targets: [12] } // Disable sorting on Actions column
+                ]
             });
         }
     });
