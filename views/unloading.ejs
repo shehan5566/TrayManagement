@@ -103,15 +103,14 @@
                         <th style="white-space: nowrap;">Date & Time</th>
                         <th style="white-space: nowrap;">Unloading No</th>
                         <th style="white-space: nowrap;">Loading No</th>
-                        <th style="white-space: nowrap;">Vehicle No</th>
+                        <th style="white-space: nowrap;">Vehicle & Driver</th>
                         <th style="white-space: nowrap;">Warehouse</th>
                         <th style="text-align: right; white-space: nowrap;">Loaded</th>
-                        <th style="text-align: right; white-space: nowrap;">Delivered(OUT)</th>
-                        <th style="text-align: right; white-space: nowrap;">Collected(IN)</th>
+                        <th style="text-align: right; white-space: nowrap;">OUT</th>
+                        <th style="text-align: right; white-space: nowrap;">IN</th>
                         <th style="text-align: right; white-space: nowrap;">Expected</th>
                         <th style="text-align: right; white-space: nowrap;">Unloaded</th>
                         <th style="text-align: right; white-space: nowrap;">Variance</th>
-                        <th style="text-align: center; white-space: nowrap;">Status</th>
                         <th style="text-align: center; width: 140px; white-space: nowrap;">Actions</th>
                     </tr>
                 </thead>
@@ -141,20 +140,15 @@
                             <td data-order="<%= t.variance || 0 %>" style="text-align: right; white-space: nowrap;">
                                 <% if (t.status === 'COMPLETED') { %>
                                     <% if (t.variance === 0) { %>
-                                        <span class="badge badge-in" style="background:#dcfce7; color:#166534; border:1px solid #86efac; font-weight: 600; white-space: nowrap;">0 (OK)</span>
+                                        <span class="badge badge-in" style="background:#dcfce7; color:#166534; border:1px solid #86efac; font-weight: 700; white-space: nowrap; padding: 3px 8px;">0</span>
                                     <% } else if (t.variance < 0) { %>
-                                        <span class="badge badge-out" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 600; white-space: nowrap;"><%= t.variance %> (Missing)</span>
+                                        <span class="badge badge-out" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 700; white-space: nowrap; padding: 3px 8px;"><%= t.variance %></span>
                                     <% } else { %>
-                                        <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; font-weight: 600; white-space: nowrap;">+<%= t.variance %> (Excess)</span>
+                                        <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; font-weight: 700; white-space: nowrap; padding: 3px 8px;">+<%= t.variance %></span>
                                     <% } %>
                                 <% } else { %>
                                     <span style="color: #9ca3af;">-</span>
                                 <% } %>
-                            </td>
-                            <td style="text-align: center; white-space: nowrap;">
-                                <span class="badge <%= t.status === 'COMPLETED' ? 'badge-in' : 'badge-out' %>" style="font-size: 11px; padding: 3px 8px; white-space: nowrap;">
-                                    <%= t.status %>
-                                </span>
                             </td>
                             <td style="text-align: center; white-space: nowrap;">
                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content; white-space: nowrap;">
@@ -388,7 +382,7 @@
                 pageLength: 25,
                 order: [[0, 'desc']], // Sort by Date & Time descending
                 columnDefs: [
-                    { orderable: false, targets: [12] } // Disable sorting on Actions column
+                    { orderable: false, targets: [11] } // Disable sorting on Actions column
                 ]
             });
         }
