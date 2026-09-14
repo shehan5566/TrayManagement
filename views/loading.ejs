@@ -123,12 +123,12 @@
                                 <% } %>
                             </td>
                             <td>
-                                <strong style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck"></i> <%= t.vehicleNo %></strong>
-                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %> &bull; <span style="color: #0284c7; font-weight: 600;">PIN: <%= t.pin %></span></div>
+                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong>
+                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %></div>
                             </td>
                             <td>
                                 <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">
-                                    <i class="fa-solid fa-warehouse"></i> <%= t.locationName || 'Head Office' %>
+                                    <%= t.locationName || 'Head Office' %>
                                 </span>
                             </td>
                             <td><%= t.dispatchedBy || 'System' %></td>
