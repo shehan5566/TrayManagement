@@ -50,8 +50,8 @@
         </div>
 
         <div class="form-group" style="margin-bottom: 20px;">
-            <label for="notes">Dispatch Notes / Destination Route</label>
-            <input type="text" id="notes" name="notes" placeholder="e.g. Gampaha - Negombo Delivery Route">
+            <label for="notes">Remarks</label>
+            <input type="text" id="notes" name="notes" placeholder="e.g. Gampaha - Negombo Delivery Route, or any remarks...">
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -86,44 +86,57 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Trip No</th>
+                        <th>Date & Time</th>
+                        <th>Loading No</th>
                         <th>Vehicle & Driver</th>
-                        <th>Dispatched</th>
-                        <th style="text-align: right;">Loaded</th>
-                        <th style="text-align: right;">Delivered (OUT)</th>
-                        <th style="text-align: right;">Collected (IN)</th>
-                        <th style="text-align: right; background: #f0fdf4;">Current in Lorry</th>
+                        <th>Warehouse</th>
+                        <th>Created By</th>
+                        <th style="text-align: right;">Loaded Qty</th>
+                        <th>Remarks</th>
                         <th style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% activeTrips.forEach(t => { %>
                         <tr>
-                            <td><strong><%= t.tripNo %></strong></td>
+                            <td>
+                                <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
+                                <small style="color: var(--text-light);"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                            </td>
+                            <td><strong style="color: #1e293b;"><%= t.tripNo %></strong></td>
                             <td>
                                 <strong style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck"></i> <%= t.vehicleNo %></strong>
                                 <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %> &bull; <span style="color: #0284c7; font-weight: 600;">PIN: <%= t.pin %></span></div>
                             </td>
                             <td>
-                                <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
-                                <small style="color: var(--text-light);"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                                <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">
+                                    <i class="fa-solid fa-warehouse"></i> <%= t.locationName || 'Head Office' %>
+                                </span>
                             </td>
-                            <td style="text-align: right; font-weight: 700;"><%= t.loadedQty %></td>
-                            <td style="text-align: right; color: #dc2626; font-weight: 700;"><%= t.totalDeliveredQty || 0 %></td>
-                            <td style="text-align: right; color: #2563eb; font-weight: 700;"><%= t.totalCollectedQty || 0 %></td>
-                            <td style="text-align: right; font-weight: 900; font-size: 16px; color: #107c41; background: #f0fdf4;">
-                                <%= (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0) %>
+                            <td><%= t.dispatchedBy || 'System' %></td>
+                            <td style="text-align: right; font-weight: 800; font-size: 15px; color: #107c41;">
+                                <%= t.loadedQty %>
+                            </td>
+                            <td>
+                                <span style="font-size: 12px; color: var(--text-light);"><%= t.notes || '-' %></span>
                             </td>
                             <td style="text-align: center;">
-                                <div style="display: flex; gap: 6px; justify-content: center;">
-                                    <a href="/unloading" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: #059669; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                                        <i class="fa-solid fa-box-archive"></i> Unload
+                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                    <a href="/loading/<%= t.id %>/print" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" title="Print Loading Note">
+                                        <i class="fa-solid fa-print"></i> Note
                                     </a>
-                                    <form action="/lorry-trips/<%= t.id %>/cancel" method="POST" onsubmit="return confirm('Are you sure you want to cancel this trip and return the loaded trays to warehouse stock?');" style="display:inline;">
-                                        <button type="submit" class="btn btn-secondary" style="padding: 6px 8px; font-size: 12px; color: #dc2626;" title="Cancel Dispatch">
-                                            <i class="fa-solid fa-ban"></i>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('transactions_edit')))) { %>
+                                        <button onclick='openEditModal(<%- JSON.stringify(t).replace(/'/g, "\\'") %>)' class="btn btn-primary" style="padding: 6px 10px; font-size: 12px;" title="Edit Loading Record">
+                                            <i class="fa-solid fa-pen"></i>
                                         </button>
-                                    </form>
+                                    <% } %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('transactions_delete') || hasPerm('delete_records'))))) { %>
+                                        <form action="/loading/<%= t.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'loading record')" style="display:inline;">
+                                            <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px; background-color: #ffc300; border-color: #e6b000; color: #000000;" title="Delete Record">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    <% } %>
                                 </div>
                             </td>
                         </tr>
@@ -134,12 +147,92 @@
     <% } %>
 </div>
 
+<!-- Edit Loading Modal -->
+<div id="editModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div style="background-color: #fff; margin: 5% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-top: 5px solid var(--primary-green);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: var(--primary-green-dark);"><i class="fa-solid fa-pen-to-square"></i> Edit Loading Record</h3>
+            <span onclick="closeEditModal()" style="font-size: 24px; font-weight: bold; cursor: pointer; color: #666;">&times;</span>
+        </div>
+
+        <form id="editForm" action="" method="POST" onsubmit="submitAjaxForm(event, this, 'Loading record updated successfully')">
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label style="font-weight: 600;">Loading Number</label>
+                <input type="text" id="editTripNo" class="form-control" readonly style="background: #f1f5f9; font-weight: 700; color: #334155;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="editVehicleNo" style="font-weight: 600;">Vehicle Number <span style="color:red;">*</span></label>
+                <select id="editVehicleNo" name="vehicleNo" required class="form-control">
+                    <% (vehicles || []).forEach(v => { %>
+                        <option value="<%= v %>"><%= v %></option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="editDriverName" style="font-weight: 600;">Driver Name</label>
+                <input type="text" id="editDriverName" name="driverName" class="form-control" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="editLoadedQty" style="font-weight: 600;">Loaded Tray Quantity <span style="color:red;">*</span></label>
+                <input type="number" id="editLoadedQty" name="loadedQty" min="1" class="form-control" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="editDispatchedDate" style="font-weight: 600;">Dispatch Date & Time</label>
+                <input type="datetime-local" id="editDispatchedDate" name="dispatchedDate" class="form-control" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="editNotes" style="font-weight: 600;">Remarks</label>
+                <input type="text" id="editNotes" name="notes" class="form-control">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px;">
+                    <i class="fa-solid fa-save"></i> Save Changes
+                </button>
+                <button type="button" onclick="closeEditModal()" class="btn btn-secondary" style="padding: 12px;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         const dtInput = document.getElementById('dispatchedDate');
         if (dtInput) dtInput.value = now.toISOString().slice(0, 16);
+    });
+
+    function openEditModal(t) {
+        document.getElementById('editForm').action = '/loading/' + t.id + '/edit';
+        document.getElementById('editTripNo').value = t.tripNo || '';
+        document.getElementById('editVehicleNo').value = t.vehicleNo || '';
+        document.getElementById('editDriverName').value = t.driverName || '';
+        document.getElementById('editLoadedQty').value = t.loadedQty || '';
+        
+        if (t.dispatchedDate) {
+            const d = new Date(t.dispatchedDate);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            document.getElementById('editDispatchedDate').value = d.toISOString().slice(0, 16);
+        }
+        document.getElementById('editNotes').value = t.notes || '';
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    window.addEventListener('click', function(e) {
+        const m = document.getElementById('editModal');
+        if (e.target === m) closeEditModal();
     });
 </script>
 

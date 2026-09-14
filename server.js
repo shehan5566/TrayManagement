@@ -1424,6 +1424,130 @@ app.post('/lorry-trips/:id/cancel', requireAuth, requireEditAccess, async (req, 
     }
 });
 
+// Print Loading Note & Gate Pass
+app.get('/loading/:id/print', requireAuth, async (req, res) => {
+    try {
+        const trip = await LorryTrip.getById(req.params.id);
+        if (!trip) return res.status(404).send('Loading record not found');
+        
+        const loc = (await Location.getById(trip.locationId || 'main')) || (await LocationModel.findById(trip.locationId || 'main'));
+        trip.locationName = loc ? loc.name : 'Head Office';
+
+        res.render('print-loading', {
+            trip,
+            activePath: '/loading'
+        });
+    } catch (err) {
+        console.error('GET /loading/:id/print error:', err);
+        res.status(500).send('Error loading print note: ' + err.message);
+    }
+});
+
+app.get('/lorry-trips/:id/print', requireAuth, (req, res) => {
+    res.redirect('/loading/' + req.params.id + '/print');
+});
+
+// Edit Loading Record
+app.post('/loading/:id/edit', requireAuth, requireEditAccess, async (req, res) => {
+    const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
+    try {
+        const { vehicleNo, driverName, loadedQty, dispatchedDate, notes } = req.body;
+        const newQty = parseInt(loadedQty, 10);
+        if (isNaN(newQty) || newQty <= 0) {
+            if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid loaded quantity!' });
+            return res.redirect('/loading?error=invalid_qty');
+        }
+
+        const trip = await LorryTripModel.findById(req.params.id);
+        if (!trip || trip.isDeleted) {
+            if (isAjax) return res.status(404).json({ success: false, error: 'Loading record not found' });
+            return res.redirect('/loading?error=not_found');
+        }
+
+        if (trip.status !== 'ON_ROUTE') {
+            if (isAjax) return res.status(400).json({ success: false, error: 'Cannot edit settled or cancelled trip!' });
+            return res.redirect('/loading?error=cannot_edit_settled');
+        }
+
+        const oldQty = trip.loadedQty || 0;
+        const qtyDiff = newQty - oldQty; // positive means more trays loaded (deduct from warehouse)
+
+        const loc = (await LocationModel.findById(trip.locationId || 'main')) || (await Location.getById(trip.locationId || 'main'));
+        if (qtyDiff > 0 && loc && (loc.currentStock || 0) < qtyDiff) {
+            if (isAjax) return res.status(400).json({ success: false, error: `Insufficient warehouse stock! (Available: ${loc.currentStock}, Needed: ${qtyDiff})` });
+            return res.redirect('/loading?error=insufficient_stock');
+        }
+
+        if (loc && qtyDiff !== 0) {
+            loc.currentStock = Math.max(0, (loc.currentStock || 0) - qtyDiff);
+            await loc.save();
+        }
+
+        trip.vehicleNo = vehicleNo || trip.vehicleNo;
+        trip.driverName = driverName !== undefined ? driverName.trim() : trip.driverName;
+        trip.loadedQty = newQty;
+        trip.expectedRemainingQty = newQty - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
+        if (dispatchedDate) trip.dispatchedDate = new Date(dispatchedDate);
+        if (notes !== undefined) trip.notes = notes.trim();
+
+        await trip.save();
+
+        await ActivityLog.log(
+            req.session.user.username,
+            'UPDATE',
+            'LorryTrip',
+            `Edited loading note ${trip.tripNo} (${trip.vehicleNo}): Loaded Qty ${oldQty} -> ${newQty}`
+        );
+
+        if (isAjax) return res.json({ success: true, message: `Loading ${trip.tripNo} updated successfully!` });
+        res.redirect('/loading');
+    } catch (err) {
+        console.error('POST /loading/:id/edit error:', err);
+        if (isAjax) return res.status(500).json({ success: false, error: err.message });
+        res.redirect('/loading?error=' + encodeURIComponent(err.message));
+    }
+});
+
+// Delete Loading Record
+app.post('/loading/:id/delete', requireAuth, requireEditAccess, async (req, res) => {
+    const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
+    try {
+        const trip = await LorryTripModel.findById(req.params.id);
+        if (!trip || trip.isDeleted) {
+            if (isAjax) return res.status(404).json({ success: false, error: 'Loading record not found' });
+            return res.redirect('/loading?error=not_found');
+        }
+
+        // If trip was on route, restore loaded trays to warehouse stock
+        if (trip.status === 'ON_ROUTE') {
+            const loc = (await LocationModel.findById(trip.locationId || 'main')) || (await Location.getById(trip.locationId || 'main'));
+            if (loc) {
+                loc.currentStock = (loc.currentStock || 0) + (trip.loadedQty || 0);
+                await loc.save();
+            }
+        }
+
+        trip.isDeleted = true;
+        trip.status = 'CANCELLED';
+        trip.notes = (trip.notes ? trip.notes + ' | ' : '') + `Deleted by ${req.session.user.username}`;
+        await trip.save();
+
+        await ActivityLog.log(
+            req.session.user.username,
+            'DELETE',
+            'LorryTrip',
+            `Deleted loading record ${trip.tripNo} (${trip.vehicleNo}) and restored ${trip.loadedQty} trays`
+        );
+
+        if (isAjax) return res.json({ success: true, message: `Loading record ${trip.tripNo} deleted successfully!` });
+        res.redirect('/loading');
+    } catch (err) {
+        console.error('POST /loading/:id/delete error:', err);
+        if (isAjax) return res.status(500).json({ success: false, error: err.message });
+        res.redirect('/loading?error=' + encodeURIComponent(err.message));
+    }
+});
+
 // ==========================================
 // 2. DRIVER MOBILE PORTAL & THERMAL RECEIPTS
 // ==========================================

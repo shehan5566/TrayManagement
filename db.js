@@ -1285,6 +1285,9 @@ const LorryTrip = {
             filter.locationId = locationId;
         }
         const trips = await LorryTripModel.find(filter).sort({ dispatchedDate: -1 });
+        const locations = await LocationModel.find({}).lean();
+        const locMap = {};
+        locations.forEach(l => { locMap[l._id] = l.name; });
 
         // Synchronize active trips dynamically with actual non-deleted transactions
         for (const trip of trips) {
@@ -1304,7 +1307,11 @@ const LorryTrip = {
             }
         }
 
-        return trips.map(mapDoc);
+        return trips.map(t => {
+            const mapped = mapDoc(t);
+            mapped.locationName = locMap[mapped.locationId] || 'Head Office';
+            return mapped;
+        });
     },
     getActiveTrip: async (vehicleNo) => {
         const trip = await LorryTripModel.findOne({ 
@@ -1327,16 +1334,23 @@ const LorryTrip = {
             await trip.save();
         }
 
-        return mapDoc(trip);
+        const mapped = mapDoc(trip);
+        const loc = await LocationModel.findById(mapped.locationId || 'main').lean();
+        mapped.locationName = loc ? loc.name : 'Head Office';
+        return mapped;
     },
     getById: async (id) => {
         const doc = await LorryTripModel.findById(id).lean();
-        return mapDoc(doc);
+        if (!doc) return null;
+        const mapped = mapDoc(doc);
+        const loc = await LocationModel.findById(mapped.locationId || 'main').lean();
+        mapped.locationName = loc ? loc.name : 'Head Office';
+        return mapped;
     },
     create: async (data, username) => {
         const loc = await LocationModel.findById(data.locationId || 'main');
-        const locCode = loc ? loc.code : 'MAIN';
-        const tripNo = await generateDocNo(locCode, 'TRP');
+        const locCode = (loc && loc.code) ? loc.code.toUpperCase() : 'HO';
+        const tripNo = await generateDocNo(locCode, 'LOD');
         const id = 'trip_' + Date.now().toString() + '_' + Math.random().toString(36).substr(2, 5);
 
         const loadedQty = parseInt(data.loadedQty, 10) || 0;
@@ -1364,7 +1378,9 @@ const LorryTrip = {
             await loc.save();
         }
 
-        return mapDoc(newTrip);
+        const resTrip = mapDoc(newTrip);
+        resTrip.locationName = loc ? loc.name : 'Head Office';
+        return resTrip;
     },
     recordTransaction: async (tripId, type, count) => {
         const trip = await LorryTripModel.findById(tripId);
