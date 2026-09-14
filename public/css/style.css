@@ -875,10 +875,7 @@ textarea:focus,
     outline: none !important;
 }
 
-select option:checked {
-    background-color: var(--primary-green, #174e3e) !important;
-    color: #ffffff !important;
-}
+
 
 /* Buttons */
 .btn {

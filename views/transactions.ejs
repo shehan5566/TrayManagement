@@ -20,7 +20,12 @@
 
                     <form action="/transactions" method="POST"
                         onsubmit="submitAjaxForm(event, this, 'Transaction added successfully')">
-                        <div class="form-grid">
+                        <div class="form-grid" style="row-gap: 22px;">
+                            <div class="form-group">
+                                <label for="date">Transaction Date & Time</label>
+                                <input type="datetime-local" id="date" name="date" required>
+                            </div>
+
                             <div class="form-group" style="position: relative;">
                                 <label for="customerSearchInput">Search Customer</label>
                                 <input type="text" id="customerSearchInput"
@@ -40,12 +45,6 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="count">Tray Quantity</label>
-                                <input type="number" id="count" name="count" min="1" placeholder="Enter tray count..."
-                                    required>
-                            </div>
-
-                            <div class="form-group">
                                 <label for="vehicleNo">Vehicle Number</label>
                                 <select id="vehicleNo" name="vehicleNo">
                                     <option value="N/A">Select Vehicle</option>
@@ -61,6 +60,12 @@
                                     <option value="RENTED">RENTED</option>
                                     <option value="OWNOUTLET">OWNOUTLET</option>
                                 </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="count">Tray Quantity</label>
+                                <input type="number" id="count" name="count" min="1" placeholder="Enter tray count..."
+                                    required>
                             </div>
 
                             <div class="form-group">
@@ -84,11 +89,6 @@
                                     (Rs.)</label>
                                 <input type="number" id="actualDeposit" name="actualDeposit" min="0" step="0.01"
                                     placeholder="Enter amount..." required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="date">Transaction Date & Time</label>
-                                <input type="datetime-local" id="date" name="date" required>
                             </div>
                         </div>
 
