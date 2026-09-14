@@ -34,10 +34,6 @@
             <td class="value"><strong><%= trip.driverName || '-' %></strong></td>
         </tr>
         <tr>
-            <td class="label">Driver PIN</td>
-            <td class="value"><strong><%= trip.pin %></strong></td>
-        </tr>
-        <tr>
             <td class="label" style="font-weight: 600; color: #1b5e20;">Loaded Tray Quantity</td>
             <td class="value"><strong><%= trip.loadedQty %> Trays</strong></td>
         </tr>
@@ -104,9 +100,8 @@
 
     <div class="receipt-signatures">
         <div class="signature-line">Loaded By</div>
-        <div class="signature-line">Security Officer</div>
-        <div class="signature-line">Driver</div>
-        <div class="signature-line">Warehouse Officer</div>
+        <div class="signature-line">Checked By</div>
+        <div class="signature-line">Received By</div>
     </div>
 </div>
 
