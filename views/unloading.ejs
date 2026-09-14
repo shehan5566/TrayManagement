@@ -359,17 +359,6 @@
             box.innerHTML = `<i class="fa-solid fa-circle-info"></i> Excess trays found: +${diff} Trays (Excess)`;
         }
     }
-
-    window.onclick = function(event) {
-        const settleModal = document.getElementById('settleModal');
-        const editModal = document.getElementById('editUnloadModal');
-        if (event.target === settleModal) {
-            closeSettleModal();
-        }
-        if (event.target === editModal) {
-            closeEditUnloadModal();
-        }
-    };
 </script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
