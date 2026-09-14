@@ -31,7 +31,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Trip No</th>
+                        <th>Loading No</th>
                         <th>Vehicle & Driver</th>
                         <th>Dispatched</th>
                         <th style="text-align: right;">Loaded</th>
@@ -46,8 +46,8 @@
                         <tr>
                             <td><strong><%= t.tripNo %></strong></td>
                             <td>
-                                <strong style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck"></i> <%= t.vehicleNo %></strong>
-                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %> &bull; <span style="color: #0284c7; font-weight: 600;">PIN: <%= t.pin %></span></div>
+                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong>
+                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %></div>
                             </td>
                             <td>
                                 <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
@@ -88,7 +88,7 @@
             <table id="completedTripsTable" class="display" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>Trip No</th>
+                        <th>Loading No</th>
                         <th>Vehicle & Driver</th>
                         <th>Dispatched</th>
                         <th>Returned</th>
@@ -153,7 +153,7 @@
         <form id="settleForm" action="" method="POST" onsubmit="submitAjaxForm(event, this, 'Trip settled and stock updated successfully')">
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 18px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                    <span style="color: #64748b; font-size: 13px;">Trip Number:</span>
+                    <span style="color: #64748b; font-size: 13px;">Loading No:</span>
                     <strong id="modalTripNo"></strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
