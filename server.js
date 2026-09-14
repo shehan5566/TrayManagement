@@ -1391,9 +1391,29 @@ app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, async (req, 
             return res.redirect('/unloading?error=invalid_unloaded');
         }
 
+        const damaged = parseInt(damagedQty, 10) || 0;
+        if (damaged < 0) {
+            if (isAjax) return res.status(400).json({ success: false, error: 'Damaged count cannot be negative!' });
+            return res.redirect('/unloading?error=invalid_damaged');
+        }
+
+        const trip = await LorryTripModel.findById(req.params.id);
+        if (!trip) {
+            if (isAjax) return res.status(404).json({ success: false, error: 'Trip not found' });
+            return res.redirect('/unloading?error=not_found');
+        }
+
+        const expected = (trip.loadedQty || 0) - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
+        const maxAllowedDamaged = Math.max(unloaded, expected);
+        if (damaged > maxAllowedDamaged) {
+            const errorMsg = `Damaged trays (${damaged}) cannot exceed maximum trays in lorry / unloaded (${maxAllowedDamaged})!`;
+            if (isAjax) return res.status(400).json({ success: false, error: errorMsg });
+            return res.redirect('/unloading?error=' + encodeURIComponent(errorMsg));
+        }
+
         const settledTrip = await LorryTrip.settle(req.params.id, {
             actualUnloadedQty: unloaded,
-            damagedQty: parseInt(damagedQty, 10) || 0,
+            damagedQty: damaged,
             notes
         }, req.session.user.username);
 

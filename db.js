@@ -1427,6 +1427,10 @@ const LorryTrip = {
         const actualUnloaded = parseInt(settleData.actualUnloadedQty, 10) || 0;
         const damaged = parseInt(settleData.damagedQty, 10) || 0;
         const expected = (trip.loadedQty || 0) - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
+        const maxAllowed = Math.max(actualUnloaded, expected);
+        if (damaged > maxAllowed) {
+            throw new Error(`Damaged trays (${damaged}) cannot exceed maximum trays in lorry / unloaded (${maxAllowed})`);
+        }
         const variance = actualUnloaded - expected;
 
         trip.returnedDate = new Date();
