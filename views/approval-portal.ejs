@@ -342,6 +342,12 @@
                     <br><span style="display:inline-block; margin-top:8px; background:#dcfce7; padding:4px 12px; border-radius:6px; font-weight:800; font-size:14px; color:#15803d;">Receipt No: RE-<%= String(approval.receiptNo).padStart(6, '0') %></span>
                 <% } %>
             </div>
+            <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed #bbf7d0;">
+                <p style="font-size: 12px; color: #166534; margin-bottom: 8px; font-weight: 500;">Approved by mistake? You can revoke this authorization:</p>
+                <button type="button" class="btn btn-reject" style="width: auto; padding: 8px 18px; font-size: 13px; margin: 0 auto; display: inline-flex; align-items: center; gap: 6px;" onclick="revokeApproval()">
+                    <i class="fa-solid fa-rotate-left"></i> Undo / Revoke Approval (අවලංගු කරන්න)
+                </button>
+            </div>
         </div>
     <% } else if (approval.status === 'REJECTED') { %>
         <div class="status-banner rejected">
@@ -459,6 +465,20 @@
         const loadingState = document.getElementById('loadingState');
         const notes = document.getElementById('managerNotes') ? document.getElementById('managerNotes').value : '';
 
+        if (action === 'APPROVE') {
+            const cust = "<%= (approval && approval.customerName) ? approval.customerName : '' %>";
+            const qty = "<%= (approval && approval.requestedQty) ? approval.requestedQty : '' %>";
+            const bal = "<%= (approval && approval.currentBalance) ? approval.currentBalance : '' %>";
+            const confirmMsg = "⚠️ Please Confirm Special Approval\n\n" +
+                "• Customer: " + cust + "\n" +
+                "• Due Trays: " + bal + "\n" +
+                "• Requested Issue: " + qty + " Trays\n\n" +
+                "Are you sure you want to AUTHORIZE and automatically SAVE this transaction?";
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+        }
+
         let finalNotes = notes;
         if (action === 'REJECT') {
             const reason = prompt("Please enter the reason for REJECTING this request (or click OK to proceed):", notes || "Previous outstanding trays must be returned first.");
@@ -493,6 +513,12 @@
                                 Special approval granted. The transaction has been automatically saved in the system and unlocked on the branch screen.<br>
                                 <span style="display:inline-block; margin-top:10px; background:#dcfce7; padding:6px 14px; border-radius:6px; font-weight:800; font-size:15px; color:#15803d;">Receipt No: ${rNo}</span>
                             </div>
+                            <div style="margin-top: 20px; padding-top: 14px; border-top: 1px dashed #bbf7d0;">
+                                <p style="font-size: 12px; color: #166534; margin-bottom: 8px; font-weight: 500;">Approved by mistake? You can revoke this authorization:</p>
+                                <button type="button" class="btn btn-reject" style="width: auto; padding: 8px 18px; font-size: 13px; margin: 0 auto; display: inline-flex; align-items: center; gap: 6px;" onclick="revokeApproval()">
+                                    <i class="fa-solid fa-rotate-left"></i> Undo / Revoke Approval (අවලංගු කරන්න)
+                                </button>
+                            </div>
                         </div>
                     `;
                 } else {
@@ -515,6 +541,38 @@
             btnContainer.style.display = 'flex';
             loadingState.style.display = 'none';
             alert('Connection error: ' + err.message);
+        }
+    }
+
+    async function revokeApproval() {
+        const confirmed = confirm(
+            "⚠️ CANCEL / REVOKE APPROVAL\n\n" +
+            "Are you sure you want to REVOKE this approval?\n\n" +
+            "This will:\n" +
+            "1. Immediately DELETE the saved transaction\n" +
+            "2. Reverse the customer's tray balance\n" +
+            "3. Restore the warehouse tray stock"
+        );
+        if (!confirmed) return;
+
+        const reason = prompt("Reason for revoking (optional):", "Approved by mistake - Revoked by Sales Manager");
+        if (reason === null) return;
+
+        try {
+            const res = await fetch('/approval/<%= (approval && approval.token) ? approval.token : "" %>/revoke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason: reason.trim() || 'Approved by mistake' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("✅ Approval has been REVOKED.\nThe transaction was deleted and tray stock restored.");
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to revoke approval.');
+            }
+        } catch (e) {
+            alert("Network error: " + e.message);
         }
     }
 </script>

@@ -1536,6 +1536,38 @@ app.post('/approval/:token/action', async (req, res) => {
     }
 });
 
+// Sales Manager Revoke / Undo Action (If approved by mistake)
+app.post('/approval/:token/revoke', async (req, res) => {
+    try {
+        const token = req.params.token;
+        const approval = await ApprovalRequest.getByToken(token);
+        if (!approval) return res.status(404).json({ success: false, error: 'Approval request not found' });
+        
+        if (approval.status !== 'APPROVED') {
+            return res.status(400).json({ success: false, error: 'Only approved requests can be revoked.' });
+        }
+
+        // Check if transaction was created and delete/reverse it
+        if (approval.transactionId) {
+            await Transaction.delete(approval.transactionId);
+        }
+
+        const reason = req.body.reason || 'Approval was revoked/undone by Sales Manager.';
+        await ApprovalRequest.reject(token, reason);
+
+        setImmediate(async () => {
+            try {
+                await ActivityLog.log('Sales Manager', 'DELETE', 'Transaction', `Special Approval revoked/undone by Sales Manager for ${approval.customerName} (Tx: ${approval.transactionId})`);
+            } catch (e) {}
+        });
+
+        res.json({ success: true, message: 'Approval revoked and transaction cancelled successfully!' });
+    } catch (err) {
+        console.error('POST /approval/:token/revoke error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // ==========================================
 // 1. LORRY DELIVERY TRIPS & RECONCILIATION
 // ==========================================
