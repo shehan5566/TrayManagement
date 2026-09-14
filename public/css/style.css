@@ -875,7 +875,29 @@ textarea:focus,
     outline: none !important;
 }
 
+/* Select Dropdown Option Hover & Selection (Brand Green) */
+select,
+::picker(select) {
+    appearance: base-select;
+}
 
+select option {
+    padding: 8px 12px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+    background-color: var(--brand-green, #174e3e) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] select option:hover,
+[data-theme="dark"] select option:focus,
+[data-theme="dark"] select option:checked {
+    background-color: var(--primary-green, #10b981) !important;
+    color: #ffffff !important;
+}
 
 /* Buttons */
 .btn {
