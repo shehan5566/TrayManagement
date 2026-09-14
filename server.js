@@ -1368,9 +1368,46 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
         const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc)) || { name: 'Main Office' };
 
+        // Calculate Customer Pending Deposit Balance & Refundable Outstanding
+        let pendingDepositBalance = 0;
+        let depositCollected = 0;
+        let depositRefunded = 0;
+        
+        const custTxs = await TransactionModel.find({ customerId: customer.id, isDeleted: { $ne: true } }).lean();
+        custTxs.forEach(t => {
+            const rate = Number(t.depositPerTray) || 2000;
+            const countQty = Number(t.count) || 0;
+            const expected = Number(t.expectedDeposit) || (countQty * rate);
+            let paid = 0;
+            if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
+                paid = Number(t.totalDeposit);
+            } else if (t.depositOption === 'ZERO') {
+                paid = 0;
+            } else if (t.depositOption === 'HALF') {
+                paid = expected / 2;
+            } else {
+                paid = expected;
+            }
+
+            const diff = expected - paid;
+            if (t.type === 'OUT') {
+                pendingDepositBalance += diff;
+                depositCollected += paid;
+            } else if (t.type === 'IN') {
+                pendingDepositBalance -= diff;
+                depositRefunded += paid;
+            }
+        });
+
+        if (pendingDepositBalance < 0) pendingDepositBalance = 0;
+        const refundableOutstanding = Math.max(0, depositCollected - depositRefunded);
+
         const approval = await ApprovalRequest.create({
             customerId: customer.id,
             customerName: customer.name,
+            customerPhone: customer.phone || 'N/A',
+            pendingDepositBalance,
+            refundableOutstanding,
             currentBalance: customer.currentBalance || 0,
             requestedQty: countVal,
             txType: txData.type || 'OUT',
@@ -1389,8 +1426,11 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
             try {
                 await smsService.sendApprovalAlert(managerPhone, {
                     customerName: customer.name,
+                    customerPhone: customer.phone || 'N/A',
                     currentBalance: customer.currentBalance,
                     requestedQty: approval.requestedQty,
+                    pendingDepositBalance,
+                    refundableOutstanding,
                     txType: approval.txType,
                     locationName: loc.name,
                     requestedBy: req.session.user.username,

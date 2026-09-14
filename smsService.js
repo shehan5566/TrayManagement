@@ -139,10 +139,16 @@ const sendApprovalAlert = async (phone, details, approvalUrl, pin) => {
         return false;
     }
 
+    const pendingDepStr = (Number(details.pendingDepositBalance) || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
+    const refundOutStr = (Number(details.refundableOutstanding) || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
+
     const msg = `*--- NELNA SPECIAL APPROVAL REQUEST ---*
 Customer: ${details.customerName}
+Contact Number: ${details.customerPhone || 'N/A'}
 Due Trays: ${details.currentBalance} Trays
-Requested: ${details.requestedQty} Trays (${details.txType || 'OUT'})
+Requested Issue: ${details.requestedQty} Trays (${details.txType || 'OUT'})
+Pending Deposit Balance: Rs. ${pendingDepStr}
+Refundable Outstanding: Rs. ${refundOutStr}
 Branch: ${details.locationName || 'Main Office'}
 Operator: ${details.requestedBy || 'Staff'}
 ${details.vehicleNo && details.vehicleNo !== 'N/A' ? `Vehicle: ${details.vehicleNo}\n` : ''}Reason: Customer has ${details.currentBalance} unreturned trays.

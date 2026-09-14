@@ -148,6 +148,16 @@
             border-color: #bbf7d0;
         }
 
+        .metric-box.pending-dep {
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+        .metric-box.refundable {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
         .metric-label {
             font-size: 11px;
             font-weight: 700;
@@ -158,6 +168,8 @@
 
         .metric-box.due .metric-label { color: #9f1239; }
         .metric-box.request .metric-label { color: #166534; }
+        .metric-box.pending-dep .metric-label { color: #b45309; }
+        .metric-box.refundable .metric-label { color: #1d4ed8; }
 
         .metric-value {
             font-size: 26px;
@@ -167,6 +179,8 @@
 
         .metric-box.due .metric-value { color: #b91c1c; }
         .metric-box.request .metric-value { color: #15803d; }
+        .metric-box.pending-dep .metric-value { color: #d97706; font-size: 18px; }
+        .metric-box.refundable .metric-value { color: #2563eb; font-size: 18px; }
 
         .metric-sub {
             font-size: 11px;
@@ -392,6 +406,16 @@
                         <div class="metric-value"><%= approval.requestedQty %></div>
                         <div class="metric-sub">Trays (OUT)</div>
                     </div>
+                    <div class="metric-box pending-dep">
+                        <div class="metric-label">Pending Deposit</div>
+                        <div class="metric-value">Rs. <%= (approval.pendingDepositBalance || 0).toLocaleString('en-LK') %></div>
+                        <div class="metric-sub">Deposit Due</div>
+                    </div>
+                    <div class="metric-box refundable">
+                        <div class="metric-label">Refundable Deposit</div>
+                        <div class="metric-value">Rs. <%= (approval.refundableOutstanding || 0).toLocaleString('en-LK') %></div>
+                        <div class="metric-sub">Deposit with Nelna</div>
+                    </div>
                 </div>
 
                 <!-- Details List -->
@@ -399,6 +423,30 @@
                     <div class="info-item">
                         <span class="label">Customer Name</span>
                         <span class="val" style="color: var(--primary-dark);"><%= approval.customerName %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Contact Number</span>
+                        <span class="val">
+                            <% if (approval.customerPhone && approval.customerPhone !== 'N/A') { %>
+                                <a href="tel:<%= approval.customerPhone %>" style="color: #0284c7; text-decoration: none; font-weight: 700;">
+                                    <i class="fa-solid fa-phone" style="font-size: 11px; margin-right: 3px;"></i><%= approval.customerPhone %>
+                                </a>
+                            <% } else { %>
+                                <span style="color: var(--text-muted);">N/A</span>
+                            <% } %>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Pending Deposit Balance</span>
+                        <span class="val" style="color: <%= (approval.pendingDepositBalance > 0) ? '#d97706' : '#16a34a' %>;">
+                            Rs. <%= (approval.pendingDepositBalance || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Refundable Outstanding</span>
+                        <span class="val" style="color: #2563eb;">
+                            Rs. <%= (approval.refundableOutstanding || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                        </span>
                     </div>
                     <div class="info-item">
                         <span class="label">Branch / Location</span>
@@ -467,12 +515,18 @@
 
         if (action === 'APPROVE') {
             const cust = "<%= (approval && approval.customerName) ? approval.customerName : '' %>";
+            const phone = "<%= (approval && approval.customerPhone) ? approval.customerPhone : '' %>";
             const qty = "<%= (approval && approval.requestedQty) ? approval.requestedQty : '' %>";
             const bal = "<%= (approval && approval.currentBalance) ? approval.currentBalance : '' %>";
+            const pendingDep = "<%= (approval && approval.pendingDepositBalance) ? Number(approval.pendingDepositBalance).toLocaleString('en-LK', { minimumFractionDigits: 2 }) : '0.00' %>";
+            const refundOut = "<%= (approval && approval.refundableOutstanding) ? Number(approval.refundableOutstanding).toLocaleString('en-LK', { minimumFractionDigits: 2 }) : '0.00' %>";
+
             const confirmMsg = "⚠️ Please Confirm Special Approval\n\n" +
-                "• Customer: " + cust + "\n" +
-                "• Due Trays: " + bal + "\n" +
-                "• Requested Issue: " + qty + " Trays\n\n" +
+                "• Customer: " + cust + (phone && phone !== 'N/A' ? " (" + phone + ")" : "") + "\n" +
+                "• Due Trays: " + bal + " Trays\n" +
+                "• Requested Issue: " + qty + " Trays\n" +
+                "• Pending Deposit: Rs. " + pendingDep + "\n" +
+                "• Refundable Outstanding: Rs. " + refundOut + "\n\n" +
                 "Are you sure you want to AUTHORIZE and automatically SAVE this transaction?";
             if (!confirm(confirmMsg)) {
                 return;
