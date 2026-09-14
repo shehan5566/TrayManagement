@@ -21,6 +21,12 @@
         </span>
     </div>
 
+    <% if (typeof currentStock !== 'undefined' && currentStock <= 0) { %>
+        <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: 600;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Warehouse stock is currently 0 Trays. Lorries cannot be loaded until new stock is received or returned.
+        </div>
+    <% } %>
+
     <form action="/lorry-trips/dispatch" method="POST" onsubmit="submitAjaxForm(event, this, 'Lorry dispatched successfully')">
         <div class="form-grid">
             <div class="form-group">
@@ -40,7 +46,10 @@
 
             <div class="form-group">
                 <label for="loadedQty">Loaded Tray Quantity <span style="color:red;">*</span></label>
-                <input type="number" id="loadedQty" name="loadedQty" min="1" placeholder="Enter tray count..." required>
+                <input type="number" id="loadedQty" name="loadedQty" min="1" max="<%= (typeof currentStock !== 'undefined') ? currentStock : '' %>" placeholder="Enter tray count..." required oninput="validateDispatchStock(this)">
+                <small id="stockWarning" style="display: none; color: #dc2626; font-weight: 600; margin-top: 4px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Quantity exceeds available warehouse stock (<%= (typeof currentStock !== 'undefined') ? currentStock : 0 %> Trays)!
+                </small>
             </div>
 
             <div class="form-group">
@@ -55,7 +64,7 @@
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+            <button type="submit" id="dispatchBtn" class="btn btn-primary" style="padding: 10px 24px;" <%= (typeof currentStock !== 'undefined' && currentStock <= 0) ? 'disabled' : '' %>>
                 <i class="fa-solid fa-paper-plane"></i> Dispatch Lorry with Trays
             </button>
             <a href="/driver" target="_blank" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
@@ -177,7 +186,10 @@
 
             <div class="form-group" style="margin-bottom: 12px;">
                 <label for="editLoadedQty" style="font-weight: 600;">Loaded Tray Quantity <span style="color:red;">*</span></label>
-                <input type="number" id="editLoadedQty" name="loadedQty" min="1" class="form-control" required>
+                <input type="number" id="editLoadedQty" name="loadedQty" min="1" class="form-control" required oninput="validateEditStock(this)">
+                <small id="editStockWarning" style="display: none; color: #dc2626; font-weight: 600; margin-top: 4px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> <span id="editStockWarningText"></span>
+                </small>
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
@@ -191,7 +203,7 @@
             </div>
 
             <div style="display: flex; gap: 10px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px;">
+                <button type="submit" id="editSaveBtn" class="btn btn-primary" style="flex: 1; padding: 12px;">
                     <i class="fa-solid fa-save"></i> Save Changes
                 </button>
                 <button type="button" onclick="closeEditModal()" class="btn btn-secondary" style="padding: 12px;">
@@ -203,6 +215,9 @@
 </div>
 
 <script>
+    const warehouseStock = <%= (typeof currentStock !== 'undefined') ? currentStock : 0 %>;
+    let editOriginalLoadedQty = 0;
+
     document.addEventListener('DOMContentLoaded', function() {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -210,12 +225,52 @@
         if (dtInput) dtInput.value = now.toISOString().slice(0, 16);
     });
 
+    function validateDispatchStock(input) {
+        const val = parseInt(input.value, 10) || 0;
+        const warn = document.getElementById('stockWarning');
+        const btn = document.getElementById('dispatchBtn');
+        if (val > warehouseStock) {
+            warn.style.display = 'block';
+            input.style.borderColor = '#dc2626';
+            if (btn) btn.disabled = true;
+        } else {
+            warn.style.display = 'none';
+            input.style.borderColor = '';
+            if (btn && warehouseStock > 0) btn.disabled = false;
+        }
+    }
+
+    function validateEditStock(input) {
+        const val = parseInt(input.value, 10) || 0;
+        const maxAllowed = warehouseStock + editOriginalLoadedQty;
+        const warn = document.getElementById('editStockWarning');
+        const warnText = document.getElementById('editStockWarningText');
+        const saveBtn = document.getElementById('editSaveBtn');
+
+        if (val > maxAllowed) {
+            warn.style.display = 'block';
+            warnText.innerText = `Maximum allowed is ${maxAllowed} Trays (Available stock: ${warehouseStock} + Current loaded: ${editOriginalLoadedQty})!`;
+            input.style.borderColor = '#dc2626';
+            if (saveBtn) saveBtn.disabled = true;
+        } else {
+            warn.style.display = 'none';
+            input.style.borderColor = '';
+            if (saveBtn) saveBtn.disabled = false;
+        }
+    }
+
     function openEditModal(t) {
         document.getElementById('editForm').action = '/loading/' + t.id + '/edit';
         document.getElementById('editTripNo').value = t.tripNo || '';
         document.getElementById('editVehicleNo').value = t.vehicleNo || '';
         document.getElementById('editDriverName').value = t.driverName || '';
         document.getElementById('editLoadedQty').value = t.loadedQty || '';
+
+        editOriginalLoadedQty = parseInt(t.loadedQty, 10) || 0;
+        document.getElementById('editLoadedQty').max = warehouseStock + editOriginalLoadedQty;
+        document.getElementById('editStockWarning').style.display = 'none';
+        document.getElementById('editLoadedQty').style.borderColor = '';
+        if (document.getElementById('editSaveBtn')) document.getElementById('editSaveBtn').disabled = false;
         
         if (t.dispatchedDate) {
             const d = new Date(t.dispatchedDate);

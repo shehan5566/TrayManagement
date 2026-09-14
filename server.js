@@ -1347,6 +1347,13 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, re
         const autoPin = digits.length >= 4 ? digits.slice(-4) : (digits ? digits.padStart(4, '0') : '1234');
 
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
+        const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc));
+        const currentStock = loc ? (loc.currentStock || 0) : 0;
+        if (qty > currentStock) {
+            const msg = `Insufficient warehouse stock! Available: ${currentStock} trays, Requested: ${qty} trays.`;
+            if (isAjax) return res.status(400).json({ success: false, error: msg });
+            return res.redirect('/loading?error=' + encodeURIComponent(msg));
+        }
         const newTrip = await LorryTrip.create({
             vehicleNo,
             driverName: driverName ? driverName.trim() : 'Driver',

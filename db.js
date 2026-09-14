@@ -1349,11 +1349,20 @@ const LorryTrip = {
     },
     create: async (data, username) => {
         const loc = await LocationModel.findById(data.locationId || 'main');
+        if (!loc) throw new Error('Warehouse location not found');
+
+        const loadedQty = parseInt(data.loadedQty, 10) || 0;
+        if (loadedQty <= 0) throw new Error('Please enter a valid loaded quantity');
+
+        const currentStock = loc.currentStock || 0;
+        if (loadedQty > currentStock) {
+            throw new Error(`Insufficient warehouse stock in ${loc.name}! Available: ${currentStock} trays, Requested: ${loadedQty} trays.`);
+        }
+
         const locCode = (loc && loc.code) ? loc.code.toUpperCase() : 'HO';
         const tripNo = await generateDocNo(locCode, 'LOD');
         const id = 'trip_' + Date.now().toString() + '_' + Math.random().toString(36).substr(2, 5);
 
-        const loadedQty = parseInt(data.loadedQty, 10) || 0;
         const newTrip = new LorryTripModel({
             _id: id,
             tripNo,
@@ -1373,10 +1382,8 @@ const LorryTrip = {
         await newTrip.save();
 
         // Deduct loaded trays from warehouse current stock
-        if (loc) {
-            loc.currentStock = Math.max(0, (loc.currentStock || 0) - loadedQty);
-            await loc.save();
-        }
+        loc.currentStock = currentStock - loadedQty;
+        await loc.save();
 
         const resTrip = mapDoc(newTrip);
         resTrip.locationName = loc ? loc.name : 'Head Office';
