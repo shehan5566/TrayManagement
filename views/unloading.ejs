@@ -45,14 +45,12 @@
                 <tbody>
                     <% activeTrips.forEach(t => { %>
                         <tr>
-                            <td>
-                                <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
-                                <small style="color: var(--text-light);"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                            <td style="white-space: nowrap;">
+                                <%= new Date(t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
                             </td>
-                            <td><strong><%= t.tripNo %></strong></td>
-                            <td>
-                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong>
-                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %></div>
+                            <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
+                            <td style="white-space: nowrap;">
+                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
                             </td>
                             <td>
                                 <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">
@@ -80,6 +78,14 @@
     <% } %>
 </div>
 
+<style>
+    .table-responsive table th, 
+    .table-responsive table td {
+        white-space: nowrap !important;
+        vertical-align: middle !important;
+    }
+</style>
+
 <!-- 2. Unloading History -->
 <div class="content-box">
     <div class="box-header">
@@ -94,68 +100,64 @@
             <table id="completedTripsTable" class="display" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>Date & Time</th>
-                        <th>Unloading No</th>
-                        <th>Loading No</th>
-                        <th>Vehicle No</th>
-                        <th>Warehouse</th>
-                        <th style="text-align: right;">Loaded</th>
-                        <th style="text-align: right;">Delivered(OUT)</th>
-                        <th style="text-align: right;">Collected(IN)</th>
-                        <th style="text-align: right;">Expected</th>
-                        <th style="text-align: right;">Unloaded</th>
-                        <th style="text-align: right;">Variance</th>
-                        <th style="text-align: center;">Status</th>
-                        <th style="text-align: center; width: 140px;">Actions</th>
+                        <th style="white-space: nowrap;">Date & Time</th>
+                        <th style="white-space: nowrap;">Unloading No</th>
+                        <th style="white-space: nowrap;">Loading No</th>
+                        <th style="white-space: nowrap;">Vehicle No</th>
+                        <th style="white-space: nowrap;">Warehouse</th>
+                        <th style="text-align: right; white-space: nowrap;">Loaded</th>
+                        <th style="text-align: right; white-space: nowrap;">Delivered(OUT)</th>
+                        <th style="text-align: right; white-space: nowrap;">Collected(IN)</th>
+                        <th style="text-align: right; white-space: nowrap;">Expected</th>
+                        <th style="text-align: right; white-space: nowrap;">Unloaded</th>
+                        <th style="text-align: right; white-space: nowrap;">Variance</th>
+                        <th style="text-align: center; white-space: nowrap;">Status</th>
+                        <th style="text-align: center; width: 140px; white-space: nowrap;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% completedTrips.forEach(t => { %>
                         <tr>
-                            <td data-order="<%= t.returnedDate ? new Date(t.returnedDate).getTime() : (t.dispatchedDate ? new Date(t.dispatchedDate).getTime() : 0) %>">
-                                <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString() %><br>
-                                <small style="color: var(--text-light);"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                            <td data-order="<%= t.returnedDate ? new Date(t.returnedDate).getTime() : (t.dispatchedDate ? new Date(t.dispatchedDate).getTime() : 0) %>" style="white-space: nowrap;">
+                                <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
                             </td>
-                            <td><strong style="color: #1e293b;"><%= t.unloadingNo || '-' %></strong></td>
-                            <td><strong><%= t.tripNo %></strong></td>
-                            <td>
-                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong>
-                                <% if (t.driverName) { %>
-                                    <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName %></div>
-                                <% } %>
+                            <td style="white-space: nowrap;"><strong style="color: #1e293b;"><%= t.unloadingNo || '-' %></strong></td>
+                            <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
+                            <td style="white-space: nowrap;">
+                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
                             </td>
-                            <td>
-                                <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">
+                            <td style="white-space: nowrap;">
+                                <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
                                     <%= t.locationName || 'Head Office' %>
                                 </span>
                             </td>
-                            <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 700;"><%= t.loadedQty %></td>
-                            <td data-order="<%= t.totalDeliveredQty || 0 %>" style="text-align: right; color: #dc2626; font-weight: 700;"><%= t.totalDeliveredQty || 0 %></td>
-                            <td data-order="<%= t.totalCollectedQty || 0 %>" style="text-align: right; color: #2563eb; font-weight: 700;"><%= t.totalCollectedQty || 0 %></td>
-                            <td data-order="<%= t.expectedRemainingQty || 0 %>" style="text-align: right; font-weight: 800;"><%= t.expectedRemainingQty || 0 %></td>
-                            <td data-order="<%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : -1 %>" style="text-align: right; font-weight: 800; color: #107c41;">
+                            <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 700; white-space: nowrap;"><%= t.loadedQty %></td>
+                            <td data-order="<%= t.totalDeliveredQty || 0 %>" style="text-align: right; color: #dc2626; font-weight: 700; white-space: nowrap;"><%= t.totalDeliveredQty || 0 %></td>
+                            <td data-order="<%= t.totalCollectedQty || 0 %>" style="text-align: right; color: #2563eb; font-weight: 700; white-space: nowrap;"><%= t.totalCollectedQty || 0 %></td>
+                            <td data-order="<%= t.expectedRemainingQty || 0 %>" style="text-align: right; font-weight: 800; white-space: nowrap;"><%= t.expectedRemainingQty || 0 %></td>
+                            <td data-order="<%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : -1 %>" style="text-align: right; font-weight: 800; color: #107c41; white-space: nowrap;">
                                 <%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : '-' %>
                             </td>
-                            <td data-order="<%= t.variance || 0 %>" style="text-align: right;">
+                            <td data-order="<%= t.variance || 0 %>" style="text-align: right; white-space: nowrap;">
                                 <% if (t.status === 'COMPLETED') { %>
                                     <% if (t.variance === 0) { %>
-                                        <span class="badge badge-in" style="background:#dcfce7; color:#166534; border:1px solid #86efac; font-weight: 600;">0 (OK)</span>
+                                        <span class="badge badge-in" style="background:#dcfce7; color:#166534; border:1px solid #86efac; font-weight: 600; white-space: nowrap;">0 (OK)</span>
                                     <% } else if (t.variance < 0) { %>
-                                        <span class="badge badge-out" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 600;"><%= t.variance %> (Missing)</span>
+                                        <span class="badge badge-out" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight: 600; white-space: nowrap;"><%= t.variance %> (Missing)</span>
                                     <% } else { %>
-                                        <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; font-weight: 600;">+<%= t.variance %> (Excess)</span>
+                                        <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; font-weight: 600; white-space: nowrap;">+<%= t.variance %> (Excess)</span>
                                     <% } %>
                                 <% } else { %>
                                     <span style="color: #9ca3af;">-</span>
                                 <% } %>
                             </td>
-                            <td style="text-align: center;">
-                                <span class="badge <%= t.status === 'COMPLETED' ? 'badge-in' : 'badge-out' %>" style="font-size: 11px; padding: 3px 8px;">
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="badge <%= t.status === 'COMPLETED' ? 'badge-in' : 'badge-out' %>" style="font-size: 11px; padding: 3px 8px; white-space: nowrap;">
                                     <%= t.status %>
                                 </span>
                             </td>
                             <td style="text-align: center; white-space: nowrap;">
-                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
+                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content; white-space: nowrap;">
                                     <a href="/unloading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Unloading Note">
                                         <i class="fa-solid fa-print"></i> Print
                                     </a>

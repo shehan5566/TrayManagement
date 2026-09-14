@@ -53,14 +53,12 @@
                 <% } %>
             </td>
         </tr>
-        <% if (trip.notes) { %>
-            <tr>
-                <td class="label" style="font-weight: 600; color: #1b5e20;">Remarks</td>
-                <td class="value" style="font-style: italic;">
-                    <%= trip.notes %>
-                </td>
-            </tr>
-        <% } %>
+        <tr>
+            <td class="label" style="font-weight: 600; color: #1b5e20;">Remarks</td>
+            <td class="value" style="font-style: italic;">
+                <%= trip.notes || '-' %>
+            </td>
+        </tr>
     </table>
 
     <!-- Loading Summary Highlight Box -->
