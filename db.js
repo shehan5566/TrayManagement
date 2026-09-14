@@ -1318,7 +1318,7 @@ const LorryTrip = {
             if (mapped.status === 'COMPLETED' && !mapped.unloadingNo) {
                 const locCode = locCodes[mapped.locationId] || 'HO';
                 const digits = (mapped.tripNo || '').replace(/\D/g, '').padStart(5, '0');
-                mapped.unloadingNo = locCode + 'ULD' + digits;
+                mapped.unloadingNo = locCode + 'UNLOD' + digits;
             }
             return mapped;
         });
@@ -1358,7 +1358,7 @@ const LorryTrip = {
         if (mapped.status === 'COMPLETED' && !mapped.unloadingNo) {
             const locCode = (loc && loc.code) ? loc.code.toUpperCase() : 'HO';
             const digits = (mapped.tripNo || '').replace(/\D/g, '').padStart(5, '0');
-            mapped.unloadingNo = locCode + 'ULD' + digits;
+            mapped.unloadingNo = locCode + 'UNLOD' + digits;
         }
         return mapped;
     },
@@ -1452,7 +1452,7 @@ const LorryTrip = {
         const loc = await LocationModel.findById(trip.locationId || 'main');
         const locCode = (loc && loc.code) ? loc.code.toUpperCase() : 'HO';
         if (!trip.unloadingNo) {
-            trip.unloadingNo = await generateDocNo(locCode, 'ULD');
+            trip.unloadingNo = await generateDocNo(locCode, 'UNLOD');
         }
 
         trip.returnedDate = new Date();
