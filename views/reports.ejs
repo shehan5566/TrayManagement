@@ -693,13 +693,6 @@
                             </tr>
                         <% }) %>
                     </tbody>
-                    <tfoot>
-                        <tr style="font-weight: bold; background: #f8fafc; border-top: 2px solid #cbd5e1;">
-                            <td colspan="6" style="text-align: right; padding: 10px;">Total Loaded Trays:</td>
-                            <td style="text-align: right; font-size: 15px; color: #107c41; padding: 10px;"><%= totalTraysLoaded.toLocaleString() %></td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
         </div>
@@ -825,18 +818,6 @@
                             </tr>
                         <% }) %>
                     </tbody>
-                    <tfoot>
-                        <tr style="font-weight: bold; background: #f8fafc; border-top: 2px solid #cbd5e1;">
-                            <td colspan="5" style="text-align: right; padding: 10px;">Period Totals:</td>
-                            <td style="text-align: right; padding: 10px;"><%= totalUnloadLoaded.toLocaleString() %></td>
-                            <td style="text-align: right; color: #dc2626; padding: 10px;"><%= totalUnloadDelivered.toLocaleString() %></td>
-                            <td style="text-align: right; color: #2563eb; padding: 10px;"><%= totalUnloadCollected.toLocaleString() %></td>
-                            <td style="text-align: right; padding: 10px;"><%= totalUnloadExpected.toLocaleString() %></td>
-                            <td style="text-align: right; color: #107c41; padding: 10px;"><%= totalUnloadActual.toLocaleString() %></td>
-                            <td style="text-align: right; padding: 10px; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#dc2626' : '#2563eb') %>;"><%= totalUnloadVariance > 0 ? ('+' + totalUnloadVariance) : totalUnloadVariance %></td>
-                            <td colspan="2"></td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
         </div>
