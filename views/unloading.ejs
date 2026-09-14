@@ -195,12 +195,6 @@
             </div>
 
             <div class="form-group">
-                <label for="damagedQty" style="font-weight: 600;">Damaged / Broken Trays (Optional)</label>
-                <input type="number" id="damagedQty" name="damagedQty" min="0" class="form-control" placeholder="0" oninput="validateDamagedQty()">
-                <small id="damagedWarning" style="color: #dc2626; font-weight: 600; display: none; margin-top: 4px;"></small>
-            </div>
-
-            <div class="form-group">
                 <label for="settleNotes">Remarks / Settlement Notes</label>
                 <input type="text" id="settleNotes" name="notes" class="form-control" placeholder="Any explanation if shortage occurred...">
             </div>
@@ -234,9 +228,6 @@
         document.getElementById('modalExpected').innerText = currentExpectedQty + ' Trays';
         
         document.getElementById('actualUnloadedQty').value = '';
-        document.getElementById('damagedQty').value = '';
-        document.getElementById('damagedQty').style.borderColor = '';
-        document.getElementById('damagedWarning').style.display = 'none';
         document.getElementById('settleNotes').value = '';
         document.getElementById('varianceBox').style.display = 'none';
 
@@ -250,38 +241,11 @@
         document.getElementById('settleModal').style.display = 'none';
     }
 
-    function getMaxAllowedDamaged() {
-        const actual = parseInt(document.getElementById('actualUnloadedQty').value, 10) || 0;
-        return Math.max(currentExpectedQty, actual);
-    }
-
-    function validateDamagedQty() {
-        const input = document.getElementById('damagedQty');
-        const warn = document.getElementById('damagedWarning');
-        const submitBtn = document.querySelector('#settleForm button[type="submit"]');
-        const val = parseInt(input.value, 10) || 0;
-        const maxAllowed = getMaxAllowedDamaged();
-
-        if (input.value !== '' && val > maxAllowed) {
-            warn.innerText = `Damaged trays (${val}) cannot exceed maximum trays in lorry / unloaded (${maxAllowed})!`;
-            warn.style.display = 'block';
-            input.style.borderColor = '#dc2626';
-            if (submitBtn) submitBtn.disabled = true;
-            return false;
-        } else {
-            warn.style.display = 'none';
-            input.style.borderColor = '';
-            if (submitBtn) submitBtn.disabled = false;
-            return true;
-        }
-    }
-
     function calculateVariance() {
         const actualInput = document.getElementById('actualUnloadedQty');
         const box = document.getElementById('varianceBox');
         if (actualInput.value === '') {
             box.style.display = 'none';
-            validateDamagedQty();
             return;
         }
 
@@ -305,8 +269,6 @@
             box.style.border = '1px solid #93c5fd';
             box.innerHTML = `<i class="fa-solid fa-circle-info"></i> Excess trays found: +${diff} Trays (Excess)`;
         }
-
-        validateDamagedQty();
     }
 
     window.onclick = function(event) {
