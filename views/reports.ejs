@@ -626,22 +626,22 @@
                     if (t.status === 'COMPLETED') completedLoadingCount++;
                 });
             %>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px;">
-                    <div style="font-size: 12px; color: var(--text-light); font-weight: 600; text-transform: uppercase;">Total Dispatched Trips</div>
-                    <div style="font-size: 22px; font-weight: 800; color: #1e293b; margin-top: 4px;"><%= loadingList.length %></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 12px;">
+                    <div style="font-size: 10.5px; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">Total Dispatched</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #1e293b; margin-top: 2px;"><%= loadingList.length %></div>
                 </div>
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px;">
-                    <div style="font-size: 12px; color: #166534; font-weight: 600; text-transform: uppercase;">Total Trays Loaded</div>
-                    <div style="font-size: 22px; font-weight: 800; color: #15803d; margin-top: 4px;"><%= totalTraysLoaded.toLocaleString() %></div>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 7px 12px;">
+                    <div style="font-size: 10.5px; color: #166534; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">Total Loaded</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #15803d; margin-top: 2px;"><%= totalTraysLoaded.toLocaleString() %></div>
                 </div>
-                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 16px;">
-                    <div style="font-size: 12px; color: #1e40af; font-weight: 600; text-transform: uppercase;">On-Route Trips</div>
-                    <div style="font-size: 22px; font-weight: 800; color: #2563eb; margin-top: 4px;"><%= activeOnRouteCount %></div>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 7px 12px;">
+                    <div style="font-size: 10.5px; color: #1e40af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">On-Route Trips</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #2563eb; margin-top: 2px;"><%= activeOnRouteCount %></div>
                 </div>
-                <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px 16px;">
-                    <div style="font-size: 12px; color: #6b21a8; font-weight: 600; text-transform: uppercase;">Completed Trips</div>
-                    <div style="font-size: 22px; font-weight: 800; color: #7e22ce; margin-top: 4px;"><%= completedLoadingCount %></div>
+                <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 7px 12px;">
+                    <div style="font-size: 10.5px; color: #6b21a8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">Completed Trips</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #7e22ce; margin-top: 2px;"><%= completedLoadingCount %></div>
                 </div>
             </div>
 
@@ -731,30 +731,30 @@
                     totalUnloadVariance += (t.variance || 0);
                 });
             %>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px;">
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px;">
-                    <div style="font-size: 11px; color: var(--text-light); font-weight: 600; text-transform: uppercase;">Total Unload Trips</div>
-                    <div style="font-size: 20px; font-weight: 800; color: #1e293b; margin-top: 4px;"><%= unloadingList.length %></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 14px;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 10px;">
+                    <div style="font-size: 10px; color: var(--text-light); font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">Total Trips</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #1e293b; margin-top: 2px;"><%= unloadingList.length %></div>
                 </div>
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px;">
-                    <div style="font-size: 11px; color: #166534; font-weight: 600; text-transform: uppercase;">Total Loaded</div>
-                    <div style="font-size: 20px; font-weight: 800; color: #15803d; margin-top: 4px;"><%= totalUnloadLoaded.toLocaleString() %></div>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 7px 10px;">
+                    <div style="font-size: 10px; color: #166534; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">Total Loaded</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #15803d; margin-top: 2px;"><%= totalUnloadLoaded.toLocaleString() %></div>
                 </div>
-                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px;">
-                    <div style="font-size: 11px; color: #991b1b; font-weight: 600; text-transform: uppercase;">Total Delivered (OUT)</div>
-                    <div style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 4px;"><%= totalUnloadDelivered.toLocaleString() %></div>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 7px 10px;">
+                    <div style="font-size: 10px; color: #991b1b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">OUT (Delivered)</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #dc2626; margin-top: 2px;"><%= totalUnloadDelivered.toLocaleString() %></div>
                 </div>
-                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px 14px;">
-                    <div style="font-size: 11px; color: #1e40af; font-weight: 600; text-transform: uppercase;">Total Collected (IN)</div>
-                    <div style="font-size: 20px; font-weight: 800; color: #2563eb; margin-top: 4px;"><%= totalUnloadCollected.toLocaleString() %></div>
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 7px 10px;">
+                    <div style="font-size: 10px; color: #1e40af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">IN (Collected)</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #2563eb; margin-top: 2px;"><%= totalUnloadCollected.toLocaleString() %></div>
                 </div>
-                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px 14px;">
-                    <div style="font-size: 11px; color: #065f46; font-weight: 600; text-transform: uppercase;">Total Unloaded</div>
-                    <div style="font-size: 20px; font-weight: 800; color: #059669; margin-top: 4px;"><%= totalUnloadActual.toLocaleString() %></div>
+                <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 7px 10px;">
+                    <div style="font-size: 10px; color: #065f46; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">Total Unloaded</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #059669; margin-top: 2px;"><%= totalUnloadActual.toLocaleString() %></div>
                 </div>
-                <div style="background: <%= totalUnloadVariance === 0 ? '#f0fdf4' : (totalUnloadVariance < 0 ? '#fef2f2' : '#eff6ff') %>; border: 1px solid <%= totalUnloadVariance === 0 ? '#bbf7d0' : (totalUnloadVariance < 0 ? '#fecaca' : '#bfdbfe') %>; border-radius: 8px; padding: 12px 14px;">
-                    <div style="font-size: 11px; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#991b1b' : '#1e40af') %>; font-weight: 600; text-transform: uppercase;">Net Variance</div>
-                    <div style="font-size: 20px; font-weight: 800; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#dc2626' : '#2563eb') %>; margin-top: 4px;"><%= totalUnloadVariance > 0 ? ('+' + totalUnloadVariance) : totalUnloadVariance %></div>
+                <div style="background: <%= totalUnloadVariance === 0 ? '#f0fdf4' : (totalUnloadVariance < 0 ? '#fef2f2' : '#eff6ff') %>; border: 1px solid <%= totalUnloadVariance === 0 ? '#bbf7d0' : (totalUnloadVariance < 0 ? '#fecaca' : '#bfdbfe') %>; border-radius: 6px; padding: 7px 10px;">
+                    <div style="font-size: 10px; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#991b1b' : '#1e40af') %>; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2px;">Net Variance</div>
+                    <div style="font-size: 16px; font-weight: 800; color: <%= totalUnloadVariance === 0 ? '#166534' : (totalUnloadVariance < 0 ? '#dc2626' : '#2563eb') %>; margin-top: 2px;"><%= totalUnloadVariance > 0 ? ('+' + totalUnloadVariance) : totalUnloadVariance %></div>
                 </div>
             </div>
 
