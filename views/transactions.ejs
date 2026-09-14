@@ -38,7 +38,7 @@
 
                             <div class="form-group">
                                 <label for="type">Transaction Type</label>
-                                <select id="type" name="type" class="custom-select" required>
+                                <select id="type" name="type" required>
                                     <option value="OUT">TRAY OUT (Issue to Customer)</option>
                                     <option value="IN">TRAY IN (Return from Customer)</option>
                                 </select>
@@ -46,7 +46,7 @@
 
                             <div class="form-group">
                                 <label for="vehicleNo">Vehicle Number</label>
-                                <select id="vehicleNo" name="vehicleNo" class="custom-select">
+                                <select id="vehicleNo" name="vehicleNo">
                                     <option value="N/A">Select Vehicle</option>
                                     <option value="LK-3945">LK-3945</option>
                                     <option value="LN-4124">LN-4124</option>
@@ -76,7 +76,7 @@
 
                             <div class="form-group">
                                 <label for="depositOption">Deposit / Refund Option</label>
-                                <select id="depositOption" name="depositOption" class="custom-select" required>
+                                <select id="depositOption" name="depositOption" required>
                                     <option value="FULL">Full Deposit / Refund (100%)</option>
                                     <option value="HALF">Half Payment / Half Refund (50%)</option>
                                     <option value="ZERO">No Deposit / No Refund (0%)</option>
@@ -321,7 +321,7 @@
                                 <div class="form-grid">
                                     <div class="form-group">
                                         <label>Customer</label>
-                                        <select id="editCustomerId" name="customerId" class="custom-select" required>
+                                        <select id="editCustomerId" name="customerId" required>
                                             <% customers.forEach(c=> { %>
                                                 <option value="<%= c.id %>">
                                                     <%= c.name %> - <%= c.phone %>
@@ -332,7 +332,7 @@
 
                                     <div class="form-group">
                                         <label>Transaction Type</label>
-                                        <select id="editType" name="type" class="custom-select" required>
+                                        <select id="editType" name="type" required>
                                             <option value="OUT">TRAY OUT (Issue to Customer)</option>
                                             <option value="IN">TRAY IN (Return from Customer)</option>
                                         </select>
@@ -345,7 +345,7 @@
 
                                     <div class="form-group">
                                         <label>Vehicle Number</label>
-                                        <select id="editVehicleNo" name="vehicleNo" class="custom-select">
+                                        <select id="editVehicleNo" name="vehicleNo">
                                             <option value="N/A">Select Vehicle</option>
                                             <option value="LK-3945">LK-3945</option>
                                             <option value="LN-4124">LN-4124</option>
@@ -369,7 +369,7 @@
 
                                     <div class="form-group">
                                         <label>Deposit Option</label>
-                                        <select id="editDepositOption" name="depositOption" class="custom-select" required>
+                                        <select id="editDepositOption" name="depositOption" required>
                                             <option value="FULL">Full Deposit / Refund (100%)</option>
                                             <option value="HALF">Half Payment / Half Refund (50%)</option>
                                             <option value="ZERO">No Deposit / No Refund (0%)</option>
@@ -520,7 +520,6 @@
                                             } else {
                                                 depositOptionSelect.value = 'CUSTOM';
                                             }
-                                            depositOptionSelect.dispatchEvent(new Event('change'));
                                         }
                                         updateDepositDisplay();
                                     });
@@ -617,13 +616,10 @@
                             document.getElementById('editDepositPerTray').value = tx.depositPerTray || <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
                             document.getElementById('editDepositOption').value = tx.depositOption || 'FULL';
                             document.getElementById('editActualDeposit').value = tx.totalDeposit || 0;
+
+
+
                             document.getElementById('editRemarks').value = tx.remarks || '';
-
-                            ['editCustomerId', 'editType', 'editVehicleNo', 'editDepositOption'].forEach(id => {
-                                const el = document.getElementById(id);
-                                if (el) el.dispatchEvent(new Event('change'));
-                            });
-
                             document.getElementById('editTxModal').style.display = 'block';
                         }
 
