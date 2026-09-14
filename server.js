@@ -542,13 +542,41 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             loc.customerBalance = branchCustBalance;
         });
 
-        const acceptedTransfers = await StockTransferModel.find({ isDeleted: { $ne: true }, status: 'ACCEPTED' });
+        const isUserAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
+        const userLocId = req.session.user.locationId;
+
+        let transferShortageQuery = { isDeleted: { $ne: true }, status: 'ACCEPTED' };
+        let tripShortageQuery = { isDeleted: { $ne: true }, status: 'COMPLETED' };
+
+        if (!isUserAdmin && userLocId) {
+            transferShortageQuery.$or = [
+                { fromLocationId: userLocId },
+                { toLocationId: userLocId }
+            ];
+            tripShortageQuery.locationId = userLocId;
+        }
+
+        const acceptedTransfers = await StockTransferModel.find(transferShortageQuery).lean();
         let totalShortage = 0;
         acceptedTransfers.forEach(t => {
             const dispatched = t.dispatchedQty || 0;
             const received = (t.receivedQty !== undefined && t.receivedQty !== null) ? t.receivedQty : dispatched;
             if (dispatched > received) {
                 totalShortage += (dispatched - received);
+            }
+        });
+
+        // Add vehicle trip unloading shortages (where variance is negative / actual unloaded < expected)
+        const completedTrips = await LorryTripModel.find(tripShortageQuery).lean();
+        completedTrips.forEach(t => {
+            if (typeof t.variance === 'number' && t.variance < 0) {
+                totalShortage += Math.abs(t.variance);
+            } else if (t.variance === undefined || t.variance === null) {
+                const expected = (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0);
+                const actual = (t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null) ? t.actualUnloadedQty : expected;
+                if (actual < expected) {
+                    totalShortage += (expected - actual);
+                }
             }
         });
 
@@ -3645,6 +3673,47 @@ app.get('/analytics', requireAuth, async (req, res) => {
             routeMap[rName].dispatched += dispatched;
             routeMap[rName].received += received;
             routeMap[rName].shortage += shortage;
+        });
+
+        const completedTrips = await LorryTripModel.find({
+            isDeleted: { $ne: true },
+            status: 'COMPLETED'
+        }).lean();
+
+        completedTrips.forEach(t => {
+            const vNo = (t.vehicleNo && t.vehicleNo.trim()) ? t.vehicleNo.trim().toUpperCase() : 'UNKNOWN';
+            const rName = (t.route && t.route.trim()) ? t.route.trim() : 'Vehicle Delivery Trip';
+            const expected = (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0);
+            const actual = (t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null) ? t.actualUnloadedQty : expected;
+
+            let tripShortage = 0;
+            if (typeof t.variance === 'number' && t.variance < 0) {
+                tripShortage = Math.abs(t.variance);
+            } else if (actual < expected) {
+                tripShortage = expected - actual;
+            }
+
+            if (tripShortage > 0) {
+                totalTransitShortage += tripShortage;
+            }
+
+            // Vehicle aggregate
+            if (!vehicleMap[vNo]) {
+                vehicleMap[vNo] = { vehicleNo: vNo, transfers: 0, dispatched: 0, received: 0, shortage: 0 };
+            }
+            vehicleMap[vNo].transfers += 1;
+            vehicleMap[vNo].dispatched += (t.loadedQty || 0);
+            vehicleMap[vNo].received += (actual || 0);
+            vehicleMap[vNo].shortage += tripShortage;
+
+            // Route aggregate
+            if (!routeMap[rName]) {
+                routeMap[rName] = { route: rName, transfers: 0, dispatched: 0, received: 0, shortage: 0 };
+            }
+            routeMap[rName].transfers += 1;
+            routeMap[rName].dispatched += (t.loadedQty || 0);
+            routeMap[rName].received += (actual || 0);
+            routeMap[rName].shortage += tripShortage;
         });
 
         const vehicleShortageStats = Object.values(vehicleMap)
