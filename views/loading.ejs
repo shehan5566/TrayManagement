@@ -116,7 +116,7 @@
                     <% loadingTrips.forEach(t => { %>
                         <tr>
                             <td data-order="<%= new Date(t.dispatchedDate).getTime() %>" style="white-space: nowrap;">
-                                <%= new Date(t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                <%= new Date(t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
                             </td>
                             <td style="white-space: nowrap;">
                                 <strong style="color: #1e293b;"><%= t.tripNo %></strong>

@@ -25,6 +25,23 @@ const cron = require('node-cron');
 // Configure multer for memory storage
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Parse date input from browser datetime-local strings as Sri Lanka (Asia/Colombo, UTC+05:30) time
+function parseLocalDatetime(val) {
+    if (!val) return new Date();
+    if (val instanceof Date) return val;
+    const str = String(val).trim();
+    if (!str) return new Date();
+    if (/Z$|[+-]\d{2}:?\d{2}$/.test(str)) return new Date(str);
+    const m = str.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?)$/);
+    if (m) {
+        return new Date(`${m[1]}T${m[2]}+05:30`);
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        return new Date(str + 'T00:00:00+05:30');
+    }
+    return new Date(str);
+}
+
 const emailService = require('./emailService');
 
 // Schedule Weekly Backup and Email Report (Every Monday at 9:00 AM Sri Lanka Time)
@@ -1360,7 +1377,7 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, re
             pin: autoPin,
             loadedQty: qty,
             locationId: userLoc,
-            dispatchedDate: dispatchedDate ? new Date(dispatchedDate) : new Date(),
+            dispatchedDate: dispatchedDate ? parseLocalDatetime(dispatchedDate) : new Date(),
             notes
         }, req.session.user.username);
 
@@ -1384,7 +1401,7 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, re
 app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
-        const { actualUnloadedQty, damagedQty, notes } = req.body;
+        const { actualUnloadedQty, damagedQty, returnedDate, notes } = req.body;
         const unloaded = parseInt(actualUnloadedQty, 10);
         if (isNaN(unloaded) || unloaded < 0) {
             if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid unloaded count!' });
@@ -1414,6 +1431,7 @@ app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, async (req, 
         const settledTrip = await LorryTrip.settle(req.params.id, {
             actualUnloadedQty: unloaded,
             damagedQty: damaged,
+            returnedDate: returnedDate ? parseLocalDatetime(returnedDate) : new Date(),
             notes
         }, req.session.user.username);
 
@@ -1512,7 +1530,7 @@ app.post('/loading/:id/edit', requireAuth, requireEditAccess, async (req, res) =
 
         trip.vehicleNo = vehicleNo || trip.vehicleNo;
         trip.driverName = driverName !== undefined ? driverName.trim() : trip.driverName;
-        if (dispatchedDate) trip.dispatchedDate = new Date(dispatchedDate);
+        if (dispatchedDate) trip.dispatchedDate = parseLocalDatetime(dispatchedDate);
         if (notes !== undefined) trip.notes = notes.trim();
 
         await trip.save();
@@ -1596,7 +1614,7 @@ app.get('/unloading/:id/print', requireAuth, async (req, res) => {
 app.post('/unloading/:id/edit', requireAuth, requireEditAccess, async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
-        const { actualUnloadedQty, notes } = req.body;
+        const { actualUnloadedQty, returnedDate, notes } = req.body;
         const newUnloaded = parseInt(actualUnloadedQty, 10);
         if (isNaN(newUnloaded) || newUnloaded < 0) {
             if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid unloaded quantity!' });
@@ -1624,6 +1642,7 @@ app.post('/unloading/:id/edit', requireAuth, requireEditAccess, async (req, res)
         const expected = (trip.loadedQty || 0) - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
         trip.expectedRemainingQty = expected;
         trip.variance = newUnloaded - expected;
+        if (returnedDate) trip.returnedDate = parseLocalDatetime(returnedDate);
         if (notes !== undefined) trip.notes = notes.trim();
 
         await trip.save();
@@ -2068,7 +2087,7 @@ app.post('/transfers/dispatch', requireAuth, async (req, res) => {
         const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
         const canBackdate = isAdmin || (req.session.user.permissions && req.session.user.permissions.includes('backdate_records'));
         if (canBackdate && req.body.dispatchedDate) {
-            data.dispatchedDate = req.body.dispatchedDate;
+            data.dispatchedDate = parseLocalDatetime(req.body.dispatchedDate);
         }
         const newTransfer = await StockTransfer.dispatch(data);
         const refNo = newTransfer.transferDocNo ? ` (Ref: ${newTransfer.transferDocNo})` : '';
@@ -2092,7 +2111,7 @@ app.post('/transfers/:id/grn', requireAuth, async (req, res) => {
         const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
         const canBackdate = isAdmin || (req.session.user.permissions && req.session.user.permissions.includes('backdate_records'));
         if (canBackdate && req.body.receivedDate) {
-            grnData.receivedDate = req.body.receivedDate;
+            grnData.receivedDate = parseLocalDatetime(req.body.receivedDate);
         }
 
         const updatedTransfer = await StockTransfer.processGRN(req.params.id, grnData);
@@ -2120,7 +2139,7 @@ app.post('/transfers/:id/edit', requireAuth, async (req, res) => {
             remarks: req.body.remarks
         };
         
-        if (req.body.dispatchedDate) updateData.dispatchedDate = req.body.dispatchedDate;
+        if (req.body.dispatchedDate) updateData.dispatchedDate = parseLocalDatetime(req.body.dispatchedDate);
         if (req.body.toLocationId) updateData.toLocationId = req.body.toLocationId;
         
         const updatedTransfer = await StockTransfer.update(req.params.id, updateData);
@@ -2134,7 +2153,9 @@ app.post('/transfers/:id/edit', requireAuth, async (req, res) => {
 app.post('/transfers/:id/backdate', requireAuth, requirePermission('backdate_records'), async (req, res) => {
     try {
         const { dispatchedDate, receivedDate } = req.body;
-        const updatedTransfer = await StockTransfer.backdate(req.params.id, dispatchedDate, receivedDate);
+        const dDate = dispatchedDate ? parseLocalDatetime(dispatchedDate) : undefined;
+        const rDate = receivedDate ? parseLocalDatetime(receivedDate) : undefined;
+        const updatedTransfer = await StockTransfer.backdate(req.params.id, dDate, rDate);
         await ActivityLog.log(req.session.user.username, 'UPDATE', 'Transfer', `Backdated transfer ${updatedTransfer.transferDocNo}`);
         res.json({ success: true, message: 'Dates updated successfully' });
     } catch (err) {
@@ -2223,8 +2244,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
 
         // Apply date range filters if provided
         if (req.query.startDate || req.query.endDate) {
-            const start = req.query.startDate ? new Date(req.query.startDate + "T00:00:00") : null;
-            const end = req.query.endDate ? new Date(req.query.endDate + "T23:59:59") : null;
+            const start = req.query.startDate ? parseLocalDatetime(req.query.startDate + "T00:00:00") : null;
+            const end = req.query.endDate ? parseLocalDatetime(req.query.endDate + "T23:59:59") : null;
 
             if (start) {
                 dateFilteredTfrQuery.dispatchedDate = { $gte: start };
@@ -2268,8 +2289,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         let dateFilteredUnloadingQuery = { ...tripReportQuery, status: { $in: ['COMPLETED', 'CANCELLED'] } };
 
         if (req.query.startDate || req.query.endDate) {
-            const startL = req.query.startDate ? new Date(req.query.startDate + "T00:00:00") : null;
-            const endL = req.query.endDate ? new Date(req.query.endDate + "T23:59:59") : null;
+            const startL = req.query.startDate ? parseLocalDatetime(req.query.startDate + "T00:00:00") : null;
+            const endL = req.query.endDate ? parseLocalDatetime(req.query.endDate + "T23:59:59") : null;
 
             if (startL) {
                 dateFilteredLoadingQuery.dispatchedDate = { $gte: startL };
@@ -2705,8 +2726,8 @@ app.get('/reports/export/transfers-csv', requireAuth, async (req, res) => {
         
         let tfrQuery = { isDeleted: { $ne: true } };
         if (startDate || endDate) {
-            if (startDate) tfrQuery.dispatchedDate = { $gte: new Date(startDate + "T00:00:00") };
-            if (endDate) tfrQuery.dispatchedDate = { ...tfrQuery.dispatchedDate, $lte: new Date(endDate + "T23:59:59") };
+            if (startDate) tfrQuery.dispatchedDate = { $gte: parseLocalDatetime(startDate + "T00:00:00") };
+            if (endDate) tfrQuery.dispatchedDate = { ...tfrQuery.dispatchedDate, $lte: parseLocalDatetime(endDate + "T23:59:59") };
         }
         if (req.session.user.role !== 'admin' && req.session.user.locationId) {
             tfrQuery.fromLocationId = req.session.user.locationId;
@@ -2718,7 +2739,7 @@ app.get('/reports/export/transfers-csv', requireAuth, async (req, res) => {
         csvContent += 'Date,Transfer No,Source,Destination,Vehicle No,Created By,Dispatched Qty,Status,Remarks\n';
         
         transfers.forEach(t => {
-            csvContent += `"${new Date(t.dispatchedDate).toLocaleString()}","${t.transferDocNo || ''}","${t.fromLocationName || ''}","${t.toLocationName || ''}","${t.vehicleNo || ''}","${t.dispatchedBy || ''}",${t.dispatchedQty},"${t.status}","${(t.remarks || '').replace(/"/g, '""')}"\n`;
+            csvContent += `"${new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' })}","${t.transferDocNo || ''}","${t.fromLocationName || ''}","${t.toLocationName || ''}","${t.vehicleNo || ''}","${t.dispatchedBy || ''}",${t.dispatchedQty},"${t.status}","${(t.remarks || '').replace(/"/g, '""')}"\n`;
         });
         
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -2738,8 +2759,8 @@ app.get('/reports/export/received-csv', requireAuth, async (req, res) => {
         
         let recQuery = { isDeleted: { $ne: true }, status: 'ACCEPTED' };
         if (startDate || endDate) {
-            if (startDate) recQuery.receivedDate = { $gte: new Date(startDate + "T00:00:00") };
-            if (endDate) recQuery.receivedDate = { ...recQuery.receivedDate, $lte: new Date(endDate + "T23:59:59") };
+            if (startDate) recQuery.receivedDate = { $gte: parseLocalDatetime(startDate + "T00:00:00") };
+            if (endDate) recQuery.receivedDate = { ...recQuery.receivedDate, $lte: parseLocalDatetime(endDate + "T23:59:59") };
         }
         if (req.session.user.role !== 'admin' && req.session.user.locationId) {
             recQuery.toLocationId = req.session.user.locationId;
@@ -2751,7 +2772,7 @@ app.get('/reports/export/received-csv', requireAuth, async (req, res) => {
         csvContent += 'Received Date,GRN No,Transfer No,Source,Vehicle No,Created By,Dispatch Qty,Received Qty,Variance,Remarks\n';
         
         transfers.forEach(t => {
-            csvContent += `"${new Date(t.receivedDate).toLocaleString()}","${t.grnNo || ''}","${t.transferDocNo || ''}","${t.fromLocationName || ''}","${t.vehicleNo || ''}","${t.receivedBy || ''}",${t.dispatchedQty},${t.receivedQty},${t.variance},"${(t.remarks || '').replace(/"/g, '""')}"\n`;
+            csvContent += `"${new Date(t.receivedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' })}","${t.grnNo || ''}","${t.transferDocNo || ''}","${t.fromLocationName || ''}","${t.vehicleNo || ''}","${t.receivedBy || ''}",${t.dispatchedQty},${t.receivedQty},${t.variance},"${(t.remarks || '').replace(/"/g, '""')}"\n`;
         });
         
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -2771,8 +2792,8 @@ app.get('/reports/export/loading-csv', requireAuth, async (req, res) => {
         let tripQuery = { isDeleted: { $ne: true } };
         if (startDate || endDate) {
             let dCond = {};
-            if (startDate) dCond.$gte = new Date(startDate + "T00:00:00");
-            if (endDate) dCond.$lte = new Date(endDate + "T23:59:59");
+            if (startDate) dCond.$gte = parseLocalDatetime(startDate + "T00:00:00");
+            if (endDate) dCond.$lte = parseLocalDatetime(endDate + "T23:59:59");
             tripQuery.dispatchedDate = dCond;
         }
         if (req.session.user.role !== 'admin' && req.session.user.locationId) {
@@ -2789,7 +2810,7 @@ app.get('/reports/export/loading-csv', requireAuth, async (req, res) => {
         
         trips.forEach(t => {
             const locName = locMap[t.locationId] || 'Head Office';
-            csvContent += `"${new Date(t.dispatchedDate).toLocaleString()}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${locName}","${t.dispatchedBy || ''}","${t.status || ''}",${t.loadedQty || 0},"${(t.notes || '').replace(/"/g, '""')}"\n`;
+            csvContent += `"${new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' })}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${locName}","${t.dispatchedBy || ''}","${t.status || ''}",${t.loadedQty || 0},"${(t.notes || '').replace(/"/g, '""')}"\n`;
         });
         
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -2809,8 +2830,8 @@ app.get('/reports/export/unloading-csv', requireAuth, async (req, res) => {
         let tripQuery = { isDeleted: { $ne: true }, status: { $in: ['COMPLETED', 'CANCELLED'] } };
         if (startDate || endDate) {
             let dCond = {};
-            if (startDate) dCond.$gte = new Date(startDate + "T00:00:00");
-            if (endDate) dCond.$lte = new Date(endDate + "T23:59:59");
+            if (startDate) dCond.$gte = parseLocalDatetime(startDate + "T00:00:00");
+            if (endDate) dCond.$lte = parseLocalDatetime(endDate + "T23:59:59");
             tripQuery.$or = [
                 { returnedDate: dCond },
                 { returnedDate: { $exists: false }, dispatchedDate: dCond }
@@ -2840,7 +2861,7 @@ app.get('/reports/export/unloading-csv', requireAuth, async (req, res) => {
                 const digits = (t.tripNo || '').replace(/\D/g, '').padStart(5, '0');
                 unlNo = locCode + 'UNLOD' + digits;
             }
-            const dateStr = t.returnedDate ? new Date(t.returnedDate).toLocaleString() : (t.dispatchedDate ? new Date(t.dispatchedDate).toLocaleString() : '-');
+            const dateStr = t.returnedDate ? new Date(t.returnedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) : (t.dispatchedDate ? new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) : '-');
             csvContent += `"${dateStr}","${unlNo}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${locName}",${t.loadedQty || 0},${t.totalDeliveredQty || 0},${t.totalCollectedQty || 0},${t.expectedRemainingQty || 0},${t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : ''},${t.variance || 0},"${t.receivedBy || ''}","${(t.notes || '').replace(/"/g, '""')}"\n`;
         });
         

@@ -1455,7 +1455,7 @@ const LorryTrip = {
             trip.unloadingNo = await generateDocNo(locCode, 'UNLOD');
         }
 
-        trip.returnedDate = new Date();
+        trip.returnedDate = settleData.returnedDate ? (settleData.returnedDate instanceof Date ? settleData.returnedDate : new Date(settleData.returnedDate)) : new Date();
         trip.receivedBy = username || 'System';
         trip.actualUnloadedQty = actualUnloaded;
         trip.damagedQty = damaged;

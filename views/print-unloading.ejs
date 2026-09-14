@@ -19,8 +19,8 @@
             <strong>Received By:</strong> <%= trip.receivedBy || 'System' %>
         </div>
         <div style="text-align: right;">
-            <strong>Returned Date:</strong> <%= trip.returnedDate ? new Date(trip.returnedDate).toLocaleDateString() : (trip.dispatchedDate ? new Date(trip.dispatchedDate).toLocaleDateString() : '-') %><br>
-            <strong>Time:</strong> <%= trip.returnedDate ? new Date(trip.returnedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (trip.dispatchedDate ? new Date(trip.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-') %><br>
+            <strong>Returned Date:</strong> <%= trip.returnedDate ? new Date(trip.returnedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) : (trip.dispatchedDate ? new Date(trip.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) : '-') %><br>
+            <strong>Time:</strong> <%= trip.returnedDate ? new Date(trip.returnedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) : (trip.dispatchedDate ? new Date(trip.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) : '-') %><br>
             <strong>Status:</strong> <%= trip.status %>
         </div>
     </div>

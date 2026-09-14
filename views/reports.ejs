@@ -360,7 +360,7 @@
                         <% trayOutList.forEach(t=> { %>
                             <tr>
                                 <td>
-                                    <%= new Date(t.date).toLocaleString() %>
+                                    <%= new Date(t.date).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %>
                                 </td>
                                 <td><code>RE-<%= String(t.receiptNo || 0).padStart(6, '0') %></code></td>
                                 <td><strong>
@@ -429,7 +429,7 @@
                         <% trayInList.forEach(t=> { %>
                             <tr>
                                 <td>
-                                    <%= new Date(t.date).toLocaleString() %>
+                                    <%= new Date(t.date).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %>
                                 </td>
                                 <td><code>RE-<%= String(t.receiptNo || 0).padStart(6, '0') %></code></td>
                                 <td><strong>
@@ -491,7 +491,7 @@
                         <% dispatchedTransfers.forEach(t=> { %>
                             <tr>
                                 <td>
-                                    <%= new Date(t.dispatchedDate).toLocaleString() %>
+                                    <%= new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %>
                                 </td>
                                 <td>
                                     <%= t.transferDocNo %>
@@ -563,7 +563,7 @@
                         <% receivedTransfers.forEach(t=> { %>
                             <tr>
                                 <td>
-                                    <%= new Date(t.receivedDate).toLocaleString() %>
+                                    <%= new Date(t.receivedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %>
                                 </td>
                                 <td>
                                     <%= t.grnNo || '-' %>
@@ -663,7 +663,7 @@
                         <% loadingList.forEach(t => { %>
                             <tr>
                                 <td data-order="<%= new Date(t.dispatchedDate).getTime() %>" style="white-space: nowrap;">
-                                    <%= new Date(t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                    <%= new Date(t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
                                 </td>
                                 <td style="white-space: nowrap;">
                                     <strong style="color: #1e293b;"><%= t.tripNo %></strong>
@@ -781,7 +781,7 @@
                         <% unloadingList.forEach(t => { %>
                             <tr>
                                 <td data-order="<%= t.returnedDate ? new Date(t.returnedDate).getTime() : (t.dispatchedDate ? new Date(t.dispatchedDate).getTime() : 0) %>" style="white-space: nowrap;">
-                                    <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                    <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
                                 </td>
                                 <td style="white-space: nowrap;"><strong style="color: #1e293b;"><%= t.unloadingNo || '-' %></strong></td>
                                 <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
@@ -914,7 +914,7 @@
                     <tbody>
                         <% (typeof damageLogs !== 'undefined' ? damageLogs : []).forEach(d => { %>
                             <tr>
-                                <td><%= new Date(d.date).toLocaleString() %></td>
+                                <td><%= new Date(d.date).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %></td>
                                 <td><strong><%= d.damageNo || '-' %></strong></td>
                                 <td><%= d.locationName || 'Head Office' %></td>
                                 <td>

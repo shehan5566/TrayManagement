@@ -46,7 +46,7 @@
                     <% activeTrips.forEach(t => { %>
                         <tr>
                             <td style="white-space: nowrap;">
-                                <%= new Date(t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                <%= new Date(t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
                             </td>
                             <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
                             <td style="white-space: nowrap;">
@@ -118,7 +118,7 @@
                     <% completedTrips.forEach(t => { %>
                         <tr>
                             <td data-order="<%= t.returnedDate ? new Date(t.returnedDate).getTime() : (t.dispatchedDate ? new Date(t.dispatchedDate).getTime() : 0) %>" style="white-space: nowrap;">
-                                <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString() %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
                             </td>
                             <td style="white-space: nowrap;"><strong style="color: #1e293b;"><%= t.unloadingNo || '-' %></strong></td>
                             <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
@@ -214,6 +214,11 @@
                 </div>
             </div>
 
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="settleReturnedDate" style="font-weight: 700; color: #1e293b;">Unloading Date & Time <span style="color:red;">*</span></label>
+                <input type="datetime-local" id="settleReturnedDate" name="returnedDate" class="form-control" required>
+            </div>
+
             <div class="form-group">
                 <label for="actualUnloadedQty" style="font-weight: 700; color: #1e293b;">Actual Unloaded Trays <span style="color:red;">*</span></label>
                 <input type="number" id="actualUnloadedQty" name="actualUnloadedQty" min="0" class="form-control" style="font-size: 18px; font-weight: 800; padding: 10px;" placeholder="0" required oninput="calculateVariance()">
@@ -265,6 +270,11 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
+                <label for="editReturnedDate" style="font-weight: 600;">Unloading Date & Time</label>
+                <input type="datetime-local" id="editReturnedDate" name="returnedDate" class="form-control">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
                 <label for="editActualUnloadedQty" style="font-weight: 700;">Actual Unloaded Trays <span style="color:red;">*</span></label>
                 <input type="number" id="editActualUnloadedQty" name="actualUnloadedQty" min="0" required class="form-control" style="font-size: 18px; font-weight: 800; padding: 8px;">
             </div>
@@ -306,6 +316,11 @@
         document.getElementById('settleNotes').value = '';
         document.getElementById('varianceBox').style.display = 'none';
 
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const settleDateInput = document.getElementById('settleReturnedDate');
+        if (settleDateInput) settleDateInput.value = now.toISOString().slice(0, 16);
+
         const submitBtn = document.querySelector('#settleForm button[type="submit"]');
         if (submitBtn) submitBtn.disabled = false;
 
@@ -321,6 +336,19 @@
         document.getElementById('editUnloadNo').innerText = trip.unloadingNo || '-';
         document.getElementById('editTripNo').innerText = trip.tripNo || '-';
         document.getElementById('editVehicleNo').innerText = trip.vehicleNo || '-';
+        
+        const retDate = trip.returnedDate || trip.dispatchedDate;
+        const editDateInput = document.getElementById('editReturnedDate');
+        if (editDateInput) {
+            if (retDate) {
+                const d = new Date(retDate);
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                editDateInput.value = d.toISOString().slice(0, 16);
+            } else {
+                editDateInput.value = '';
+            }
+        }
+
         document.getElementById('editActualUnloadedQty').value = trip.actualUnloadedQty !== undefined ? trip.actualUnloadedQty : '';
         document.getElementById('editNotes').value = trip.notes || '';
         document.getElementById('editUnloadModal').style.display = 'block';
