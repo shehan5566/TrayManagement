@@ -164,6 +164,26 @@ window.submitAjaxForm = async function (event, form, successMessage, successCall
         fetchOptions.body = JSON.stringify(data);
     }
 
+    if (form) form.classList.add('is-submitting');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    if (submitBtn) {
+        if (!submitBtn.dataset.originalContent) {
+            submitBtn.dataset.originalContent = submitBtn.innerHTML;
+        }
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.85';
+        submitBtn.style.cursor = 'not-allowed';
+        submitBtn.classList.add('is-loading');
+        if (submitBtn.classList.contains('btn-action-delete') || submitBtn.classList.contains('btn-action-edit')) {
+            submitBtn.style.width = 'auto';
+            submitBtn.style.padding = '0 10px';
+            submitBtn.style.gap = '6px';
+            submitBtn.style.fontSize = '12px';
+            submitBtn.style.fontWeight = '600';
+        }
+        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+    }
+
     try {
         const url = form.getAttribute('action') || form.action;
         const response = await fetch(url, fetchOptions);
@@ -209,13 +229,23 @@ window.submitAjaxForm = async function (event, form, successMessage, successCall
         });
     } finally {
         // Reset global form state if applicable
-        form.classList.remove('is-submitting');
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn && submitBtn.dataset.originalContent) {
+        if (form) form.classList.remove('is-submitting');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.style.opacity = '1';
             submitBtn.style.cursor = 'pointer';
-            submitBtn.innerHTML = submitBtn.dataset.originalContent;
+            submitBtn.classList.remove('is-loading');
+            if (submitBtn.classList.contains('btn-action-delete') || submitBtn.classList.contains('btn-action-edit')) {
+                submitBtn.style.width = '';
+                submitBtn.style.padding = '';
+                submitBtn.style.gap = '';
+                submitBtn.style.fontSize = '';
+                submitBtn.style.fontWeight = '';
+            }
+            if (submitBtn.dataset.originalContent) {
+                submitBtn.innerHTML = submitBtn.dataset.originalContent;
+            }
         }
     }
 };
@@ -226,8 +256,27 @@ function resetSubmitButton(form, submitBtn) {
         submitBtn.disabled = false;
         submitBtn.style.opacity = '1';
         submitBtn.style.cursor = 'pointer';
+        submitBtn.classList.remove('is-loading');
+        if (submitBtn.classList.contains('btn-action-delete') || submitBtn.classList.contains('btn-action-edit')) {
+            submitBtn.style.width = '';
+            submitBtn.style.padding = '';
+            submitBtn.style.gap = '';
+            submitBtn.style.fontSize = '';
+            submitBtn.style.fontWeight = '';
+        }
         if (submitBtn.dataset.originalContent) {
             submitBtn.innerHTML = submitBtn.dataset.originalContent;
+        }
+    }
+    if (form) {
+        const actionContainer = form.closest('div');
+        if (actionContainer) {
+            actionContainer.querySelectorAll('a, button').forEach(el => {
+                if (el !== submitBtn) {
+                    el.style.pointerEvents = '';
+                    el.style.opacity = '';
+                }
+            });
         }
     }
 }
@@ -253,9 +302,29 @@ window.confirmAjaxDelete = function (event, form, itemType) {
             if (form) form.classList.add('is-submitting');
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.8';
+                submitBtn.style.opacity = '0.85';
                 submitBtn.style.cursor = 'not-allowed';
+                submitBtn.classList.add('is-loading');
+                if (submitBtn.classList.contains('btn-action-delete') || submitBtn.classList.contains('btn-action-edit')) {
+                    submitBtn.style.width = 'auto';
+                    submitBtn.style.padding = '0 10px';
+                    submitBtn.style.gap = '6px';
+                    submitBtn.style.fontSize = '12px';
+                    submitBtn.style.fontWeight = '600';
+                }
                 submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+            }
+
+            if (form) {
+                const actionContainer = form.closest('div');
+                if (actionContainer) {
+                    actionContainer.querySelectorAll('a, button').forEach(el => {
+                        if (el !== submitBtn) {
+                            el.style.pointerEvents = 'none';
+                            el.style.opacity = '0.5';
+                        }
+                    });
+                }
             }
 
             try {
@@ -347,8 +416,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Set loading state
                 submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.8';
+                submitBtn.style.opacity = '0.85';
                 submitBtn.style.cursor = 'not-allowed';
+                submitBtn.classList.add('is-loading');
+                if (submitBtn.classList.contains('btn-action-delete') || submitBtn.classList.contains('btn-action-edit')) {
+                    submitBtn.style.width = 'auto';
+                    submitBtn.style.padding = '0 10px';
+                    submitBtn.style.gap = '6px';
+                    submitBtn.style.fontSize = '12px';
+                    submitBtn.style.fontWeight = '600';
+                }
                 submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
             }
         });

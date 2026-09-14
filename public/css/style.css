@@ -942,6 +942,17 @@ textarea:focus {
     color: #ffffff !important;
 }
 
+.btn-action-edit.is-loading,
+.btn-action-edit:has(.fa-spin) {
+    width: auto !important;
+    min-width: 32px;
+    padding: 0 10px !important;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 .btn-action-delete {
     background-color: #ffc107;
     color: #000000 !important;
@@ -955,7 +966,7 @@ textarea:focus {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, width 0.2s ease, padding 0.2s ease;
 }
 
 .btn-action-delete i {
@@ -965,6 +976,17 @@ textarea:focus {
 .btn-action-delete:hover {
     background-color: #e0a800;
     color: #000000 !important;
+}
+
+.btn-action-delete.is-loading,
+.btn-action-delete:has(.fa-spin) {
+    width: auto !important;
+    min-width: 32px;
+    padding: 0 10px !important;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 /* Tables */
