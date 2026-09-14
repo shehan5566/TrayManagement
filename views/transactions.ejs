@@ -18,8 +18,8 @@
                         <span class="box-title"><i class="fa-solid fa-pen-nib"></i> New Transaction Entry</span>
                     </div>
 
-                    <form action="/transactions" method="POST"
-                        onsubmit="submitAjaxForm(event, this, 'Transaction added successfully')">
+                    <form id="transactionForm" action="/transactions" method="POST"
+                        onsubmit="handleTransactionFormSubmit(event, this)">
                         <div class="form-grid" style="row-gap: 22px;">
                             <div class="form-group">
                                 <label for="date">Transaction Date & Time</label>
@@ -34,6 +34,17 @@
                                     style="position: absolute; border: 1px solid #d4d4d4; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; background-color: #fff; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;">
                                 </div>
                                 <input type="hidden" id="customerId" name="customerId" required>
+
+                                <!-- Customer Outstanding Notice -->
+                                <div id="customerOutstandingNotice" style="display: none; margin-top: 8px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 13px;">
+                                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+                                        <i class="fa-solid fa-triangle-exclamation" style="color: #e11d48; font-size: 15px;"></i>
+                                        <span>Customer Outstanding: <span id="outstandingNoticeCount" style="font-size: 15px; color: #b91c1c;"></span> Trays</span>
+                                    </div>
+                                    <div style="font-size: 12px; margin-top: 4px; color: #be123c;">
+                                        Tray issue (OUT) is locked until balance is 0 or Special Approval is granted by the Sales Manager via WhatsApp.
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -535,7 +546,7 @@
 
                             const customersData = [
                         <% customers.forEach(c => { %>
-                                { name: "<%= c.name.replace(/\"/g, '&quot;') %>", id: "<%= c.id %>" },
+                                { name: "<%= c.name.replace(/\"/g, '&quot;') %>", id: "<%= c.id %>", balance: <%= c.currentBalance || 0 %> },
                                 <% }) %>
                     ];
 
@@ -559,7 +570,15 @@
                                     div.style.borderBottom = "1px solid #d4d4d4";
                                     div.style.color = "#333";
                                     div.style.fontSize = "14px";
-                                    div.innerHTML = c.name;
+                                    div.style.display = "flex";
+                                    div.style.justifyContent = "space-between";
+                                    div.style.alignItems = "center";
+
+                                    let badgeHtml = c.balance > 0 
+                                        ? `<span style="font-size: 11px; background: #fee2e2; color: #b91c1c; padding: 2px 7px; border-radius: 4px; font-weight: 700; border: 1px solid #fca5a5;">Due: ${c.balance}</span>`
+                                        : `<span style="font-size: 11px; background: #f0fdf4; color: #166534; padding: 2px 7px; border-radius: 4px; font-weight: 600;">Bal: 0</span>`;
+
+                                    div.innerHTML = `<span>${c.name}</span>${badgeHtml}`;
 
                                     div.addEventListener("mouseover", () => {
                                         div.style.backgroundColor = "#007bff";
@@ -574,6 +593,8 @@
                                         searchInput.value = c.name;
                                         hiddenId.value = c.id;
                                         autocompleteList.style.display = 'none';
+                                        selectedCustomerObj = c;
+                                        checkCustomerOutstanding();
                                     });
                                     autocompleteList.appendChild(div);
                                 }
@@ -587,6 +608,8 @@
                         if (searchInput && hiddenId && autocompleteList) {
                             searchInput.addEventListener('input', function () {
                                 hiddenId.value = ''; // reset on typing
+                                selectedCustomerObj = null;
+                                checkCustomerOutstanding();
                                 renderAutocomplete(this.value);
                             });
 
@@ -604,7 +627,246 @@
                                 }
                             });
                         }
+
+                        // Attach change listener to Transaction Type
+                        const typeInput = document.getElementById('type');
+                        if (typeInput) {
+                            typeInput.addEventListener('change', checkCustomerOutstanding);
+                        }
+
+                        // Check Outstanding on load if customer pre-selected
+                        checkCustomerOutstanding();
                 });
+
+                // Global variables for Approval workflow
+                let selectedCustomerObj = null;
+                let approvalPollingInterval = null;
+
+                function checkCustomerOutstanding() {
+                    const notice = document.getElementById('customerOutstandingNotice');
+                    const noticeCount = document.getElementById('outstandingNoticeCount');
+                    const typeSelect = document.getElementById('type');
+                    const type = typeSelect ? typeSelect.value : 'OUT';
+                    
+                    const isBlockEnabled = <%= (settings && settings.enableOutstandingBlock !== false) ? 'true' : 'false' %>;
+                    const graceLimit = <%= (settings && settings.allowedGraceTrays) ? settings.allowedGraceTrays : 0 %>;
+
+                    if (selectedCustomerObj && isBlockEnabled && type === 'OUT' && (selectedCustomerObj.balance || 0) > graceLimit) {
+                        if (notice && noticeCount) {
+                            noticeCount.innerText = selectedCustomerObj.balance;
+                            notice.style.display = 'block';
+                        }
+                    } else {
+                        if (notice) notice.style.display = 'none';
+                    }
+                }
+
+                // Handle Form Submit with Outstanding Block Check
+                async function handleTransactionFormSubmit(event, form) {
+                    event.preventDefault();
+                    const type = document.getElementById('type').value;
+                    const count = parseInt(document.getElementById('count').value, 10) || 0;
+                    const customerId = document.getElementById('customerId').value;
+                    const isBlockEnabled = <%= (settings && settings.enableOutstandingBlock !== false) ? 'true' : 'false' %>;
+                    const graceLimit = <%= (settings && settings.allowedGraceTrays) ? settings.allowedGraceTrays : 0 %>;
+
+                    const cust = selectedCustomerObj || (typeof customersData !== 'undefined' ? customersData.find(c => c.id === customerId) : null);
+
+                    if (isBlockEnabled && type === 'OUT' && cust && (cust.balance || 0) > graceLimit) {
+                        const mgrPhone = "<%= (settings && settings.salesManagerPhone) ? settings.salesManagerPhone : '0770000000' %>";
+                        
+                        Swal.fire({
+                            title: 'Customer Blocked (Outstanding Trays)',
+                            html: `
+                                <div style="text-align:left; font-size:14px; line-height:1.5;">
+                                    <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; margin-bottom:14px;">
+                                        <strong style="color:#9f1239;">Customer:</strong> <span style="font-weight:700; color:#1e293b;">${cust.name}</span><br>
+                                        <strong style="color:#9f1239;">Outstanding Due:</strong> <span style="color:#dc2626; font-weight:800; font-size:16px;">${cust.balance} Trays</span>
+                                    </div>
+                                    <p style="color:#334155; margin-bottom:10px;">
+                                        New tray issue (<strong>${count} Trays</strong>) is strictly blocked until previous balance is returned or authorized.
+                                    </p>
+                                    <p style="color:#059669; font-weight:600;">
+                                        Would you like to send a <strong>Special Approval Request</strong> to the Sales Manager via WhatsApp?
+                                    </p>
+                                </div>
+                            `,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fa-brands fa-whatsapp"></i> Request WhatsApp Approval',
+                            confirmButtonColor: '#107c41',
+                            cancelButtonText: 'Cancel',
+                            cancelButtonColor: '#64748b'
+                        }).then(async (result) => {
+                            if (result.isConfirmed) {
+                                initiateApprovalRequest(form, cust, count);
+                            }
+                        });
+                        return false;
+                    }
+
+                    // Normal submit when balance == 0 or IN (Return)
+                    return submitAjaxForm(event, form, 'Transaction added successfully');
+                }
+
+                // Initiate WhatsApp Approval Request to Sales Manager
+                async function initiateApprovalRequest(form, cust, count) {
+                    const formData = new FormData(form);
+                    const txPayload = Object.fromEntries(formData.entries());
+
+                    Swal.fire({
+                        title: 'Sending Approval Request...',
+                        html: '<i class="fa-solid fa-circle-notch fa-spin" style="font-size:32px; color:#107c41; margin-top:10px;"></i>',
+                        allowOutsideClick: false,
+                        showConfirmButton: false
+                    });
+
+                    try {
+                        const res = await fetch('/api/approvals/request', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(txPayload)
+                        });
+                        const data = await res.json();
+                        if (!data.success) {
+                            Swal.fire('Error', data.error || 'Failed to request approval', 'error');
+                            return;
+                        }
+
+                        const requestId = data.requestId;
+                        const managerPhone = data.managerPhone || 'Sales Manager';
+                        let timerSeconds = 600; // 10 minutes timeout
+                        let timerInterval = null;
+
+                        Swal.fire({
+                            title: 'Waiting for Sales Manager Approval',
+                            html: `
+                                <div style="text-align:center; padding: 10px 0;">
+                                    <div style="margin-bottom: 15px;">
+                                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 38px; color: #107c41;"></i>
+                                    </div>
+                                    <p style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                                        WhatsApp Alert Sent to Sales Manager (${managerPhone})
+                                    </p>
+                                    <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">
+                                        The system will automatically record this transaction the moment approval is given.
+                                    </p>
+                                    
+                                    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 14px; border-radius: 10px; margin-top: 10px; text-align: left;">
+                                        <span style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 6px;">
+                                            <i class="fa-solid fa-key" style="color: #107c41;"></i> Or enter Override PIN from Manager:
+                                        </span>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input type="text" id="swalOverridePin" maxlength="6" placeholder="PIN" style="flex: 1; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 16px; font-weight: bold; text-align: center; letter-spacing: 2px;">
+                                            <button type="button" class="swal2-confirm swal2-styled" style="margin: 0; background: #107c41; padding: 8px 14px; font-size: 13px;" onclick="submitOverridePin('${requestId}')">Verify</button>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top: 15px; font-size: 12px; color: #94a3b8;">
+                                        Waiting for response... Timeout in <span id="swalTimer">10:00</span>
+                                    </div>
+                                </div>
+                            `,
+                            allowOutsideClick: false,
+                            showConfirmButton: false,
+                            showCancelButton: true,
+                            cancelButtonText: 'Cancel Request',
+                            cancelButtonColor: '#ef4444',
+                            didOpen: () => {
+                                // Start polling every 2 seconds
+                                approvalPollingInterval = setInterval(async () => {
+                                    try {
+                                        const statusRes = await fetch('/api/approvals/status/' + requestId);
+                                        const statusData = await statusRes.json();
+                                        if (statusData.success) {
+                                            if (statusData.status === 'APPROVED') {
+                                                clearInterval(approvalPollingInterval);
+                                                clearInterval(timerInterval);
+                                                const receiptNo = statusData.receiptNo ? `RE-${String(statusData.receiptNo).padStart(6, '0')}` : '';
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Special Approval Granted!',
+                                                    html: `Transaction has been approved by <strong>${statusData.approvedBy || 'Sales Manager'}</strong>!<br><span style="color:#15803d; font-weight:bold; font-size:16px;">${receiptNo}</span><br>Redirecting to receipt...`,
+                                                    timer: 1800,
+                                                    showConfirmButton: false
+                                                }).then(() => {
+                                                    window.location.href = `/transactions/${statusData.transactionId}/receipt?autoPrint=false`;
+                                                });
+                                            } else if (statusData.status === 'REJECTED') {
+                                                clearInterval(approvalPollingInterval);
+                                                clearInterval(timerInterval);
+                                                Swal.fire('Request Rejected', statusData.rejectionReason || 'The Sales Manager rejected this transaction.', 'error');
+                                            } else if (statusData.status === 'EXPIRED') {
+                                                clearInterval(approvalPollingInterval);
+                                                clearInterval(timerInterval);
+                                                Swal.fire('Request Expired', 'The approval request timed out.', 'warning');
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error('Polling error:', e);
+                                    }
+                                }, 2000);
+
+                                // Start countdown
+                                timerInterval = setInterval(() => {
+                                    timerSeconds--;
+                                    const m = Math.floor(timerSeconds / 60);
+                                    const s = timerSeconds % 60;
+                                    const timerEl = document.getElementById('swalTimer');
+                                    if (timerEl) timerEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                                    if (timerSeconds <= 0) {
+                                        clearInterval(timerInterval);
+                                        clearInterval(approvalPollingInterval);
+                                        Swal.fire('Timed Out', 'No response received from Sales Manager within 10 minutes.', 'info');
+                                    }
+                                }, 1000);
+                            },
+                            willClose: () => {
+                                if (approvalPollingInterval) clearInterval(approvalPollingInterval);
+                                if (timerInterval) clearInterval(timerInterval);
+                            }
+                        });
+
+                    } catch (err) {
+                        Swal.fire('Error', 'Connection failed: ' + err.message, 'error');
+                    }
+                }
+
+                // Verify Override PIN
+                window.submitOverridePin = async function(requestId) {
+                    const pinInput = document.getElementById('swalOverridePin');
+                    const pin = pinInput ? pinInput.value.trim() : '';
+                    if (!pin) {
+                        alert('Please enter the 4-digit PIN code.');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch('/api/approvals/verify-pin', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ requestId, pin })
+                        });
+                        const result = await res.json();
+                        if (result.success) {
+                            if (approvalPollingInterval) clearInterval(approvalPollingInterval);
+                            const receiptNo = result.receiptNo ? `RE-${String(result.receiptNo).padStart(6, '0')}` : '';
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'PIN Verified & Approved!',
+                                html: `Transaction recorded successfully!<br><span style="color:#15803d; font-weight:bold; font-size:16px;">${receiptNo}</span><br>Redirecting to receipt...`,
+                                timer: 1800,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.href = `/transactions/${result.transactionId}/receipt?autoPrint=false`;
+                            });
+                        } else {
+                            alert(result.error || 'Invalid PIN code');
+                        }
+                    } catch (err) {
+                        alert('Verification error: ' + err.message);
+                    }
+                };
 
                         // Edit Modal Logic
                         function openEditModal(tx) {

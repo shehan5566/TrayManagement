@@ -17,7 +17,7 @@ const xss = require('xss-clean');
 const rateLimit = require('express-rate-limit');
 const MongoStore = require('connect-mongo').MongoStore || require('connect-mongo').default || require('connect-mongo');
 
-const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting, CustomerModel, LorryTrip, LorryTripModel, LocationModel } = require('./db');
+const { connectDB, Customer, Transaction, User, Role, ActivityLog, Location, StockTransfer, SystemTools, TransactionModel, StockTransferModel, MonthlyBalance, DamageLog, SystemSetting, CustomerModel, LorryTrip, LorryTripModel, LocationModel, ApprovalRequest, ApprovalRequestModel } = require('./db');
 const smsService = require('./smsService');
 const backupService = require('./backupService');
 const cron = require('node-cron');
@@ -1060,6 +1060,41 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
             date
         };
         
+        // Check for customer outstanding tray block on OUT transactions
+        const settings = await SystemSetting.get();
+        if (settings.enableOutstandingBlock && type === 'OUT') {
+            const customer = await Customer.getById(customerId);
+            const graceLimit = settings.allowedGraceTrays || 0;
+            if (customer && (customer.currentBalance || 0) > graceLimit) {
+                // Check if special approval token or override is present
+                const { approvalToken } = req.body;
+                let isApproved = false;
+                if (approvalToken) {
+                    const approval = await ApprovalRequest.getByToken(approvalToken);
+                    if (approval && approval.status === 'APPROVED' && approval.customerId === customerId && !approval.isUsed) {
+                        isApproved = true;
+                        txData.specialApprovalId = approval._id;
+                        txData.approvedBy = approval.approvedBy || 'Sales Manager';
+                        await ApprovalRequest.markUsed(approval._id);
+                    }
+                }
+                if (!isApproved) {
+                    const errorMsg = `Customer ${customer.name} has ${customer.currentBalance} outstanding trays! New tray issue is blocked until balance is 0 or Sales Manager approval is granted.`;
+                    if (isAjax) {
+                        return res.status(403).json({
+                            success: false,
+                            blocked: true,
+                            customerName: customer.name,
+                            currentBalance: customer.currentBalance,
+                            managerPhone: settings.salesManagerPhone || '0770000000',
+                            error: errorMsg
+                        });
+                    }
+                    return res.redirect('/transactions?error=' + encodeURIComponent(errorMsg));
+                }
+            }
+        }
+
         // Remove backdated date if user is not admin and doesn't have permission
         const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
         const canBackdate = isAdmin || (req.session.user.permissions && req.session.user.permissions.includes('backdate_records'));
@@ -1308,6 +1343,196 @@ app.get('/transactions/receiptByRef/:refNo', requireAuth, async (req, res) => {
         res.redirect(`/transactions/${tx._id}/receipt`);
     } catch (err) {
         res.status(500).send('Error loading receipt');
+    }
+});
+
+// ==========================================
+// SPECIAL TRANSACTION APPROVAL WORKFLOW
+// ==========================================
+
+// Request Special Approval for customer with outstanding trays
+app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, res) => {
+    try {
+        const txData = req.body;
+        const countVal = txData.count ? parseInt(txData.count, 10) : 0;
+        if (!txData.customerId || countVal <= 0) {
+            return res.status(400).json({ success: false, error: 'Customer and tray count are required' });
+        }
+
+        const customer = await Customer.getById(txData.customerId);
+        if (!customer) {
+            return res.status(404).json({ success: false, error: 'Customer not found' });
+        }
+
+        const settings = await SystemSetting.get();
+        const userLoc = (req.session.user && req.session.user.locationId) || 'main';
+        const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc)) || { name: 'Main Office' };
+
+        const approval = await ApprovalRequest.create({
+            customerId: customer.id,
+            customerName: customer.name,
+            currentBalance: customer.currentBalance || 0,
+            requestedQty: countVal,
+            txType: txData.type || 'OUT',
+            txPayload: txData,
+            locationId: userLoc,
+            locationName: loc.name || 'Head Office',
+            requestedBy: req.session.user.username || 'Operator'
+        });
+
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+        const host = req.get('host');
+        const approvalUrl = `${protocol}://${host}/approval/${approval.token}`;
+
+        const managerPhone = settings.salesManagerPhone || '0770000000';
+        setImmediate(async () => {
+            try {
+                await smsService.sendApprovalAlert(managerPhone, {
+                    customerName: customer.name,
+                    currentBalance: customer.currentBalance,
+                    requestedQty: approval.requestedQty,
+                    txType: approval.txType,
+                    locationName: loc.name,
+                    requestedBy: req.session.user.username,
+                    vehicleNo: txData.vehicleNo
+                }, approvalUrl, approval.pin);
+            } catch (notifyErr) {
+                console.error('[APPROVAL NOTIFY ERROR]:', notifyErr);
+            }
+        });
+
+        res.json({
+            success: true,
+            requestId: approval.id,
+            token: approval.token,
+            pin: approval.pin,
+            managerPhone,
+            approvalUrl,
+            expiresAt: approval.expiresAt
+        });
+    } catch (err) {
+        console.error('POST /api/approvals/request error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Poll approval status by Operator
+app.get('/api/approvals/status/:id', requireAuth, async (req, res) => {
+    try {
+        const approval = await ApprovalRequest.getById(req.params.id);
+        if (!approval) return res.status(404).json({ success: false, error: 'Approval request not found' });
+        res.json({
+            success: true,
+            status: approval.status,
+            approvedBy: approval.approvedBy,
+            rejectionReason: approval.rejectionReason,
+            transactionId: approval.transactionId,
+            receiptNo: approval.receiptNo
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Operator overrides using Manager's PIN code
+app.post('/api/approvals/verify-pin', requireAuth, requireEditAccess, async (req, res) => {
+    try {
+        const { requestId, pin } = req.body;
+        if (!requestId || !pin) {
+            return res.status(400).json({ success: false, error: 'Request ID and PIN are required' });
+        }
+
+        const pinResult = await ApprovalRequest.verifyPin(requestId, pin);
+        if (!pinResult.success) {
+            return res.status(400).json({ success: false, error: pinResult.error });
+        }
+
+        const approval = await ApprovalRequest.approve(requestId, 'Sales Manager (via PIN)', 'Authorized via Override PIN');
+        
+        let newTx = null;
+        if (!approval.transactionId && approval.txPayload) {
+            const txData = { ...approval.txPayload };
+            txData.specialApprovalId = approval._id;
+            txData.approvedBy = approval.approvedBy;
+            newTx = await Transaction.create(txData, approval.requestedBy);
+            await ApprovalRequest.markUsed(approval._id, newTx._id, newTx.receiptNo);
+
+            setImmediate(async () => {
+                try {
+                    await ActivityLog.log(approval.requestedBy, 'CREATE', 'Transaction', `Created OUT transaction for ${newTx.count} trays with Special Approval via PIN (Ref: RE-${String(newTx.receiptNo).padStart(6, '0')})`);
+                    const customer = await Customer.getById(newTx.customerId);
+                    if (customer && customer.phone) {
+                        await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance);
+                    }
+                } catch (e) {}
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'PIN verified and transaction approved!',
+            transactionId: newTx ? newTx._id : approval.transactionId,
+            receiptNo: newTx ? newTx.receiptNo : approval.receiptNo
+        });
+    } catch (err) {
+        console.error('POST /api/approvals/verify-pin error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Sales Manager Web Approval View (Open from WhatsApp Link)
+app.get('/approval/:token', async (req, res) => {
+    try {
+        const approval = await ApprovalRequest.getByToken(req.params.token);
+        res.render('approval-portal', { approval });
+    } catch (err) {
+        console.error('GET /approval/:token error:', err);
+        res.status(500).render('approval-portal', { approval: null });
+    }
+});
+
+// Sales Manager Action (Approve / Reject)
+app.post('/approval/:token/action', async (req, res) => {
+    try {
+        const { action, notes, approverName } = req.body;
+        const token = req.params.token;
+
+        if (action === 'APPROVE') {
+            const approval = await ApprovalRequest.approve(token, approverName || 'Sales Manager', notes);
+            let newTx = null;
+            if (!approval.transactionId && approval.txPayload) {
+                const txData = { ...approval.txPayload };
+                txData.specialApprovalId = approval._id;
+                txData.approvedBy = approval.approvedBy;
+                newTx = await Transaction.create(txData, approval.requestedBy);
+                await ApprovalRequest.markUsed(approval._id, newTx._id, newTx.receiptNo);
+
+                setImmediate(async () => {
+                    try {
+                        await ActivityLog.log(approval.requestedBy, 'CREATE', 'Transaction', `Special Approval granted by ${approval.approvedBy} for ${newTx.count} trays (Ref: RE-${String(newTx.receiptNo).padStart(6, '0')})`);
+                        const customer = await Customer.getById(newTx.customerId);
+                        if (customer && customer.phone) {
+                            await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance);
+                        }
+                    } catch (e) {}
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: 'Approved successfully',
+                transactionId: newTx ? newTx._id : approval.transactionId,
+                receiptNo: newTx ? newTx.receiptNo : approval.receiptNo
+            });
+        } else if (action === 'REJECT') {
+            const approval = await ApprovalRequest.reject(token, notes || 'Rejected by Sales Manager');
+            return res.json({ success: true, message: 'Request rejected', approval });
+        } else {
+            return res.status(400).json({ success: false, error: 'Invalid action' });
+        }
+    } catch (err) {
+        console.error('POST /approval/:token/action error:', err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

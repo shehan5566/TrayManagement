@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 dotenv.config();
 
 let cachedPromise = null;
@@ -111,7 +112,10 @@ const SystemSettingSchema = new mongoose.Schema({
     companyName: { type: String, default: 'NELNA AGRI DEVELOPMENT (PVT) LTD' },
     smsWebhookUrl: { type: String, default: 'https://trigger.macrodroid.com/55b77285-583d-4748-b4e8-765fa3e9fb2b/sendsms' },
     emailReceiver: { type: String, default: 'shehand@nelna.lk' },
-    receiptFooterNote: { type: String, default: 'Official Inward Stock Receipt & Verification Log' }
+    receiptFooterNote: { type: String, default: 'Official Inward Stock Receipt & Verification Log' },
+    enableOutstandingBlock: { type: Boolean, default: true },
+    salesManagerPhone: { type: String, default: '0770000000' },
+    allowedGraceTrays: { type: Number, default: 0 }
 });
 
 const RoleSchema = new mongoose.Schema({
@@ -159,7 +163,33 @@ const TransactionSchema = new mongoose.Schema({
     receiptNo: { type: Number, default: 0 },
     locationId: { type: String, default: 'main' },
     tripId: { type: String },
+    specialApprovalId: { type: String },
+    approvedBy: { type: String },
     isDeleted: { type: Boolean, default: false }
+});
+
+const ApprovalRequestSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    token: { type: String, required: true, unique: true },
+    pin: { type: String, required: true },
+    customerId: { type: String, required: true },
+    customerName: { type: String, required: true },
+    currentBalance: { type: Number, default: 0 },
+    requestedQty: { type: Number, required: true },
+    txType: { type: String, default: 'OUT' },
+    txPayload: { type: Object, required: true },
+    locationId: { type: String, default: 'main' },
+    locationName: { type: String, default: 'Main Office' },
+    requestedBy: { type: String, default: 'System' },
+    status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED', 'EXPIRED'], default: 'PENDING' },
+    approvedBy: { type: String },
+    approvedAt: { type: Date },
+    rejectionReason: { type: String },
+    transactionId: { type: String },
+    receiptNo: { type: Number },
+    isUsed: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date, required: true }
 });
 
 const ActivityLogSchema = new mongoose.Schema({
@@ -239,6 +269,7 @@ const MonthlyBalanceModel = mongoose.model('MonthlyBalance', MonthlyBalanceSchem
 const DamageLogModel = mongoose.model('DamageLog', DamageLogSchema);
 const SystemSettingModel = mongoose.model('SystemSetting', SystemSettingSchema);
 const LorryTripModel = mongoose.model('LorryTrip', LorryTripSchema);
+const ApprovalRequestModel = mongoose.model('ApprovalRequest', ApprovalRequestSchema);
 
 // Helper function to map _id to id
 const mapDoc = (doc) => {
@@ -1347,8 +1378,113 @@ const SystemSetting = {
         if (data.smsWebhookUrl) setting.smsWebhookUrl = data.smsWebhookUrl;
         if (data.emailReceiver !== undefined) setting.emailReceiver = data.emailReceiver;
         if (data.receiptFooterNote) setting.receiptFooterNote = data.receiptFooterNote;
+        if (data.enableOutstandingBlock !== undefined) setting.enableOutstandingBlock = (data.enableOutstandingBlock === 'true' || data.enableOutstandingBlock === true || data.enableOutstandingBlock === 'on');
+        if (data.salesManagerPhone !== undefined) setting.salesManagerPhone = data.salesManagerPhone;
+        if (data.allowedGraceTrays !== undefined && data.allowedGraceTrays !== '') setting.allowedGraceTrays = parseInt(data.allowedGraceTrays, 10);
         await setting.save();
         return mapDoc(setting);
+    }
+};
+
+// Approval Requests CRUD
+const ApprovalRequest = {
+    create: async (data) => {
+        const id = 'appr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        const token = crypto.randomBytes(16).toString('hex');
+        const pin = String(Math.floor(1000 + Math.random() * 9000));
+        const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+        const doc = new ApprovalRequestModel({
+            _id: id,
+            token,
+            pin,
+            customerId: data.customerId,
+            customerName: data.customerName,
+            currentBalance: data.currentBalance || 0,
+            requestedQty: data.requestedQty,
+            txType: data.txType || 'OUT',
+            txPayload: data.txPayload,
+            locationId: data.locationId || 'main',
+            locationName: data.locationName || 'Main Office',
+            requestedBy: data.requestedBy || 'System',
+            status: 'PENDING',
+            expiresAt
+        });
+        await doc.save();
+        return mapDoc(doc);
+    },
+    getByToken: async (token) => {
+        const doc = await ApprovalRequestModel.findOne({ token });
+        if (!doc) return null;
+        if (doc.status === 'PENDING' && new Date() > doc.expiresAt) {
+            doc.status = 'EXPIRED';
+            await doc.save();
+        }
+        return mapDoc(doc);
+    },
+    getById: async (id) => {
+        const doc = await ApprovalRequestModel.findById(id);
+        if (!doc) return null;
+        if (doc.status === 'PENDING' && new Date() > doc.expiresAt) {
+            doc.status = 'EXPIRED';
+            await doc.save();
+        }
+        return mapDoc(doc);
+    },
+    approve: async (idOrToken, approverName, notes) => {
+        const query = idOrToken.startsWith('appr_') ? { _id: idOrToken } : { token: idOrToken };
+        const doc = await ApprovalRequestModel.findOne(query);
+        if (!doc) throw new Error('Approval request not found');
+        if (doc.status === 'EXPIRED' || (doc.status === 'PENDING' && new Date() > doc.expiresAt)) {
+            doc.status = 'EXPIRED';
+            await doc.save();
+            throw new Error('Approval request has expired');
+        }
+        if (doc.status === 'APPROVED') {
+            return mapDoc(doc);
+        }
+        if (doc.status === 'REJECTED') {
+            throw new Error('Approval request was already rejected');
+        }
+
+        doc.status = 'APPROVED';
+        doc.approvedBy = approverName || 'Sales Manager';
+        doc.approvedAt = new Date();
+        if (notes && doc.txPayload) {
+            doc.txPayload.remarks = (doc.txPayload.remarks ? doc.txPayload.remarks + ' | ' : '') + `Approved by ${doc.approvedBy}: ${notes}`;
+            doc.markModified('txPayload');
+        }
+        await doc.save();
+        return mapDoc(doc);
+    },
+    reject: async (idOrToken, reason) => {
+        const query = idOrToken.startsWith('appr_') ? { _id: idOrToken } : { token: idOrToken };
+        const doc = await ApprovalRequestModel.findOne(query);
+        if (!doc) throw new Error('Approval request not found');
+        doc.status = 'REJECTED';
+        doc.rejectionReason = reason || 'Rejected by Sales Manager';
+        await doc.save();
+        return mapDoc(doc);
+    },
+    verifyPin: async (id, inputPin) => {
+        const doc = await ApprovalRequestModel.findById(id);
+        if (!doc) return { success: false, error: 'Request not found' };
+        if (doc.status === 'EXPIRED' || new Date() > doc.expiresAt) {
+            return { success: false, error: 'Request has expired' };
+        }
+        if (doc.pin === String(inputPin).trim()) {
+            return { success: true };
+        }
+        return { success: false, error: 'Invalid PIN code' };
+    },
+    markUsed: async (id, transactionId, receiptNo) => {
+        const doc = await ApprovalRequestModel.findById(id);
+        if (doc) {
+            doc.isUsed = true;
+            if (transactionId) doc.transactionId = transactionId;
+            if (receiptNo) doc.receiptNo = receiptNo;
+            await doc.save();
+        }
     }
 };
 
@@ -1629,5 +1765,7 @@ module.exports = {
     SystemSettingModel,
     CounterModel,
     LorryTripModel,
-    LocationModel
+    LocationModel,
+    ApprovalRequest,
+    ApprovalRequestModel
 };

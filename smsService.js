@@ -33,7 +33,16 @@ const formatPhoneNumber = (phone) => {
  * @param {string} message - SMS message content
  */
 const sendSMS = async (phone, message) => {
-    if (!MACRODROID_WEBHOOK_URL) {
+    let webhookUrl = MACRODROID_WEBHOOK_URL;
+    try {
+        const { SystemSettingModel } = require('./db');
+        const setting = await SystemSettingModel.findById('global_config').lean();
+        if (setting && setting.smsWebhookUrl) {
+            webhookUrl = setting.smsWebhookUrl;
+        }
+    } catch (e) {}
+
+    if (!webhookUrl) {
         console.warn('MacroDroid Webhook URL not configured. Skipping SMS.');
         return false;
     }
@@ -46,11 +55,11 @@ const sendSMS = async (phone, message) => {
 
     try {
         // Construct the URL with query parameters for the webhook
-        const url = new URL(MACRODROID_WEBHOOK_URL);
+        const url = new URL(webhookUrl);
         url.searchParams.append('number', formattedPhone);
         url.searchParams.append('msg', message);
 
-        console.log(`Triggering MacroDroid webhook to send SMS to ${formattedPhone}...`);
+        console.log(`Triggering MacroDroid webhook to send alert to ${formattedPhone}...`);
         
         const response = await fetch(url.toString(), {
             method: 'GET'
@@ -59,7 +68,7 @@ const sendSMS = async (phone, message) => {
         const text = await response.text();
 
         if (response.ok) {
-            console.log(`MacroDroid webhook triggered successfully! SMS requested for ${formattedPhone}.`);
+            console.log(`MacroDroid webhook triggered successfully for ${formattedPhone}.`);
             return true;
         } else {
             console.error(`MacroDroid Webhook failed with status ${response.status}: ${text}`);
@@ -119,7 +128,34 @@ Thank you!`;
     return await sendSMS(phone, msg);
 };
 
-module.exports = { sendSMS, formatPhoneNumber, sendTransactionSMS, sendManualSMS };
+/**
+ * Send an alert for Special Transaction Approval to Sales Manager via MacroDroid (WhatsApp / SMS)
+ */
+const sendApprovalAlert = async (phone, details, approvalUrl, pin) => {
+    const formattedPhone = formatPhoneNumber(phone);
+    const targetPhone = formattedPhone || phone;
+    if (!targetPhone) {
+        console.error('Invalid phone number for approval alert:', phone);
+        return false;
+    }
+
+    const msg = `*--- NELNA SPECIAL APPROVAL REQUEST ---*
+Customer: ${details.customerName}
+Due Trays: ${details.currentBalance} Trays
+Requested: ${details.requestedQty} Trays (${details.txType || 'OUT'})
+Branch: ${details.locationName || 'Main Office'}
+Operator: ${details.requestedBy || 'Staff'}
+${details.vehicleNo && details.vehicleNo !== 'N/A' ? `Vehicle: ${details.vehicleNo}\n` : ''}Reason: Customer has ${details.currentBalance} unreturned trays.
+
+👉 *Click Link to APPROVE or REJECT:*
+${approvalUrl}
+
+(Or Override PIN: *${pin}*)`;
+
+    return await sendSMS(targetPhone, msg);
+};
+
+module.exports = { sendSMS, formatPhoneNumber, sendTransactionSMS, sendManualSMS, sendApprovalAlert };
 
 
 
