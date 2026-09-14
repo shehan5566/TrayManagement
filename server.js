@@ -1471,29 +1471,27 @@ app.post('/loading/:id/edit', requireAuth, requireEditAccess, async (req, res) =
             return res.redirect('/loading?error=not_found');
         }
 
-        if (trip.status !== 'ON_ROUTE') {
-            if (isAjax) return res.status(400).json({ success: false, error: 'Cannot edit settled or cancelled trip!' });
-            return res.redirect('/loading?error=cannot_edit_settled');
-        }
-
+        const isTripOnRoute = trip.status === 'ON_ROUTE';
         const oldQty = trip.loadedQty || 0;
         const qtyDiff = newQty - oldQty; // positive means more trays loaded (deduct from warehouse)
 
-        const loc = (await LocationModel.findById(trip.locationId || 'main')) || (await Location.getById(trip.locationId || 'main'));
-        if (qtyDiff > 0 && loc && (loc.currentStock || 0) < qtyDiff) {
-            if (isAjax) return res.status(400).json({ success: false, error: `Insufficient warehouse stock! (Available: ${loc.currentStock}, Needed: ${qtyDiff})` });
-            return res.redirect('/loading?error=insufficient_stock');
-        }
+        if (isTripOnRoute) {
+            const loc = (await LocationModel.findById(trip.locationId || 'main')) || (await Location.getById(trip.locationId || 'main'));
+            if (qtyDiff > 0 && loc && (loc.currentStock || 0) < qtyDiff) {
+                if (isAjax) return res.status(400).json({ success: false, error: `Insufficient warehouse stock! (Available: ${loc.currentStock}, Needed: ${qtyDiff})` });
+                return res.redirect('/loading?error=insufficient_stock');
+            }
 
-        if (loc && qtyDiff !== 0) {
-            loc.currentStock = Math.max(0, (loc.currentStock || 0) - qtyDiff);
-            await loc.save();
+            if (loc && qtyDiff !== 0) {
+                loc.currentStock = Math.max(0, (loc.currentStock || 0) - qtyDiff);
+                await loc.save();
+            }
+            trip.loadedQty = newQty;
+            trip.expectedRemainingQty = newQty - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
         }
 
         trip.vehicleNo = vehicleNo || trip.vehicleNo;
         trip.driverName = driverName !== undefined ? driverName.trim() : trip.driverName;
-        trip.loadedQty = newQty;
-        trip.expectedRemainingQty = newQty - (trip.totalDeliveredQty || 0) + (trip.totalCollectedQty || 0);
         if (dispatchedDate) trip.dispatchedDate = new Date(dispatchedDate);
         if (notes !== undefined) trip.notes = notes.trim();
 
