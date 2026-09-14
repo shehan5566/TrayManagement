@@ -875,7 +875,150 @@ textarea:focus,
     outline: none !important;
 }
 
+/* -------------------------------------------
+   Custom Dropdown Component (Brand Green)
+   Guarantees 100% Brand Green Selection & Hover
+------------------------------------------- */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    user-select: none;
+}
 
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    background-color: var(--input-bg);
+    color: var(--text-dark);
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-height: 42px;
+    box-sizing: border-box;
+}
+
+.custom-select-trigger:focus,
+.custom-select-trigger:focus-visible,
+.custom-select-wrapper.open .custom-select-trigger {
+    border-color: var(--primary-green, #174e3e) !important;
+    box-shadow: 0 0 0 3px rgba(23, 78, 62, 0.22) !important;
+    outline: none !important;
+}
+
+.custom-select-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.custom-select-arrow {
+    font-size: 11px;
+    color: var(--text-light);
+    transition: transform 0.2s ease, color 0.2s ease;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.custom-select-wrapper.open .custom-select-arrow {
+    transform: rotate(180deg);
+    color: var(--primary-green, #174e3e);
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--input-bg, #ffffff);
+    border: 1.5px solid var(--border-color);
+    border-top: 3px solid var(--primary-green, #174e3e);
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 999999 !important;
+    display: none;
+    padding: 4px;
+}
+
+.custom-select-wrapper.open .custom-select-dropdown {
+    display: block;
+    animation: customSelectDrop 0.15s ease-out;
+}
+
+@keyframes customSelectDrop {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* BRAND GREEN HOVER - GUARANTEED ZERO BLUE */
+.custom-select-option:hover {
+    background-color: var(--brand-green, #174e3e) !important;
+    color: #ffffff !important;
+}
+
+.custom-select-option:hover .option-check {
+    color: #ffffff !important;
+}
+
+/* SELECTED STATE - CLEAN LIGHT GREEN ACCENT */
+.custom-select-option.selected {
+    background-color: #e8f5e9;
+    color: var(--brand-green, #174e3e);
+    font-weight: 600;
+}
+
+.custom-select-option.selected:hover {
+    background-color: var(--brand-green, #174e3e) !important;
+    color: #ffffff !important;
+}
+
+.custom-select-option .option-check {
+    font-size: 12px;
+    color: var(--brand-green, #174e3e);
+    margin-left: 8px;
+}
+
+[data-theme="dark"] .custom-select-dropdown {
+    background-color: #1e293b;
+    border-color: #334155;
+    border-top-color: #10b981;
+}
+
+[data-theme="dark"] .custom-select-option {
+    color: #f8fafc;
+}
+
+[data-theme="dark"] .custom-select-option:hover {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .custom-select-option.selected {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+[data-theme="dark"] .custom-select-option .option-check {
+    color: #34d399;
+}
 
 /* Buttons */
 .btn {

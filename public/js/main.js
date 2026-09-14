@@ -452,3 +452,127 @@ function togglePasswordVisibility(inputId, btnElement) {
         }
     }
 }
+
+// ----------------------------------------------------
+// Custom Dropdown Initializer for Brand Green Dropdowns
+// (Replaces native OS blue menus with 100% Brand Green)
+// ----------------------------------------------------
+function initCustomSelect(select) {
+    if (!select || select.dataset.customSelectInit === 'true') return;
+    select.dataset.customSelectInit = 'true';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+
+    // Keep native select in DOM for form submission & validation
+    select.style.position = 'absolute';
+    select.style.opacity = '0';
+    select.style.pointerEvents = 'none';
+    select.style.width = '0';
+    select.style.height = '0';
+    select.style.margin = '0';
+    select.style.padding = '0';
+    select.style.border = 'none';
+    select.tabIndex = -1;
+
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    trigger.tabIndex = 0;
+
+    const textSpan = document.createElement('span');
+    textSpan.className = 'custom-select-text';
+
+    const arrowIcon = document.createElement('i');
+    arrowIcon.className = 'fa-solid fa-chevron-down custom-select-arrow';
+
+    trigger.appendChild(textSpan);
+    trigger.appendChild(arrowIcon);
+    wrapper.appendChild(trigger);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown';
+    wrapper.appendChild(dropdown);
+
+    function updateTriggerText() {
+        const selectedOpt = select.options[select.selectedIndex];
+        textSpan.textContent = selectedOpt ? selectedOpt.text : 'Select...';
+    }
+
+    function renderOptions() {
+        dropdown.innerHTML = '';
+        Array.from(select.options).forEach((opt, idx) => {
+            const optDiv = document.createElement('div');
+            const isSelected = (idx === select.selectedIndex);
+            optDiv.className = 'custom-select-option' + (isSelected ? ' selected' : '');
+            optDiv.dataset.value = opt.value;
+
+            const label = document.createElement('span');
+            label.textContent = opt.text;
+            optDiv.appendChild(label);
+
+            if (isSelected) {
+                const check = document.createElement('i');
+                check.className = 'fa-solid fa-check option-check';
+                optDiv.appendChild(check);
+            }
+
+            optDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                select.selectedIndex = idx;
+                select.value = opt.value;
+                updateTriggerText();
+                wrapper.classList.remove('open');
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                select.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+
+            dropdown.appendChild(optDiv);
+        });
+    }
+
+    updateTriggerText();
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = wrapper.classList.contains('open');
+        document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+            if (w !== wrapper) w.classList.remove('open');
+        });
+        if (!isOpen) {
+            renderOptions();
+            wrapper.classList.add('open');
+        } else {
+            wrapper.classList.remove('open');
+        }
+    });
+
+    trigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            trigger.click();
+        } else if (e.key === 'Escape') {
+            wrapper.classList.remove('open');
+        }
+    });
+
+    select.addEventListener('change', updateTriggerText);
+    select.refreshCustomSelect = function() {
+        updateTriggerText();
+        if (wrapper.classList.contains('open')) renderOptions();
+    };
+}
+
+// Global click outside listener to close custom dropdowns
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-select-wrapper')) {
+        document.querySelectorAll('.custom-select-wrapper.open').forEach(w => w.classList.remove('open'));
+    }
+});
+
+// Auto-initialize all select elements with class 'custom-select'
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('select.custom-select').forEach(initCustomSelect);
+});
+
