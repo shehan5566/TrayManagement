@@ -181,6 +181,7 @@ const MonthlyBalanceSchema = new mongoose.Schema({
 const LorryTripSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     tripNo: { type: String, required: true },
+    unloadingNo: { type: String },
     vehicleNo: { type: String, required: true },
     driverName: { type: String, default: '' },
     driverPhone: { type: String, default: '' },
@@ -1287,7 +1288,11 @@ const LorryTrip = {
         const trips = await LorryTripModel.find(filter).sort({ dispatchedDate: -1 });
         const locations = await LocationModel.find({}).lean();
         const locMap = {};
-        locations.forEach(l => { locMap[l._id] = l.name; });
+        const locCodes = {};
+        locations.forEach(l => { 
+            locMap[l._id] = l.name; 
+            locCodes[l._id] = (l.code ? l.code.toUpperCase() : 'HO');
+        });
 
         // Synchronize active trips dynamically with actual non-deleted transactions
         for (const trip of trips) {
@@ -1310,6 +1315,11 @@ const LorryTrip = {
         return trips.map(t => {
             const mapped = mapDoc(t);
             mapped.locationName = locMap[mapped.locationId] || 'Head Office';
+            if (mapped.status === 'COMPLETED' && !mapped.unloadingNo) {
+                const locCode = locCodes[mapped.locationId] || 'HO';
+                const digits = (mapped.tripNo || '').replace(/\D/g, '').padStart(5, '0');
+                mapped.unloadingNo = locCode + 'ULD' + digits;
+            }
             return mapped;
         });
     },
@@ -1345,6 +1355,11 @@ const LorryTrip = {
         const mapped = mapDoc(doc);
         const loc = await LocationModel.findById(mapped.locationId || 'main').lean();
         mapped.locationName = loc ? loc.name : 'Head Office';
+        if (mapped.status === 'COMPLETED' && !mapped.unloadingNo) {
+            const locCode = (loc && loc.code) ? loc.code.toUpperCase() : 'HO';
+            const digits = (mapped.tripNo || '').replace(/\D/g, '').padStart(5, '0');
+            mapped.unloadingNo = locCode + 'ULD' + digits;
+        }
         return mapped;
     },
     create: async (data, username) => {
@@ -1433,6 +1448,13 @@ const LorryTrip = {
         }
         const variance = actualUnloaded - expected;
 
+        // Generate unloading document number if not present
+        const loc = await LocationModel.findById(trip.locationId || 'main');
+        const locCode = (loc && loc.code) ? loc.code.toUpperCase() : 'HO';
+        if (!trip.unloadingNo) {
+            trip.unloadingNo = await generateDocNo(locCode, 'ULD');
+        }
+
         trip.returnedDate = new Date();
         trip.receivedBy = username || 'System';
         trip.actualUnloadedQty = actualUnloaded;
@@ -1445,7 +1467,6 @@ const LorryTrip = {
         await trip.save();
 
         // Add actual unloaded trays back to warehouse current stock
-        const loc = await LocationModel.findById(trip.locationId || 'main');
         if (loc) {
             loc.currentStock = (loc.currentStock || 0) + actualUnloaded;
             await loc.save();
