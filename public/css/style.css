@@ -17,6 +17,8 @@
     --brand-yellow: #ffc300;
     --brand-yellow-light: #ffea79;
 
+    accent-color: var(--brand-green);
+
     /* Theme Variables */
     --border-color: #dcdcdc;
     --border-light: #e9ecef;
@@ -61,6 +63,8 @@
     --accent-yellow: #fbbf24;
     /* Warm Amber/Gold accent */
     --accent-yellow-light: #fde047;
+
+    accent-color: var(--primary-green);
 
     --border-color: #334155;
     /* Slate 700 borders */
@@ -119,6 +123,35 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* -------------------------------------------
+   Global Selection & Focus Theming
+   Replaces browser default blue with brand green
+------------------------------------------- */
+::selection {
+    background-color: var(--brand-green, #174e3e) !important;
+    color: #ffffff !important;
+}
+
+::-moz-selection {
+    background-color: var(--brand-green, #174e3e) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] ::selection {
+    background-color: var(--primary-green, #10b981) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] ::-moz-selection {
+    background-color: var(--primary-green, #10b981) !important;
+    color: #ffffff !important;
+}
+
+:focus-visible {
+    outline: 2px solid var(--primary-green, #174e3e) !important;
+    outline-offset: 1px;
 }
 
 body {
@@ -834,8 +867,17 @@ textarea {
 
 input:focus,
 select:focus,
-textarea:focus {
-    border-color: var(--primary-green);
+textarea:focus,
+.search-input:focus,
+.form-control:focus {
+    border-color: var(--primary-green) !important;
+    box-shadow: 0 0 0 3px rgba(23, 78, 62, 0.22) !important;
+    outline: none !important;
+}
+
+select option:checked {
+    background-color: var(--primary-green, #174e3e) !important;
+    color: #ffffff !important;
 }
 
 /* Buttons */
@@ -1963,6 +2005,22 @@ footer strong {
     background: var(--primary-green) !important;
     border-color: var(--primary-green) !important;
     color: var(--white) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:focus,
+.dataTables_wrapper .dataTables_paginate .paginate_button:focus-visible,
+.dataTables_wrapper .dataTables_paginate .paginate_button:active {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(23, 78, 62, 0.3) !important;
+}
+
+table.dataTable tbody tr.selected,
+table.dataTable.display tbody tr.selected,
+table.dataTable.stripe tbody tr.selected,
+table.dataTable tbody > tr.selected,
+table tbody tr.selected {
+    background-color: rgba(23, 78, 62, 0.12) !important;
+    color: inherit !important;
 }
 
 .dataTables_wrapper .dataTables_info {
