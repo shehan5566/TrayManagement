@@ -35,38 +35,38 @@
             <td class="value"><strong><%= trip.driverName || '-' %></strong></td>
         </tr>
         <tr>
-            <td class="label">Warehouse / Branch</td>
+            <td class="label">Warehouse</td>
             <td class="value"><strong><%= trip.locationName || 'Head Office' %></strong></td>
         </tr>
         <tr>
-            <td class="label">Loaded Tray Quantity (OUT)</td>
+            <td class="label">Loaded Qty</td>
             <td class="value"><strong><%= trip.loadedQty %> Trays</strong></td>
         </tr>
         <tr>
-            <td class="label" style="color: #dc2626;">Total Delivered to Customers (OUT)</td>
+            <td class="label" style="color: #dc2626;">OUT</td>
             <td class="value" style="color: #dc2626; font-weight: 700;"><strong><%= trip.totalDeliveredQty || 0 %> Trays</strong></td>
         </tr>
         <tr>
-            <td class="label" style="color: #2563eb;">Total Collected from Customers (IN)</td>
+            <td class="label" style="color: #2563eb;">IN</td>
             <td class="value" style="color: #2563eb; font-weight: 700;"><strong><%= trip.totalCollectedQty || 0 %> Trays</strong></td>
         </tr>
         <tr>
-            <td class="label" style="font-weight: 700;">Expected Remaining in Lorry</td>
+            <td class="label" style="font-weight: 700;">Expected Qty</td>
             <td class="value"><strong><%= trip.expectedRemainingQty || 0 %> Trays</strong></td>
         </tr>
         <tr>
-            <td class="label" style="font-weight: 700; color: #1b5e20;">Actual Unloaded to Warehouse</td>
+            <td class="label" style="font-weight: 700; color: #1b5e20;">Unloaded Qty</td>
             <td class="value" style="color: #1b5e20; font-size: 15px;"><strong><%= trip.actualUnloadedQty !== undefined ? trip.actualUnloadedQty : '-' %> Trays</strong></td>
         </tr>
         <tr>
-            <td class="label">Reconciliation Variance</td>
+            <td class="label">Variance</td>
             <td class="value">
                 <% if (trip.variance === 0) { %>
-                    <span class="badge" style="background:#dcfce7; color:#166534; padding:4px 8px; font-size:11px; font-weight: 700;">0 (OK / Exact Match)</span>
+                    <span class="badge" style="background:#dcfce7; color:#166534; padding:4px 8px; font-size:11px; font-weight: 700;">0 Trays</span>
                 <% } else if (trip.variance < 0) { %>
-                    <span class="badge" style="background:#fee2e2; color:#b91c1c; padding:4px 8px; font-size:11px; font-weight: 700;"><%= trip.variance %> Trays (Shortage)</span>
+                    <span class="badge" style="background:#fee2e2; color:#b91c1c; padding:4px 8px; font-size:11px; font-weight: 700;"><%= trip.variance %> Trays</span>
                 <% } else { %>
-                    <span class="badge" style="background:#eff6ff; color:#1d4ed8; padding:4px 8px; font-size:11px; font-weight: 700;">+<%= trip.variance %> Trays (Excess)</span>
+                    <span class="badge" style="background:#eff6ff; color:#1d4ed8; padding:4px 8px; font-size:11px; font-weight: 700;">+<%= trip.variance %> Trays</span>
                 <% } %>
             </td>
         </tr>
@@ -83,7 +83,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div style="font-size: 14px; font-weight: 700; color: #333;">
-                    <i class="fa-solid fa-truck-ramp-box"></i> Return & Unload Summary:
+                    <i class="fa-solid fa-truck-ramp-box"></i> Unload Summary:
                 </div>
                 <div style="font-size: 12px; color: #555; margin-top: 4px;">
                     Vehicle: <strong><%= trip.vehicleNo %></strong> &nbsp;|&nbsp; Driver: <strong><%= trip.driverName || 'N/A' %></strong>
@@ -116,7 +116,7 @@
     <div class="receipt-signatures">
         <div class="signature-line">Unloaded By</div>
         <div class="signature-line">Checked By</div>
-        <div class="signature-line">Received By (Warehouse)</div>
+        <div class="signature-line">Received By</div>
     </div>
 </div>
 
