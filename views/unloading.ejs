@@ -92,6 +92,29 @@
         <span class="box-title"><i class="fa-solid fa-clock-rotate-left"></i> Unloading History</span>
     </div>
 
+    <!-- Date Filter Form -->
+    <form action="/unloading" method="GET"
+        style="display: flex; gap: 15px; align-items: flex-end; background: var(--bg-light); padding: 15px; border-radius: 8px; border: 1px solid var(--border-light); margin-bottom: 20px; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label for="startDate"
+                style="font-size: 12px; font-weight: 600; color: var(--text-dark);">Start Date</label>
+            <input type="date" id="startDate" name="startDate" value="<%= typeof startDate !== 'undefined' ? startDate : '' %>"
+                style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label for="endDate" style="font-size: 12px; font-weight: 600; color: var(--text-dark);">End Date</label>
+            <input type="date" id="endDate" name="endDate" value="<%= typeof endDate !== 'undefined' ? endDate : '' %>"
+                style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 8px 16px; height: 38px;">
+            <i class="fa-solid fa-filter"></i> Search
+        </button>
+        <a href="/unloading" class="btn btn-secondary"
+            style="padding: 8px 16px; height: 38px; text-decoration: none; display: flex; align-items: center; justify-content: center; background-color: #f1f3f5; color: #333;">
+            Clear
+        </a>
+    </form>
+
     <% const completedTrips = (trips || []).filter(t => t.status === 'COMPLETED' || t.status === 'CANCELLED'); %>
     <% if (completedTrips.length === 0) { %>
         <p style="text-align: center; color: var(--text-light); padding: 20px 0;">No unloading history records yet.</p>

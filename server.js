@@ -1320,7 +1320,12 @@ app.get('/loading', requireAuth, async (req, res) => {
     try {
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
         const userRole = (req.session.user && req.session.user.role) || 'user';
-        const trips = await LorryTrip.getAll(userLoc, userRole);
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
+        const startDate = req.query.startDate !== undefined ? req.query.startDate : today;
+        const endDate = req.query.endDate !== undefined ? req.query.endDate : today;
+        const queryParams = { startDate, endDate, page: 'loading' };
+
+        const trips = await LorryTrip.getAll(userLoc, userRole, queryParams);
         
         const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc));
         const currentStock = loc ? (loc.currentStock || 0) : 0;
@@ -1334,6 +1339,8 @@ app.get('/loading', requireAuth, async (req, res) => {
             currentStock,
             vehicles,
             activePath: '/loading',
+            startDate,
+            endDate,
             error: req.query.error
         });
     } catch (err) {
@@ -1347,7 +1354,12 @@ app.get('/unloading', requireAuth, async (req, res) => {
     try {
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
         const userRole = (req.session.user && req.session.user.role) || 'user';
-        const trips = await LorryTrip.getAll(userLoc, userRole);
+        const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
+        const startDate = req.query.startDate !== undefined ? req.query.startDate : today;
+        const endDate = req.query.endDate !== undefined ? req.query.endDate : today;
+        const queryParams = { startDate, endDate, page: 'unloading' };
+
+        const trips = await LorryTrip.getAll(userLoc, userRole, queryParams);
         
         const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc));
         const currentStock = loc ? (loc.currentStock || 0) : 0;
@@ -1356,6 +1368,8 @@ app.get('/unloading', requireAuth, async (req, res) => {
             trips,
             currentStock,
             activePath: '/unloading',
+            startDate,
+            endDate,
             error: req.query.error
         });
     } catch (err) {

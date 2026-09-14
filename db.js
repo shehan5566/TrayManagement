@@ -1354,11 +1354,32 @@ const SystemSetting = {
 
 // Lorry Trips CRUD
 const LorryTrip = {
-    getAll: async (locationId = null, role = 'user') => {
+    getAll: async (locationId = null, role = 'user', queryParams = {}) => {
         let filter = { isDeleted: false };
         if (role !== 'admin' && locationId) {
             filter.locationId = locationId;
         }
+
+        if (queryParams.startDate || queryParams.endDate) {
+            let dateCondition = {};
+            if (queryParams.startDate) {
+                dateCondition.$gte = new Date(queryParams.startDate + 'T00:00:00+05:30');
+            }
+            if (queryParams.endDate) {
+                dateCondition.$lte = new Date(queryParams.endDate + 'T23:59:59.999+05:30');
+            }
+
+            if (queryParams.page === 'unloading') {
+                filter.$or = [
+                    { status: 'ON_ROUTE' },
+                    { status: { $in: ['COMPLETED', 'CANCELLED'] }, returnedDate: dateCondition },
+                    { status: { $in: ['COMPLETED', 'CANCELLED'] }, returnedDate: { $exists: false }, dispatchedDate: dateCondition }
+                ];
+            } else {
+                filter.dispatchedDate = dateCondition;
+            }
+        }
+
         const trips = await LorryTripModel.find(filter).sort({ dispatchedDate: -1 });
         const locations = await LocationModel.find({}).lean();
         const locMap = {};
