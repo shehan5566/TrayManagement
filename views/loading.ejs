@@ -132,7 +132,7 @@
                             <td style="text-align: center;">
                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                                     <a href="/loading/<%= t.id %>/print" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px;" title="Print Loading Note">
-                                        <i class="fa-solid fa-print"></i> Note
+                                        <i class="fa-solid fa-print"></i> Print
                                     </a>
                                     <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('transactions_edit')))) { %>
                                         <button onclick='openEditModal(<%- JSON.stringify(t).replace(/'/g, "\\'") %>)' class="btn btn-primary" style="padding: 6px 10px; font-size: 12px;" title="Edit Loading Record">
