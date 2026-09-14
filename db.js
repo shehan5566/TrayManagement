@@ -535,7 +535,42 @@ const StockTransfer = {
 
 // Customers CRUD
 const Customer = {
-    getAll: async (locationId = null, role = 'user') => {
+    getPendingDepositsMap: async () => {
+        const allTransactions = await TransactionModel.find({ isDeleted: { $ne: true } }).lean();
+        const pendingDepositMap = {};
+        allTransactions.forEach(t => {
+            const custId = String(t.customerId);
+            if (!custId) return;
+            const rate = Number(t.depositPerTray) || 2000;
+            const countQty = Number(t.count) || 0;
+            const expected = Number(t.expectedDeposit) || (countQty * rate);
+            let paid = 0;
+            if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
+                paid = Number(t.totalDeposit);
+            } else if (t.depositOption === 'ZERO') {
+                paid = 0;
+            } else if (t.depositOption === 'HALF') {
+                paid = expected / 2;
+            } else {
+                paid = expected;
+            }
+
+            const diff = expected - paid;
+            if (!pendingDepositMap[custId]) pendingDepositMap[custId] = 0;
+            if (t.type === 'OUT') {
+                pendingDepositMap[custId] += diff;
+            } else if (t.type === 'IN') {
+                pendingDepositMap[custId] -= diff;
+            }
+        });
+
+        Object.keys(pendingDepositMap).forEach(k => {
+            if (pendingDepositMap[k] < 0) pendingDepositMap[k] = 0;
+        });
+
+        return pendingDepositMap;
+    },
+    getAll: async (locationId = null, role = 'user', includePendingDeposit = false) => {
         let filter = {};
         // If not global admin and a locationId is provided, filter by location
         if (role !== 'admin' && locationId) {
@@ -543,6 +578,15 @@ const Customer = {
         }
         const customers = await CustomerModel.find(filter).lean();
         const mapped = customers.map(mapDoc);
+
+        if (includePendingDeposit) {
+            const pendingMap = await Customer.getPendingDepositsMap();
+            mapped.forEach(c => {
+                const p = pendingMap[String(c.id || c._id)];
+                c.pendingDeposit = (p && p > 0) ? p : 0;
+            });
+        }
+
         return mapped.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
     },
     getById: async (id) => {

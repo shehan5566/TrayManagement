@@ -1758,7 +1758,7 @@ app.get('/driver', async (req, res) => {
 
         const activeVehicle = driverSession.vehicleNo;
         const activeTrip = await LorryTrip.getActiveTrip(activeVehicle);
-        const customers = await Customer.getAll();
+        const customers = await Customer.getAll(null, 'admin', true);
         
         const settings = await SystemSetting.get();
         const depositPerTray = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
