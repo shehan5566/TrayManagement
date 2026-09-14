@@ -1995,9 +1995,54 @@ app.get('/transfers', requireAuth, requirePermission('manage_stock'), async (req
         // Pass a new query object to getAll to avoid mutating req.query directly if not needed, or just add them
         const queryParams = { ...req.query, startDate, endDate };
         const transfers = await StockTransfer.getAll(req.session.user.locationId, req.session.user.role, queryParams);
+        
+        // Ensure all pending incoming transfers for this branch are included (so they can be processed via GRN)
+        const { StockTransferModel } = require('./db');
+        const pendingQuery = {
+            status: 'PENDING',
+            isDeleted: { $ne: true }
+        };
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            pendingQuery.toLocationId = req.session.user.locationId;
+        }
+        const pendingTransfers = await StockTransferModel.find(pendingQuery).sort({ dispatchedDate: -1 }).lean();
+        const existingIds = new Set(transfers.map(t => String(t._id || t.id)));
+        pendingTransfers.forEach(p => {
+            const pId = String(p._id || p.id);
+            if (!existingIds.has(pId)) {
+                p.id = p._id;
+                transfers.push(p);
+                existingIds.add(pId);
+            }
+        });
+
+        // Also fetch received transfers for this location within the date range (by receivedDate)
+        const dateCondition = {
+            $gte: new Date(startDate),
+            $lte: (() => { const d = new Date(endDate); d.setHours(23, 59, 59, 999); return d; })()
+        };
+        const receivedQuery = {
+            status: { $ne: 'PENDING' },
+            receivedDate: dateCondition,
+            isDeleted: { $ne: true }
+        };
+        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+            receivedQuery.toLocationId = req.session.user.locationId;
+        }
+        const receivedTransfers = await StockTransferModel.find(receivedQuery).sort({ receivedDate: -1 }).lean();
+        receivedTransfers.forEach(r => {
+            const rId = String(r._id || r.id);
+            if (!existingIds.has(rId)) {
+                r.id = r._id;
+                transfers.push(r);
+                existingIds.add(rId);
+            }
+        });
+
         const locations = await Location.getAll();
         res.render('transfers', { transfers, locations, error: null, query: queryParams, startDate, endDate });
     } catch (err) {
+        console.error('Error retrieving transfers:', err);
         res.status(500).send('Error retrieving transfers');
     }
 });
@@ -2100,7 +2145,8 @@ app.post('/transfers/:id/grn', requireAuth, async (req, res) => {
         if (updatedTransfer.grnNo) refNo += ` / GRN: ${updatedTransfer.grnNo}`;
         const refStr = refNo ? ` (Ref: ${refNo})` : '';
         await ActivityLog.log(req.session.user.username, 'UPDATE', 'Transfer', `${grnData.action} transfer ${req.params.id}${refStr}`);
-        res.json({ success: true, message: 'GRN processed successfully', redirect: '/receive-stock' });
+        const redirectUrl = req.body.returnUrl || (req.headers.referer && req.headers.referer.includes('/transfers') ? '/transfers' : '/receive-stock');
+        res.json({ success: true, message: 'GRN processed successfully', redirect: redirectUrl });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
