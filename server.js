@@ -1270,8 +1270,8 @@ app.get('/transactions/receiptByRef/:refNo', requireAuth, async (req, res) => {
 // 1. LORRY DELIVERY TRIPS & RECONCILIATION
 // ==========================================
 
-// Warehouse Lorry Trips Manager View
-app.get('/lorry-trips', requireAuth, async (req, res) => {
+// Warehouse Lorry Loading View
+app.get('/loading', requireAuth, async (req, res) => {
     try {
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
         const userRole = (req.session.user && req.session.user.role) || 'user';
@@ -1284,16 +1284,44 @@ app.get('/lorry-trips', requireAuth, async (req, res) => {
         const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'RENTED', 'OWNOUTLET'];
         const vehicles = Array.from(new Set([...STANDARD_VEHICLES, ...dbVehicles])).filter(v => v !== 'N/A');
 
-        res.render('lorry-trips', {
+        res.render('loading', {
             trips,
             currentStock,
             vehicles,
-            activePath: '/lorry-trips'
+            activePath: '/loading',
+            error: req.query.error
         });
     } catch (err) {
-        console.error('GET /lorry-trips error:', err);
-        res.status(500).send('Error loading lorry trips: ' + err.message);
+        console.error('GET /loading error:', err);
+        res.status(500).send('Error loading lorry loading page: ' + err.message);
     }
+});
+
+// Warehouse Lorry Unloading & Reconciliation View
+app.get('/unloading', requireAuth, async (req, res) => {
+    try {
+        const userLoc = (req.session.user && req.session.user.locationId) || 'main';
+        const userRole = (req.session.user && req.session.user.role) || 'user';
+        const trips = await LorryTrip.getAll(userLoc, userRole);
+        
+        const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc));
+        const currentStock = loc ? (loc.currentStock || 0) : 0;
+
+        res.render('unloading', {
+            trips,
+            currentStock,
+            activePath: '/unloading',
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('GET /unloading error:', err);
+        res.status(500).send('Error loading lorry unloading page: ' + err.message);
+    }
+});
+
+// Backward compatibility redirect for /lorry-trips
+app.get('/lorry-trips', requireAuth, (req, res) => {
+    res.redirect('/loading');
 });
 
 // Dispatch Lorry with Trays (Warehouse Loading)
@@ -1304,14 +1332,14 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, re
         const qty = parseInt(loadedQty, 10);
         if (!vehicleNo || isNaN(qty) || qty <= 0) {
             if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid vehicle and tray quantity!' });
-            return res.redirect('/lorry-trips?error=invalid_qty');
+            return res.redirect('/loading?error=invalid_qty');
         }
 
         // Check if vehicle already has an active trip in progress
         const existingActive = await LorryTrip.getActiveTrip(vehicleNo);
         if (existingActive) {
             if (isAjax) return res.status(400).json({ success: false, error: `Vehicle ${vehicleNo} already has an active trip in progress (${existingActive.tripNo})!` });
-            return res.redirect('/lorry-trips?error=active_trip_exists');
+            return res.redirect('/loading?error=active_trip_exists');
         }
 
         // Auto-generate PIN from the last 4 digits of the vehicle number
@@ -1337,11 +1365,11 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, re
         );
 
         if (isAjax) return res.json({ success: true, message: `Lorry ${vehicleNo} dispatched successfully with ${qty} trays!` });
-        res.redirect('/lorry-trips');
+        res.redirect('/loading');
     } catch (err) {
         console.error('POST /lorry-trips/dispatch error:', err);
         if (isAjax) return res.status(500).json({ success: false, error: err.message });
-        res.redirect('/lorry-trips?error=' + encodeURIComponent(err.message));
+        res.redirect('/loading?error=' + encodeURIComponent(err.message));
     }
 });
 
@@ -1353,7 +1381,7 @@ app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, async (req, 
         const unloaded = parseInt(actualUnloadedQty, 10);
         if (isNaN(unloaded) || unloaded < 0) {
             if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid unloaded count!' });
-            return res.redirect('/lorry-trips?error=invalid_unloaded');
+            return res.redirect('/unloading?error=invalid_unloaded');
         }
 
         const settledTrip = await LorryTrip.settle(req.params.id, {
@@ -1371,11 +1399,11 @@ app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, async (req, 
         );
 
         if (isAjax) return res.json({ success: true, message: `Trip ${settledTrip.tripNo} settled successfully! (${varianceText})` });
-        res.redirect('/lorry-trips');
+        res.redirect('/unloading');
     } catch (err) {
         console.error('POST /lorry-trips/:id/settle error:', err);
         if (isAjax) return res.status(500).json({ success: false, error: err.message });
-        res.redirect('/lorry-trips?error=' + encodeURIComponent(err.message));
+        res.redirect('/unloading?error=' + encodeURIComponent(err.message));
     }
 });
 
@@ -1389,10 +1417,10 @@ app.post('/lorry-trips/:id/cancel', requireAuth, requireEditAccess, async (req, 
             'LorryTrip',
             `Cancelled dispatch of trip ${cancelled.tripNo} (${cancelled.vehicleNo}) and restored ${cancelled.loadedQty} trays`
         );
-        res.redirect('/lorry-trips');
+        res.redirect(req.headers.referer || '/loading');
     } catch (err) {
         console.error('POST /lorry-trips/:id/cancel error:', err);
-        res.redirect('/lorry-trips?error=' + encodeURIComponent(err.message));
+        res.redirect('/loading?error=' + encodeURIComponent(err.message));
     }
 });
 

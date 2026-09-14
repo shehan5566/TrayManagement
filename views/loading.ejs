@@ -1,0 +1,146 @@
+<%- include('partials/header') %>
+
+<div style="margin-bottom: 25px;">
+    <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck-loading"></i> Lorry Loading & Dispatch</h2>
+    <p style="color: var(--text-light); font-size: 14px;">Manage vehicle loading, assign tray counts, and dispatch lorries for delivery routes.</p>
+</div>
+
+<% if (locals.error) { %>
+    <div class="error-banner">
+        <i class="fa-solid fa-triangle-exclamation"></i> <%= error %>
+    </div>
+<% } %>
+
+<!-- 1. Dispatch Lorry (Load Trays) -->
+<% if (typeof hasPerm !== 'function' || hasPerm('transactions_create')) { %>
+<div class="content-box" style="border-top: 4px solid var(--primary-green);">
+    <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <span class="box-title"><i class="fa-solid fa-truck-loading"></i> Loading</span>
+        <span style="font-size: 13px; font-weight: 700; color: var(--primary-green-dark); background: #dcfce7; padding: 4px 12px; border-radius: 20px; border: 1px solid #86efac;">
+            <i class="fa-solid fa-warehouse"></i> Warehouse Stock: <%= (typeof currentStock !== 'undefined') ? currentStock : 0 %> Trays
+        </span>
+    </div>
+
+    <form action="/lorry-trips/dispatch" method="POST" onsubmit="submitAjaxForm(event, this, 'Lorry dispatched successfully')">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="vehicleNo">Vehicle Number <span style="color:red;">*</span></label>
+                <select id="vehicleNo" name="vehicleNo" required>
+                    <option value="">Select Vehicle</option>
+                    <% (vehicles || []).forEach(v => { %>
+                        <option value="<%= v %>"><%= v %></option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="driverName">Driver Name</label>
+                <input type="text" id="driverName" name="driverName" placeholder="e.g. Nuwan Kumara" required>
+            </div>
+
+            <div class="form-group">
+                <label for="loadedQty">Loaded Tray Quantity <span style="color:red;">*</span></label>
+                <input type="number" id="loadedQty" name="loadedQty" min="1" placeholder="Enter tray count..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="dispatchedDate">Dispatch Date & Time</label>
+                <input type="datetime-local" id="dispatchedDate" name="dispatchedDate" required>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="notes">Dispatch Notes / Destination Route</label>
+            <input type="text" id="notes" name="notes" placeholder="e.g. Gampaha - Negombo Delivery Route">
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                <i class="fa-solid fa-paper-plane"></i> Dispatch Lorry with Trays
+            </button>
+            <a href="/driver" target="_blank" class="btn btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-mobile-screen-button"></i> Open Driver Mobile Portal (/driver)
+            </a>
+        </div>
+    </form>
+</div>
+<% } %>
+
+<!-- 2. Active Loaded Lorries on Route -->
+<div class="content-box">
+    <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <span class="box-title"><i class="fa-solid fa-route"></i> Active Loaded Lorries on Route</span>
+        <a href="/unloading" class="btn btn-secondary" style="text-decoration: none; font-size: 12px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-truck-ramp-box"></i> Go to Unloading Page
+        </a>
+    </div>
+
+    <% const activeTrips = (trips || []).filter(t => t.status === 'ON_ROUTE'); %>
+    <% if (activeTrips.length === 0) { %>
+        <p style="text-align: center; color: var(--text-light); padding: 30px 0;">
+            <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 24px; display: block; margin-bottom: 8px;"></i>
+            No active lorry trips on route. All lorries have been unloaded and reconciled.
+        </p>
+    <% } else { %>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trip No</th>
+                        <th>Vehicle & Driver</th>
+                        <th>Dispatched</th>
+                        <th style="text-align: right;">Loaded</th>
+                        <th style="text-align: right;">Delivered (OUT)</th>
+                        <th style="text-align: right;">Collected (IN)</th>
+                        <th style="text-align: right; background: #f0fdf4;">Current in Lorry</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% activeTrips.forEach(t => { %>
+                        <tr>
+                            <td><strong><%= t.tripNo %></strong></td>
+                            <td>
+                                <strong style="color: var(--primary-green-dark);"><i class="fa-solid fa-truck"></i> <%= t.vehicleNo %></strong>
+                                <div style="font-size: 11px; color: var(--text-light);"><%= t.driverName || 'Driver' %> &bull; <span style="color: #0284c7; font-weight: 600;">PIN: <%= t.pin %></span></div>
+                            </td>
+                            <td>
+                                <%= new Date(t.dispatchedDate).toLocaleDateString() %><br>
+                                <small style="color: var(--text-light);"><%= new Date(t.dispatchedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></small>
+                            </td>
+                            <td style="text-align: right; font-weight: 700;"><%= t.loadedQty %></td>
+                            <td style="text-align: right; color: #dc2626; font-weight: 700;"><%= t.totalDeliveredQty || 0 %></td>
+                            <td style="text-align: right; color: #2563eb; font-weight: 700;"><%= t.totalCollectedQty || 0 %></td>
+                            <td style="text-align: right; font-weight: 900; font-size: 16px; color: #107c41; background: #f0fdf4;">
+                                <%= (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0) %>
+                            </td>
+                            <td style="text-align: center;">
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <a href="/unloading" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: #059669; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid fa-box-archive"></i> Unload
+                                    </a>
+                                    <form action="/lorry-trips/<%= t.id %>/cancel" method="POST" onsubmit="return confirm('Are you sure you want to cancel this trip and return the loaded trays to warehouse stock?');" style="display:inline;">
+                                        <button type="submit" class="btn btn-secondary" style="padding: 6px 8px; font-size: 12px; color: #dc2626;" title="Cancel Dispatch">
+                                            <i class="fa-solid fa-ban"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } %>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const dtInput = document.getElementById('dispatchedDate');
+        if (dtInput) dtInput.value = now.toISOString().slice(0, 16);
+    });
+</script>
+
+<%- include('partials/footer') %>

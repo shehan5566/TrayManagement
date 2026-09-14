@@ -174,9 +174,14 @@
                                                     </li>
                                                     <% } %>
 
-                                                <!-- 4.1 Lorry Delivery Trips -->
-                                                <li class="<%= activePath.startsWith('/lorry-trips') ? 'active' : '' %>">
-                                                    <a href="/lorry-trips"><i class="fa-solid fa-truck-ramp-box"></i> Lorry Delivery Trips</a>
+                                                <!-- 4.1 Loading -->
+                                                <li class="<%= activePath.startsWith('/loading') ? 'active' : '' %>">
+                                                    <a href="/loading"><i class="fa-solid fa-truck-loading"></i> Loading</a>
+                                                </li>
+
+                                                <!-- 4.2 Unloading -->
+                                                <li class="<%= activePath.startsWith('/unloading') ? 'active' : '' %>">
+                                                    <a href="/unloading"><i class="fa-solid fa-truck-ramp-box"></i> Unloading</a>
                                                 </li>
 
                                                         <!-- 5. Receive Stock -->
