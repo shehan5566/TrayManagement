@@ -255,6 +255,32 @@
                     </div>
                 </div>
             `;
+        } else if (data.status === 'CONNECTING' || (data.hasSavedSession && data.status !== 'SCAN_QR')) {
+            badgeEl.innerHTML = `
+                <span style="background: #e0f2fe; color: #0284c7; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #bae6fd;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Connecting / Syncing...
+                </span>
+            `;
+            contentEl.innerHTML = `
+                <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 16px; padding: 24px; text-align: left; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: #0284c7; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            <i class="fa-solid fa-rotate fa-spin"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 700; color: #1e293b;">
+                                Linked Account: <span style="color: #0284c7; font-family: monospace;">+${data.connectedPhone || 'Restoring Session...'}</span>
+                            </div>
+                            <div style="font-size: 13px; color: #0369a1; margin-top: 4px;">
+                                Syncing with WhatsApp servers. Please wait a few moments...
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="unlinkWhatsApp()" class="btn" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-size: 13px; padding: 8px 16px;">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Unlink Device
+                    </button>
+                </div>
+            `;
         } else {
             badgeEl.innerHTML = `
                 <span style="background: #f1f5f9; color: #64748b; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0;">
