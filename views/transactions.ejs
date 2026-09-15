@@ -39,7 +39,7 @@
                                 <div id="customerOutstandingNotice" style="display: none; margin-top: 8px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 13px;">
                                     <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
                                         <i class="fa-solid fa-triangle-exclamation" style="color: #e11d48; font-size: 15px;"></i>
-                                        <span>Customer Outstanding: <span id="outstandingNoticeCount" style="font-size: 15px; color: #b91c1c;"></span> Trays</span>
+                                        <span id="outstandingNoticeText">Approval Required</span>
                                     </div>
                                 </div>
                             </div>
@@ -543,7 +543,7 @@
 
                             const customersData = [
                         <% customers.forEach(c => { %>
-                                { name: "<%= c.name.replace(/\"/g, '&quot;') %>", id: "<%= c.id %>", balance: <%= c.currentBalance || 0 %> },
+                                { name: "<%= c.name.replace(/\"/g, '&quot;') %>", id: "<%= c.id %>", balance: <%= c.currentBalance || 0 %>, pendingDeposit: <%= c.pendingDeposit || 0 %> },
                                 <% }) %>
                             ];
 
@@ -598,7 +598,17 @@
                                         div.style.borderBottom = "1px solid #d4d4d4";
                                         div.style.color = "#333";
                                         div.style.fontSize = "14px";
-                                        div.innerHTML = c.name;
+                                        const pDep = Number(c.pendingDeposit || 0);
+                                        const bal = Number(c.balance || 0);
+                                        div.innerHTML = `
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span style="font-weight: 600;">${c.name}</span>
+                                                <div style="display: flex; gap: 6px; font-size: 11px;">
+                                                    ${pDep > 0 ? `<span style="background: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-weight: 700; border: 1px solid #fca5a5;"><i class="fa-solid fa-coins"></i> Pending: Rs. ${pDep.toLocaleString('en-LK')}</span>` : ''}
+                                                    ${bal > 0 ? `<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 600; border: 1px solid #fde68a;"><i class="fa-solid fa-boxes-stacked"></i> ${bal} Trays</span>` : ''}
+                                                </div>
+                                            </div>
+                                        `;
 
                                         div.addEventListener("mouseenter", function () {
                                             const items = autocompleteList.getElementsByClassName("autocomplete-item");
@@ -690,10 +700,13 @@
                                 });
                             }
 
-                        // Attach change listener to Transaction Type
+                        // Attach change listener to Transaction Type and Deposit Option
                         const typeInput = document.getElementById('type');
                         if (typeInput) {
                             typeInput.addEventListener('change', checkCustomerOutstanding);
+                        }
+                        if (depositOptionSelect) {
+                            depositOptionSelect.addEventListener('change', checkCustomerOutstanding);
                         }
 
                         // Check Outstanding on load if customer pre-selected
@@ -706,16 +719,28 @@
 
                 function checkCustomerOutstanding() {
                     const notice = document.getElementById('customerOutstandingNotice');
-                    const noticeCount = document.getElementById('outstandingNoticeCount');
+                    const noticeText = document.getElementById('outstandingNoticeText');
                     const typeSelect = document.getElementById('type');
                     const type = typeSelect ? typeSelect.value : 'OUT';
+                    const depositOptionEl = document.getElementById('depositOption');
+                    const depositOption = depositOptionEl ? depositOptionEl.value : 'FULL';
                     
                     const isBlockEnabled = <%= (settings && settings.enableOutstandingBlock !== false) ? 'true' : 'false' %>;
-                    const graceLimit = <%= (settings && settings.allowedGraceTrays) ? settings.allowedGraceTrays : 0 %>;
 
-                    if (selectedCustomerObj && isBlockEnabled && type === 'OUT' && (selectedCustomerObj.balance || 0) > graceLimit) {
-                        if (notice && noticeCount) {
-                            noticeCount.innerText = selectedCustomerObj.balance;
+                    const pendingDeposit = Number(selectedCustomerObj ? (selectedCustomerObj.pendingDeposit || 0) : 0);
+                    const isNonFull = (depositOption !== 'FULL');
+
+                    if (selectedCustomerObj && isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isNonFull)) {
+                        if (notice) {
+                            let text = '';
+                            if (pendingDeposit > 0 && isNonFull) {
+                                text = `Customer has Pending Deposit: Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} & Mode is '${depositOption}' (Approval Required)`;
+                            } else if (pendingDeposit > 0) {
+                                text = `Customer has Pending Deposit: Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Approval Required)`;
+                            } else {
+                                text = `Payment Mode: '${depositOption}' selected (Not Full Payment - Approval Required)`;
+                            }
+                            if (noticeText) noticeText.innerText = text;
                             notice.style.display = 'block';
                         }
                     } else {
@@ -723,30 +748,45 @@
                     }
                 }
 
-                // Handle Form Submit with Outstanding Block Check
+                // Handle Form Submit with Unified Outstanding / Payment Option Block Check
                 async function handleTransactionFormSubmit(event, form) {
                     event.preventDefault();
                     const type = document.getElementById('type').value;
                     const count = parseInt(document.getElementById('count').value, 10) || 0;
                     const customerId = document.getElementById('customerId').value;
+                    const depositOptionEl = document.getElementById('depositOption');
+                    const depositOption = depositOptionEl ? depositOptionEl.value : 'FULL';
                     const isBlockEnabled = <%= (settings && settings.enableOutstandingBlock !== false) ? 'true' : 'false' %>;
-                    const graceLimit = <%= (settings && settings.allowedGraceTrays) ? settings.allowedGraceTrays : 0 %>;
 
                     const cust = selectedCustomerObj || (typeof customersData !== 'undefined' ? customersData.find(c => c.id === customerId) : null);
+                    const pendingDeposit = Number(cust ? (cust.pendingDeposit || 0) : 0);
+                    const isNonFull = (depositOption !== 'FULL');
+                    const isBlocked = isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isNonFull);
 
-                    if (isBlockEnabled && type === 'OUT' && cust && (cust.balance || 0) > graceLimit) {
+                    if (isBlocked && cust) {
                         const mgrPhone = "<%= (settings && settings.salesManagerPhone) ? settings.salesManagerPhone : '0770000000' %>";
                         
+                        let reasonHtml = '';
+                        if (pendingDeposit > 0 && isNonFull) {
+                            reasonHtml = `Customer has an unsettled pending deposit of <strong style="color:#dc2626;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> and payment option is <strong style="color:#d97706;">${depositOption}</strong>.`;
+                        } else if (pendingDeposit > 0) {
+                            reasonHtml = `Customer has an unsettled pending deposit balance of <strong style="color:#dc2626;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong>.`;
+                        } else {
+                            reasonHtml = `Payment option <strong style="color:#d97706;">${depositOption}</strong> is selected (Full Payment is required or Approval needed).`;
+                        }
+
                         Swal.fire({
-                            title: 'Customer Blocked',
+                            title: 'Special Approval Required',
                             html: `
                                 <div style="text-align:left; font-size:14px; line-height:1.5;">
                                     <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; margin-bottom:14px;">
                                         <strong style="color:#9f1239;">Customer:</strong> <span style="font-weight:700; color:#1e293b;">${cust.name}</span><br>
-                                        <strong style="color:#9f1239;">Outstanding Due:</strong> <span style="color:#dc2626; font-weight:800; font-size:16px;">${cust.balance} Trays</span>
+                                        <strong style="color:#9f1239;">Pending Deposit:</strong> <span style="color:#dc2626; font-weight:800; font-size:15px;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span><br>
+                                        <strong style="color:#9f1239;">Payment Option:</strong> <span style="color:#d97706; font-weight:800; font-size:14px;">${depositOption}</span>
                                     </div>
                                     <p style="color:#334155; margin-bottom:10px;">
-                                        New tray issue (<strong>${count} Trays</strong>) is strictly blocked until previous balance is returned or authorized.
+                                        ${reasonHtml}<br>
+                                        Issuing <strong>${count} Trays</strong> is blocked until authorized by the Sales Manager.
                                     </p>
                                     <p style="color:#059669; font-weight:600;">
                                         Would you like to send a <strong>Special Approval Request</strong> to the Sales Manager via WhatsApp?
@@ -767,7 +807,7 @@
                         return false;
                     }
 
-                    // Normal submit when balance == 0 or IN (Return)
+                    // Normal submit when pending deposit == 0 and FULL option or IN (Return)
                     return submitAjaxForm(event, form, 'Transaction added successfully');
                 }
 
@@ -816,7 +856,11 @@
                                     
                                     <div style="background: #f1f5f9; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12.5px; text-align: left; border: 1px solid #e2e8f0;">
                                         <div style="font-weight: 700; color: #1e293b; margin-bottom: 2px;">Customer: ${cust.name} ${cust.phone ? `(${cust.phone})` : ''}</div>
-                                        <div style="color: #475569;">Due Trays: <strong style="color: #dc2626;">${cust.currentBalance}</strong> | Request: <strong style="color: #15803d;">${count} Trays</strong></div>
+                                        <div style="color: #475569;">
+                                            Pending Deposit: <strong style="color: #dc2626;">Rs. ${(cust.pendingDeposit || 0).toLocaleString('en-LK')}</strong> | 
+                                            Option: <strong style="color: #d97706;">${txPayload.depositOption || 'FULL'}</strong> | 
+                                            Request: <strong style="color: #15803d;">${count} Trays</strong>
+                                        </div>
                                     </div>
                                     
                                     ${data.whatsAppUrl ? `

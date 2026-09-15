@@ -628,6 +628,35 @@ const Customer = {
         const doc = await CustomerModel.findById(id).lean();
         return mapDoc(doc);
     },
+    getPendingDeposit: async (customerId) => {
+        const custId = String(customerId);
+        if (!custId) return 0;
+        const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
+        let pending = 0;
+        custTxs.forEach(t => {
+            const rate = Number(t.depositPerTray) || 2000;
+            const countQty = Number(t.count) || 0;
+            const expected = Number(t.expectedDeposit) || (countQty * rate);
+            let paid = 0;
+            if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
+                paid = Number(t.totalDeposit);
+            } else if (t.depositOption === 'ZERO') {
+                paid = 0;
+            } else if (t.depositOption === 'HALF') {
+                paid = expected / 2;
+            } else {
+                paid = expected;
+            }
+
+            const diff = expected - paid;
+            if (t.type === 'OUT') {
+                pending += diff;
+            } else if (t.type === 'IN') {
+                pending -= diff;
+            }
+        });
+        return Math.max(0, pending);
+    },
     create: async (customerData) => {
         const id = Date.now().toString();
         const newCustomer = new CustomerModel({

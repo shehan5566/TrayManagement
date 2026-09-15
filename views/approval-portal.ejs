@@ -452,6 +452,15 @@
                             Rs. <%= (approval.refundableOutstanding || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                         </span>
                     </div>
+                    <% if (approval.txPayload && approval.txPayload.depositOption) { %>
+                        <div class="info-item">
+                            <span class="label">Payment Mode</span>
+                            <span class="val" style="color: <%= approval.txPayload.depositOption === 'FULL' ? '#16a34a' : '#d97706' %>; font-weight: 700;">
+                                <%= approval.txPayload.depositOption %>
+                                <%= approval.txPayload.depositOption === 'FULL' ? '(Full Payment)' : (approval.txPayload.depositOption === 'ZERO' ? '(No Deposit)' : (approval.txPayload.depositOption === 'HALF' ? '(Half Payment)' : '(Custom Amount)')) %>
+                            </span>
+                        </div>
+                    <% } %>
                     <div class="info-item">
                         <span class="label">Branch / Location</span>
                         <span class="val"><%= approval.locationName %></span>

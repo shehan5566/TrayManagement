@@ -340,6 +340,16 @@ const requireEditAccess = (req, res, next) => {
     }
 };
 
+const requireUserOrDriver = (req, res, next) => {
+    if (req.session.user || (req.session.driver && req.session.driver.vehicleNo)) {
+        return next();
+    }
+    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(401).json({ success: false, error: 'Authentication required. Please login.' });
+    }
+    return res.redirect('/login');
+};
+
 // API Endpoint for User Notifications
 app.get('/api/notifications', requireAuth, async (req, res) => {
     try {
@@ -1014,7 +1024,7 @@ app.get('/transactions', requireAuth, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const search = req.query.search || '';
-        const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
+        const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role, true);
         const settings = await SystemSetting.get();
         
         let errorMessage = null;
@@ -1061,18 +1071,22 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
             date
         };
         
-        // Check for customer outstanding tray block on OUT transactions
+        // Check for customer block on OUT transactions:
+        // Blocked if customer has pending deposit balance > 0 OR if transaction deposit option is NOT 'FULL'
         const settings = await SystemSetting.get();
-        if (settings.enableOutstandingBlock && type === 'OUT') {
+        if (settings.enableOutstandingBlock !== false && type === 'OUT') {
             const customer = await Customer.getById(customerId);
-            const graceLimit = settings.allowedGraceTrays || 0;
-            if (customer && (customer.currentBalance || 0) > graceLimit) {
+            const custPendingDeposit = await Customer.getPendingDeposit(customerId);
+            const isDepositOptionNonFull = (!depositOption || depositOption !== 'FULL');
+            const hasPendingDeposit = (custPendingDeposit > 0);
+
+            if (hasPendingDeposit || isDepositOptionNonFull) {
                 // Check if special approval token or override is present
                 const { approvalToken } = req.body;
                 let isApproved = false;
                 if (approvalToken) {
                     const approval = await ApprovalRequest.getByToken(approvalToken);
-                    if (approval && approval.status === 'APPROVED' && approval.customerId === customerId && !approval.isUsed) {
+                    if (approval && approval.status === 'APPROVED' && String(approval.customerId) === String(customerId) && !approval.isUsed) {
                         isApproved = true;
                         txData.specialApprovalId = approval._id;
                         txData.approvedBy = approval.approvedBy || 'Sales Manager';
@@ -1080,13 +1094,24 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
                     }
                 }
                 if (!isApproved) {
-                    const errorMsg = `Customer ${customer.name} has ${customer.currentBalance} outstanding trays! New tray issue is blocked until balance is 0 or Sales Manager approval is granted.`;
+                    let blockReason = '';
+                    if (hasPendingDeposit && isDepositOptionNonFull) {
+                        blockReason = `Customer has a pending deposit balance of Rs. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} and payment option is '${depositOption}'!`;
+                    } else if (hasPendingDeposit) {
+                        blockReason = `Customer has a pending deposit balance of Rs. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}!`;
+                    } else {
+                        blockReason = `Payment option '${depositOption}' is selected (requires Full Payment or Approval)!`;
+                    }
+                    const errorMsg = `${blockReason} Sales Manager approval is required to issue trays.`;
                     if (isAjax) {
                         return res.status(403).json({
                             success: false,
                             blocked: true,
-                            customerName: customer.name,
-                            currentBalance: customer.currentBalance,
+                            customerName: customer ? customer.name : '',
+                            currentBalance: customer ? customer.currentBalance : 0,
+                            pendingDepositBalance: custPendingDeposit,
+                            depositOption: depositOption || 'FULL',
+                            reason: blockReason,
                             managerPhone: settings.salesManagerPhone || '0770000000',
                             error: errorMsg
                         });
@@ -1352,7 +1377,7 @@ app.get('/transactions/receiptByRef/:refNo', requireAuth, async (req, res) => {
 // ==========================================
 
 // Request Special Approval for customer with outstanding trays
-app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
     try {
         const txData = req.body;
         const countVal = txData.count ? parseInt(txData.count, 10) : 0;
@@ -1366,8 +1391,21 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
         }
 
         const settings = await SystemSetting.get();
-        const userLoc = (req.session.user && req.session.user.locationId) || 'main';
+        const userLoc = (req.session.user && req.session.user.locationId) 
+            || (req.session.driver && req.session.driver.locationId) 
+            || txData.locationId 
+            || 'main';
         const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc)) || { name: 'Main Office' };
+        const requestedBy = (req.session.user && req.session.user.username) 
+            || (req.session.driver && (req.session.driver.driverName || `Driver (${req.session.driver.vehicleNo})`)) 
+            || 'Staff';
+
+        if (!txData.vehicleNo && req.session.driver && req.session.driver.vehicleNo) {
+            txData.vehicleNo = req.session.driver.vehicleNo;
+        }
+        if (!txData.driverName && req.session.driver && req.session.driver.driverName) {
+            txData.driverName = req.session.driver.driverName;
+        }
 
         // Calculate Customer Pending Deposit Balance & Refundable Outstanding
         let pendingDepositBalance = 0;
@@ -1415,7 +1453,7 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
             txPayload: txData,
             locationId: userLoc,
             locationName: loc.name || 'Head Office',
-            requestedBy: req.session.user.username || 'Operator'
+            requestedBy
         });
 
         const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
@@ -1425,6 +1463,18 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
         const managerPhone = settings.salesManagerPhone || '0770000000';
         const waNumber = smsService.formatWhatsAppNumber(managerPhone) || '94770000000';
 
+        const paymentMode = txData.depositOption || 'FULL';
+        let reason = '';
+        if (pendingDepositBalance > 0 && paymentMode !== 'FULL') {
+            reason = `Pending deposit balance (Rs. ${pendingDepositBalance.toLocaleString('en-LK')}) & payment mode is '${paymentMode}'`;
+        } else if (pendingDepositBalance > 0) {
+            reason = `Pending deposit balance of Rs. ${pendingDepositBalance.toLocaleString('en-LK')}`;
+        } else if (paymentMode !== 'FULL') {
+            reason = `Payment option is '${paymentMode}' (not Full Payment)`;
+        } else {
+            reason = `Customer has ${customer.currentBalance || 0} unreturned trays`;
+        }
+
         const alertDetails = {
             customerName: customer.name,
             customerPhone: customer.phone || 'N/A',
@@ -1432,9 +1482,11 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
             requestedQty: approval.requestedQty,
             pendingDepositBalance,
             refundableOutstanding,
+            depositOption: paymentMode,
+            reason,
             txType: approval.txType,
             locationName: loc.name,
-            requestedBy: req.session.user.username,
+            requestedBy,
             vehicleNo: txData.vehicleNo
         };
 
@@ -1466,8 +1518,8 @@ app.post('/api/approvals/request', requireAuth, requireEditAccess, async (req, r
     }
 });
 
-// Poll approval status by Operator
-app.get('/api/approvals/status/:id', requireAuth, async (req, res) => {
+// Poll approval status by Operator or Driver
+app.get('/api/approvals/status/:id', requireUserOrDriver, async (req, res) => {
     try {
         const approval = await ApprovalRequest.getById(req.params.id);
         if (!approval) return res.status(404).json({ success: false, error: 'Approval request not found' });
@@ -1484,8 +1536,8 @@ app.get('/api/approvals/status/:id', requireAuth, async (req, res) => {
     }
 });
 
-// Operator overrides using Manager's PIN code
-app.post('/api/approvals/verify-pin', requireAuth, requireEditAccess, async (req, res) => {
+// Operator / Driver overrides using Manager's PIN code
+app.post('/api/approvals/verify-pin', requireUserOrDriver, async (req, res) => {
     try {
         const { requestId, pin } = req.body;
         if (!requestId || !pin) {
@@ -2209,6 +2261,51 @@ app.post('/driver/transaction', async (req, res) => {
         };
 
         const username = driverName || `Driver (${req.session.driver.vehicleNo})`;
+
+        // Check for customer block on OUT transactions for Driver
+        if (settings.enableOutstandingBlock !== false && type === 'OUT') {
+            const customer = await Customer.getById(customerId);
+            const custPendingDeposit = await Customer.getPendingDeposit(customerId);
+            const isDepositOptionNonFull = (!depositOption || depositOption !== 'FULL');
+            const hasPendingDeposit = (custPendingDeposit > 0);
+
+            if (hasPendingDeposit || isDepositOptionNonFull) {
+                const { approvalToken } = req.body;
+                let isApproved = false;
+                if (approvalToken) {
+                    const approval = await ApprovalRequest.getByToken(approvalToken);
+                    if (approval && approval.status === 'APPROVED' && String(approval.customerId) === String(customerId) && !approval.isUsed) {
+                        isApproved = true;
+                        txData.specialApprovalId = approval._id;
+                        txData.approvedBy = approval.approvedBy || 'Sales Manager';
+                        await ApprovalRequest.markUsed(approval._id);
+                    }
+                }
+                if (!isApproved) {
+                    let blockReason = '';
+                    if (hasPendingDeposit && isDepositOptionNonFull) {
+                        blockReason = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල රු. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} ක් වන අතර තෝරාගත් ක්‍රමය '${depositOption}' වේ.`;
+                    } else if (hasPendingDeposit) {
+                        blockReason = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල රු. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} කි.`;
+                    } else {
+                        blockReason = `තෝරාගත් තැන්පතු ක්‍රමය '${depositOption}' වේ (Full Payment නොවේ).`;
+                    }
+                    const errorMsg = `${blockReason} Sales Manager අනුමැතිය අවශ්‍යයි!`;
+                    return res.status(403).json({
+                        success: false,
+                        blocked: true,
+                        customerName: customer ? customer.name : '',
+                        currentBalance: customer ? customer.currentBalance : 0,
+                        pendingDepositBalance: custPendingDeposit,
+                        depositOption: depositOption || 'FULL',
+                        reason: blockReason,
+                        managerPhone: settings.salesManagerPhone || '0770000000',
+                        error: errorMsg
+                    });
+                }
+            }
+        }
+
         const newTx = await Transaction.create(txData, username);
 
         // Instant SMS Notification to Registered Customer Phone Number

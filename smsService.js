@@ -158,17 +158,32 @@ Thank you!`;
 const buildApprovalMessage = (details, approvalUrl, pin) => {
     const pendingDepStr = (Number(details.pendingDepositBalance) || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
     const refundOutStr = (Number(details.refundableOutstanding) || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
+    const paymentMode = details.depositOption || 'FULL';
+
+    let reasonText = details.reason;
+    if (!reasonText) {
+        if (details.pendingDepositBalance > 0 && paymentMode !== 'FULL') {
+            reasonText = `Pending deposit balance (Rs. ${pendingDepStr}) & payment mode is '${paymentMode}'`;
+        } else if (details.pendingDepositBalance > 0) {
+            reasonText = `Customer has pending deposit balance of Rs. ${pendingDepStr}`;
+        } else if (paymentMode !== 'FULL') {
+            reasonText = `Payment mode is '${paymentMode}' (not Full Payment)`;
+        } else {
+            reasonText = `Customer has ${details.currentBalance || 0} unreturned trays`;
+        }
+    }
 
     return `*--- NELNA SPECIAL APPROVAL REQUEST ---*
 Customer: ${details.customerName}
 Contact Number: ${details.customerPhone || 'N/A'}
-Due Trays: ${details.currentBalance} Trays
+Due Trays: ${details.currentBalance || 0} Trays
 Requested Issue: ${details.requestedQty} Trays (${details.txType || 'OUT'})
+Payment Mode: ${paymentMode}
 Pending Deposit Balance: Rs. ${pendingDepStr}
 Refundable Outstanding: Rs. ${refundOutStr}
 Branch: ${details.locationName || 'Main Office'}
 Operator: ${details.requestedBy || 'Staff'}
-${details.vehicleNo && details.vehicleNo !== 'N/A' ? `Vehicle: ${details.vehicleNo}\n` : ''}Reason: Customer has ${details.currentBalance} unreturned trays.
+${details.vehicleNo && details.vehicleNo !== 'N/A' ? `Vehicle: ${details.vehicleNo}\n` : ''}Reason: ${reasonText}
 
 👉 *Click Link to APPROVE or REJECT:*
 ${approvalUrl}

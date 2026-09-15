@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #107c41;
@@ -1093,6 +1095,8 @@
             });
         }
 
+        let driverApprovalInterval = null;
+
         async function handleDriverSubmit(e) {
             e.preventDefault();
             const form = e.target;
@@ -1100,21 +1104,80 @@
 
             const customerId = document.getElementById('selectedCustomerId').value;
             if (!customerId) {
-                alert('කරුණාකර පාරිභෝගිකයා තෝරන්න (Please select a customer)');
+                Swal.fire({ icon: 'warning', title: 'පාරිභෝගිකයා තෝරන්න', text: 'කරුණාකර පාරිභෝගිකයෙකු තෝරන්න (Please select a customer)' });
                 return;
             }
 
             const count = parseInt(document.getElementById('trayCountInput').value) || 0;
             if (count <= 0) {
-                alert('කරුණාකර වලංගු ට්‍රේ ප්‍රමාණයක් ඇතුළත් කරන්න (Please enter valid quantity)');
+                Swal.fire({ icon: 'warning', title: 'ට්‍රේ ප්‍රමාණය ඇතුළත් කරන්න', text: 'කරුණාකර වලංගු ට්‍රේ ප්‍රමාණයක් ඇතුළත් කරන්න (Please enter valid quantity)' });
                 return;
             }
 
             if (currentType === 'OUT' && count > currentLorryStock) {
-                alert(`ලොරියේ ඉතිරිව ඇත්තේ ට්‍රේ ${currentLorryStock} ක් පමණි!\nලොරියේ ඇති ප්‍රමාණයට (${currentLorryStock}) වඩා වැඩිපුර ට්‍රේ නිකුත් (OUT) කළ නොහැක.`);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ලොරියේ ට්‍රේ ප්‍රමාණවත් නොවේ',
+                    text: `ලොරියේ ඉතිරිව ඇත්තේ ට්‍රේ ${currentLorryStock} ක් පමණි!\nලොරියේ ඇති ප්‍රමාණයට වඩා වැඩිපුර ට්‍රේ නිකුත් (OUT) කළ නොහැක.`
+                });
                 return;
             }
 
+            const cust = customers.find(c => String(c.id) === String(customerId));
+            const depositOptionEl = document.querySelector('input[name="depositOption"]:checked');
+            const depositOption = depositOptionEl ? depositOptionEl.value : 'FULL';
+            const pendingDeposit = Number(cust ? (cust.pendingDeposit || 0) : 0);
+            const isNonFull = (depositOption !== 'FULL');
+
+            // Blocking condition on OUT transactions
+            if (currentType === 'OUT' && (pendingDeposit > 0 || isNonFull) && cust) {
+                let reasonSi = '';
+                if (pendingDeposit > 0 && isNonFull) {
+                    reasonSi = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල <strong style="color:#dc2626;">රු. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> කි.<br>තෝරාගත් ක්‍රමය: <strong style="color:#d97706;">${depositOption}</strong>`;
+                } else if (pendingDeposit > 0) {
+                    reasonSi = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල <strong style="color:#dc2626;">රු. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> කි.`;
+                } else {
+                    reasonSi = `තෝරාගත් තැන්පතු ක්‍රමය <strong style="color:#d97706;">${depositOption}</strong> වේ (Full Payment නොවේ).`;
+                }
+
+                Swal.fire({
+                    title: 'අනුමැතිය අවශ්‍යයි (Approval Required)',
+                    html: `
+                        <div style="text-align:left; font-size:13.5px; line-height:1.5;">
+                            <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; margin-bottom:12px;">
+                                <strong>Customer:</strong> <span style="font-weight:700; color:#1e293b;">${cust.name}</span><br>
+                                <strong>Pending Deposit:</strong> <span style="color:#dc2626; font-weight:800; font-size:15px;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span><br>
+                                <strong>Payment Option:</strong> <span style="color:#d97706; font-weight:800;">${depositOption}</span>
+                            </div>
+                            <div style="color:#334155; margin-bottom:10px;">
+                                ${reasonSi}<br>
+                                ට්‍රේ <strong>${count}</strong> ක් නිකුත් කිරීම සඳහා Sales Manager ගේ WhatsApp අනුමැතිය අවශ්‍ය වේ.
+                            </div>
+                            <p style="color:#059669; font-weight:700; font-size:13px;">
+                                Sales Manager වෙත WhatsApp Approval Request පණිවිඩයක් යවමුද?
+                            </p>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fa-brands fa-whatsapp"></i> Request Approval',
+                    confirmButtonColor: '#107c41',
+                    cancelButtonText: 'අවලංගු කරන්න',
+                    cancelButtonColor: '#64748b'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        initiateDriverApprovalRequest(form, cust, count, pendingDeposit, depositOption);
+                    }
+                });
+                return;
+            }
+
+            // Normal submit when pending deposit == 0 and FULL or IN
+            await submitDriverTransactionForm(form);
+        }
+
+        async function submitDriverTransactionForm(form) {
+            const submitBtn = document.getElementById('btnSubmit');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> සුරකිමින් පවතී...';
 
@@ -1137,15 +1200,201 @@
                         openReceiptPreviewModal(json.printUrl + '?autoprint=1');
                     }
                     resetDriverFormAfterSuccess(data);
+                } else if (json.blocked) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
+                    const cust = customers.find(c => String(c.id) === String(data.customerId));
+                    initiateDriverApprovalRequest(form, cust || { name: json.customerName }, parseInt(data.count) || 0, json.pendingDepositBalance || 0, json.depositOption || 'FULL');
                 } else {
-                    alert('දෝෂයකි: ' + (json.error || 'Failed to save transaction'));
+                    Swal.fire('දෝෂයකි', json.error || 'Failed to save transaction', 'error');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
                 }
             } catch (err) {
-                alert('සන්නිවේදන දෝෂයකි: ' + err.message);
+                Swal.fire('සන්නිවේදන දෝෂයකි', err.message, 'error');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
+            }
+        }
+
+        async function initiateDriverApprovalRequest(form, cust, count, pendingDeposit, depositOption) {
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.type = currentType;
+            data.count = count;
+
+            Swal.fire({
+                title: 'යවමින් පවතී...',
+                html: '<div style="margin: 15px 0;"><i class="fa-solid fa-spinner fa-spin" style="font-size:36px; color:#107c41;"></i></div><p style="font-size:13px; color:#475569;">Sales Manager වෙත WhatsApp Approval පණිවිඩය යවමින් පවතී...</p>',
+                allowOutsideClick: false,
+                showConfirmButton: false
+            });
+
+            try {
+                const res = await fetch('/api/approvals/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const resp = await res.json();
+                if (!resp.success) {
+                    Swal.fire('දෝෂයකි', resp.error || 'Approval request failed', 'error');
+                    return;
+                }
+
+                const requestId = resp.requestId;
+                const managerPhone = resp.managerPhone || 'Sales Manager';
+                let timerSeconds = 600;
+                let timerInterval = null;
+
+                Swal.fire({
+                    title: 'Waiting for Manager Approval',
+                    html: `
+                        <div style="text-align:center; padding: 6px 0;">
+                            <div style="margin-bottom: 12px;">
+                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: #107c41;"></i>
+                            </div>
+                            <p style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 2px;">
+                                Sales Manager වෙත Alert එක යවන ලදී (${managerPhone})
+                            </p>
+                            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+                                අනුමැතිය ලැබුණු සැණින් රිසිට්පත ස්වයංක්‍රීයව Print වේ.
+                            </p>
+                            
+                            <div style="background: #f1f5f9; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; text-align: left; border: 1px solid #e2e8f0;">
+                                <div style="font-weight: 700; color: #1e293b;">${cust.name}</div>
+                                <div style="color: #475569; margin-top:2px;">
+                                    Pending: <strong style="color: #dc2626;">Rs. ${pendingDeposit.toLocaleString('en-LK')}</strong> | 
+                                    Option: <strong style="color: #d97706;">${depositOption}</strong> | 
+                                    Qty: <strong style="color: #15803d;">${count} Trays</strong>
+                                </div>
+                            </div>
+                            
+                            ${resp.whatsAppUrl ? `
+                            <div style="margin-bottom: 12px;">
+                                <a href="${resp.whatsAppUrl}" target="_blank" style="background: #25d366; color: #fff; font-weight: 600; font-size: 12.5px; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;">
+                                    <i class="fa-brands fa-whatsapp" style="font-size: 15px;"></i> Send via WhatsApp (${managerPhone})
+                                </a>
+                            </div>
+                            ` : ''}
+                            
+                            <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px; text-align: left;">
+                                <span style="font-size: 11.5px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">
+                                    <i class="fa-solid fa-key" style="color: #107c41;"></i> කළමනාකරු ලබාදුන් PIN අංකය ඇත්නම්:
+                                </span>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" id="driverOverridePin" maxlength="6" placeholder="PIN" style="flex: 1; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 16px; font-weight: bold; text-align: center; letter-spacing: 2px;">
+                                    <button type="button" class="swal2-confirm swal2-styled" style="margin: 0; background: #107c41; padding: 6px 12px; font-size: 12px;" onclick="submitDriverOverridePin('${requestId}')">Verify</button>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 10px; font-size: 11.5px; color: #94a3b8;">
+                                කාලය: <span id="driverSwalTimer">10:00</span>
+                            </div>
+                        </div>
+                    `,
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    showCancelButton: true,
+                    cancelButtonText: 'අවලංගු කරන්න (Cancel)',
+                    cancelButtonColor: '#ef4444',
+                    didOpen: () => {
+                        // Real-time polling every 2s
+                        driverApprovalInterval = setInterval(async () => {
+                            try {
+                                const stRes = await fetch('/api/approvals/status/' + requestId);
+                                const stData = await stRes.json();
+                                if (stData.success) {
+                                    if (stData.status === 'APPROVED') {
+                                        clearInterval(driverApprovalInterval);
+                                        clearInterval(timerInterval);
+                                        const receiptNo = stData.receiptNo ? `RE-${String(stData.receiptNo).padStart(6, '0')}` : '';
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'අනුමත විය! (Approved)',
+                                            html: `Sales Manager විසින් අනුමත කරන ලදී!<br><strong style="color:#15803d; font-size:16px;">${receiptNo}</strong><br>රිසිට්පත Print කරමින් පවතී...`,
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            const printUrl = `/transactions/${stData.transactionId}/thermal-print?autoprint=1`;
+                                            openReceiptPreviewModal(printUrl);
+                                            resetDriverFormAfterSuccess(data);
+                                        });
+                                    } else if (stData.status === 'REJECTED') {
+                                        clearInterval(driverApprovalInterval);
+                                        clearInterval(timerInterval);
+                                        Swal.fire('ප්‍රතික්ෂේප විය', stData.rejectionReason || 'Sales Manager විසින් මෙය ප්‍රතික්ෂේප කරන ලදී.', 'error');
+                                    } else if (stData.status === 'EXPIRED') {
+                                        clearInterval(driverApprovalInterval);
+                                        clearInterval(timerInterval);
+                                        Swal.fire('කාලය ඉකුත් විය', 'අනුමැතිය ඉල්ලීමේ කාලය ඉකුත් විය.', 'warning');
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Driver poll error:', e);
+                            }
+                        }, 2000);
+
+                        timerInterval = setInterval(() => {
+                            timerSeconds--;
+                            const timerEl = document.getElementById('driverSwalTimer');
+                            if (timerEl) {
+                                const m = Math.floor(timerSeconds / 60);
+                                const s = timerSeconds % 60;
+                                timerEl.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+                            }
+                            if (timerSeconds <= 0) {
+                                clearInterval(timerInterval);
+                                clearInterval(driverApprovalInterval);
+                                Swal.fire('කාලය ඉකුත් විය', 'අනුමැතිය ඉල්ලීමේ කාලය ඉකුත් විය.', 'warning');
+                            }
+                        }, 1000);
+                    },
+                    willClose: () => {
+                        clearInterval(driverApprovalInterval);
+                        clearInterval(timerInterval);
+                    }
+                });
+
+            } catch (err) {
+                Swal.fire('දෝෂයකි', err.message, 'error');
+            }
+        }
+
+        async function submitDriverOverridePin(requestId) {
+            const pinInput = document.getElementById('driverOverridePin');
+            const pin = pinInput ? pinInput.value.trim() : '';
+            if (!pin) {
+                alert('කරුණාකර PIN අංකය ඇතුළත් කරන්න');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/approvals/verify-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ requestId, pin })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    clearInterval(driverApprovalInterval);
+                    const receiptNo = json.receiptNo ? `RE-${String(json.receiptNo).padStart(6, '0')}` : '';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'PIN අංකය තහවුරු විය!',
+                        html: `අනුමැතිය සාර්ථකයි!<br><strong style="color:#15803d; font-size:16px;">${receiptNo}</strong>`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        const printUrl = `/transactions/${json.transactionId}/thermal-print?autoprint=1`;
+                        openReceiptPreviewModal(printUrl);
+                        resetDriverFormAfterSuccess({});
+                    });
+                } else {
+                    alert('වැරදි PIN අංකයකි: ' + (json.error || 'Invalid PIN'));
+                }
+            } catch (e) {
+                alert('දෝෂයකි: ' + e.message);
             }
         }
 
