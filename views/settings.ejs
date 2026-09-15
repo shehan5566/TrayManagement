@@ -119,6 +119,36 @@
     </form>
 </div>
 
+<!-- WhatsApp Automated Gateway (QR Bot) Card -->
+<div class="card" style="max-width: 800px; padding: 32px; border-radius: 20px; margin-top: 30px; border-top: 4px solid #25d366;">
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #e8f5e9; display: flex; align-items: center; justify-content: center;">
+                <i class="fa-brands fa-whatsapp" style="font-size: 26px; color: #25d366;"></i>
+            </div>
+            <div>
+                <h3 style="font-size: 19px; font-weight: 700; color: var(--text-dark); margin: 0;">
+                    Automated WhatsApp Gateway (QR Bot)
+                </h3>
+                <p style="font-size: 13px; color: var(--text-light); margin: 2px 0 0 0;">
+                    Link a WhatsApp account to automatically send special approval alerts to the Sales Manager in the background.
+                </p>
+            </div>
+        </div>
+        <div id="waStatusBadge">
+            <span style="background: #f1f5f9; color: #64748b; font-size: 12.5px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Checking Status...
+            </span>
+        </div>
+    </div>
+
+    <!-- Live Status & QR Area -->
+    <div id="waContentArea" style="text-align: center; padding: 10px 0;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 32px; color: #107c41;"></i>
+        <div style="margin-top: 10px; font-size: 13px; color: #64748b;">Loading WhatsApp gateway status...</div>
+    </div>
+</div>
+
 <script>
     async function handleSettingsSubmit(e) {
         e.preventDefault();
@@ -149,6 +179,154 @@
             Swal.fire('Error', 'Failed to save settings', 'error');
         }
     }
+
+    // --- WhatsApp Bot Gateway Controller ---
+    let waPollInterval = null;
+
+    async function checkWhatsAppStatus() {
+        try {
+            const res = await fetch('/api/whatsapp/status');
+            const data = await res.json();
+            renderWhatsAppStatus(data);
+        } catch (e) {
+            console.error('Error fetching WhatsApp status:', e);
+        }
+    }
+
+    function renderWhatsAppStatus(data) {
+        const badgeEl = document.getElementById('waStatusBadge');
+        const contentEl = document.getElementById('waContentArea');
+        if (!badgeEl || !contentEl) return;
+
+        if (data.status === 'CONNECTED') {
+            badgeEl.innerHTML = `
+                <span style="background: #dcfce7; color: #15803d; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #bbf7d0;">
+                    <i class="fa-solid fa-circle-check"></i> Connected & Active
+                </span>
+            `;
+            contentEl.innerHTML = `
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 24px; text-align: left; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: #25d366; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 700; color: #1e293b;">
+                                Linked Account: <span style="color: #107c41; font-family: monospace;">+${data.connectedPhone || 'Connected'}</span>
+                            </div>
+                            <div style="font-size: 13px; color: #15803d; margin-top: 4px;">
+                                ${data.connectedName ? `Name: <strong>${data.connectedName}</strong> | ` : ''}Ready to auto-dispatch Special Approvals silently in background.
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="unlinkWhatsApp()" class="btn" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; font-size: 13px; padding: 8px 16px;">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Unlink Device
+                    </button>
+                </div>
+                <div style="margin-top: 15px; font-size: 12.5px; color: #64748b; text-align: left;">
+                    <i class="fa-solid fa-shield-halved" style="color: #107c41;"></i> 
+                    All Customer Block approval requests will now be silently dispatched to the Sales Manager via this WhatsApp account with zero manual intervention required.
+                </div>
+            `;
+        } else if (data.status === 'SCAN_QR' && data.qrDataUrl) {
+            badgeEl.innerHTML = `
+                <span style="background: #fef9c3; color: #854d0e; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #fef08a;">
+                    <i class="fa-solid fa-qrcode"></i> Ready for QR Scan
+                </span>
+            `;
+            contentEl.innerHTML = `
+                <div style="max-width: 520px; margin: 0 auto; text-align: center;">
+                    <p style="font-size: 14.5px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">
+                        Scan this QR code with WhatsApp on the sender phone:
+                    </p>
+                    <div style="display: inline-block; padding: 12px; background: white; border: 2px dashed #107c41; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 16px;">
+                        <img src="${data.qrDataUrl}" alt="WhatsApp QR Code" style="width: 220px; height: 220px; display: block; border-radius: 8px;">
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; text-align: left; font-size: 13px; color: #334155; margin-bottom: 16px;">
+                        <strong style="color: #0f172a; display: block; margin-bottom: 6px;">How to link:</strong>
+                        1. Open <strong>WhatsApp</strong> on the sender phone.<br>
+                        2. Tap <strong>Settings</strong> or <strong>⋮ (Menu)</strong> &gt; <strong>Linked Devices</strong>.<br>
+                        3. Tap <strong>Link a Device</strong> and point your camera at this QR Code.
+                    </div>
+                    <div>
+                        <button type="button" onclick="restartWhatsAppQR()" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+                            <i class="fa-solid fa-rotate-right"></i> Refresh QR Code
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            badgeEl.innerHTML = `
+                <span style="background: #f1f5f9; color: #64748b; font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #e2e8f0;">
+                    <i class="fa-solid fa-circle-pause"></i> Not Linked
+                </span>
+            `;
+            contentEl.innerHTML = `
+                <div style="padding: 20px 0; text-align: center;">
+                    <div style="margin-bottom: 14px; color: #94a3b8; font-size: 42px;">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <p style="font-size: 14px; color: #475569; margin-bottom: 18px;">
+                        No WhatsApp account is currently linked. Click below to generate a QR Code and connect your WhatsApp.
+                    </p>
+                    <button type="button" onclick="restartWhatsAppQR()" class="btn btn-primary" style="font-size: 14px; padding: 10px 24px; background: #25d366;">
+                        <i class="fa-solid fa-qrcode"></i> Connect WhatsApp Device
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    async function restartWhatsAppQR() {
+        Swal.fire({
+            title: 'Generating QR Code...',
+            text: 'Initializing WhatsApp socket session...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+        try {
+            const res = await fetch('/api/whatsapp/restart', { method: 'POST' });
+            const data = await res.json();
+            Swal.close();
+            renderWhatsAppStatus(data);
+        } catch (e) {
+            Swal.fire('Error', 'Failed to generate QR: ' + e.message, 'error');
+        }
+    }
+
+    async function unlinkWhatsApp() {
+        const confirm = await Swal.fire({
+            title: 'Unlink WhatsApp Device?',
+            text: 'Are you sure you want to disconnect this WhatsApp account?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Yes, Unlink'
+        });
+        if (!confirm.isConfirmed) return;
+
+        Swal.fire({
+            title: 'Disconnecting...',
+            didOpen: () => Swal.showLoading()
+        });
+        try {
+            await fetch('/api/whatsapp/logout', { method: 'POST' });
+            Swal.fire('Unlinked!', 'WhatsApp account has been disconnected.', 'success');
+            checkWhatsAppStatus();
+        } catch (e) {
+            Swal.fire('Error', 'Failed to unlink: ' + e.message, 'error');
+        }
+    }
+
+    // Start live polling status
+    document.addEventListener('DOMContentLoaded', () => {
+        checkWhatsAppStatus();
+        waPollInterval = setInterval(checkWhatsAppStatus, 3000);
+    });
+    window.addEventListener('beforeunload', () => {
+        if (waPollInterval) clearInterval(waPollInterval);
+    });
 </script>
 
 <%- include('partials/footer') %>
+

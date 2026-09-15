@@ -3827,6 +3827,38 @@ app.post('/settings/update', requireAuth, async (req, res) => {
 });
 
 // ----------------------------------------------------
+// WHATSAPP BOT GATEWAY API ROUTES
+// ----------------------------------------------------
+app.get('/api/whatsapp/status', requireAuth, (req, res) => {
+    try {
+        const whatsappBot = require('./whatsappBot');
+        res.json({ success: true, ...whatsappBot.getBotStatus() });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+app.post('/api/whatsapp/restart', requireAuth, async (req, res) => {
+    try {
+        const whatsappBot = require('./whatsappBot');
+        const status = await whatsappBot.restartWhatsAppBot();
+        res.json({ success: true, ...status });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+app.post('/api/whatsapp/logout', requireAuth, async (req, res) => {
+    try {
+        const whatsappBot = require('./whatsappBot');
+        await whatsappBot.logoutWhatsAppBot();
+        res.json({ success: true, message: 'WhatsApp session unlinked successfully' });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ----------------------------------------------------
 // AI ANALYTICS & ADVANCED FORECASTING ROUTES
 // ----------------------------------------------------
 app.get('/analytics', requireAuth, async (req, res) => {
@@ -4100,6 +4132,13 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
+    // Auto-initialize WhatsApp Bot Gateway in background
+    try {
+        const whatsappBot = require('./whatsappBot');
+        whatsappBot.initWhatsAppBot();
+    } catch (botInitErr) {
+        console.warn('WhatsApp Bot initialization notice:', botInitErr.message);
+    }
 });
 
 // Process-level crash prevention (Uncaught Exception & Unhandled Rejection Guards)

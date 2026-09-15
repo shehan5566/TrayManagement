@@ -188,6 +188,24 @@ const sendApprovalAlert = async (phone, details, approvalUrl, pin) => {
     }
 
     const msg = buildApprovalMessage(details, approvalUrl, pin);
+
+    // 1. Try sending directly via automated Server WhatsApp Bot if connected
+    try {
+        const whatsappBot = require('./whatsappBot');
+        const botStatus = whatsappBot.getBotStatus();
+        if (botStatus.status === 'CONNECTED') {
+            console.log(`[WHATSAPP BOT] Sending automated WhatsApp approval alert to ${targetPhone}...`);
+            const botRes = await whatsappBot.sendWhatsAppMessage(targetPhone, msg);
+            if (botRes && botRes.success) {
+                console.log(`[WHATSAPP BOT] Approval alert successfully sent via WhatsApp to ${targetPhone} (MsgID: ${botRes.messageId})`);
+                return true;
+            }
+        }
+    } catch (botErr) {
+        console.warn('[WHATSAPP BOT] Direct WhatsApp send failed or not linked, falling back to SMS webhook:', botErr.message);
+    }
+
+    // 2. Fallback to MacroDroid SMS Webhook
     return await sendSMS(targetPhone, msg);
 };
 
