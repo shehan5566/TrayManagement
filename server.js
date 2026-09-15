@@ -132,6 +132,7 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0, etag: false }));
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'public', 'images', 'logo.png')));
 
 // Secure Session configuration with MongoDB Store
 app.use(session({
