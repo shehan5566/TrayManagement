@@ -51,6 +51,12 @@ async function restoreSessionFromDB() {
 
         const credsFile = path.join(SESSION_DIR, 'creds.json');
         if (!fs.existsSync(credsFile)) {
+            if (mongoose.connection.readyState !== 1) {
+                try {
+                    const { connectDB } = require('./db');
+                    await connectDB();
+                } catch (dbConnErr) {}
+            }
             if (mongoose.connection.readyState === 1) {
                 const records = await WhatsAppSessionModel.find({}).lean();
                 if (records && records.length > 0) {

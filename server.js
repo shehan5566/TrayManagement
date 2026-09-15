@@ -4130,10 +4130,11 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).send('Internal Server Error');
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server is running at http://localhost:${PORT}`);
-    // Auto-initialize WhatsApp Bot Gateway in background
+    // Auto-initialize WhatsApp Bot Gateway in background after DB is ready
     try {
+        await connectDB();
         const whatsappBot = require('./whatsappBot');
         whatsappBot.initWhatsAppBot();
     } catch (botInitErr) {

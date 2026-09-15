@@ -192,9 +192,16 @@ const sendApprovalAlert = async (phone, details, approvalUrl, pin) => {
     // 1. Try sending directly via automated Server WhatsApp Bot if connected
     try {
         const whatsappBot = require('./whatsappBot');
-        const botStatus = whatsappBot.getBotStatus();
+        let botStatus = whatsappBot.getBotStatus();
+        if (botStatus.status !== 'CONNECTED' && botStatus.hasSavedSession) {
+            console.log(`[WHATSAPP BOT] Status is ${botStatus.status}, attempting immediate session reconnect...`);
+            await whatsappBot.initWhatsAppBot();
+            await new Promise(r => setTimeout(r, 2500));
+            botStatus = whatsappBot.getBotStatus();
+        }
+
         if (botStatus.status === 'CONNECTED') {
-            console.log(`[WHATSAPP BOT] Sending automated WhatsApp approval alert to ${targetPhone}...`);
+            console.log(`[WHATSAPP BOT] Sending automated WhatsApp approval alert to Sales Manager (${targetPhone})...`);
             const botRes = await whatsappBot.sendWhatsAppMessage(targetPhone, msg);
             if (botRes && botRes.success) {
                 console.log(`[WHATSAPP BOT] Approval alert successfully sent via WhatsApp to ${targetPhone} (MsgID: ${botRes.messageId})`);
