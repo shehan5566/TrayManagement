@@ -488,13 +488,19 @@
                                 }
 
                                 const actualVal = parseFloat(actualDepositInput ? actualDepositInput.value : 0) || 0;
+                                const isShortfall = (typeSelect && typeSelect.value === 'OUT' && qty > 0 && actualVal < expectedTotal);
 
                                 if (totalDisplay) {
                                     totalDisplay.textContent = actualVal.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                                 }
 
                                 if (expectedDisplay) {
-                                    expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 });
+                                    if (isShortfall) {
+                                        const shortfall = expectedTotal - actualVal;
+                                        expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + ' <span style="color:#dc2626; font-weight:700; margin-left:8px;"><i class="fa-solid fa-triangle-exclamation"></i> Shortfall: Rs. ' + shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + ' (Approval Required)</span>';
+                                    } else {
+                                        expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + (qty > 0 ? ' <span style="color:#16a34a; font-weight:700; margin-left:8px;"><i class="fa-solid fa-circle-check"></i> Full Deposit Paid</span>' : '');
+                                    }
                                 }
 
                                 checkCustomerOutstanding();

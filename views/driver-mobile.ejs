@@ -758,6 +758,7 @@
                         <div class="qty-chip" style="background:#fee2e2; color:#b91c1c; font-weight:700;" onclick="setDriverQuickDeposit('ZERO')"><i class="fa-solid fa-circle-xmark"></i> මුදල් නෑ (Rs. 0 / Credit)</div>
                     </div>
 
+                    <div id="driverDepositShortfallWarning" style="display: none; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 600; margin-top: 6px;"></div>
                 </div>
 
                 <!-- 5. Remarks (Optional) -->
@@ -970,6 +971,7 @@
             const actualInput = document.getElementById('driverActualDeposit');
             const actualVal = parseFloat(actualInput ? actualInput.value : 0) || 0;
             const optInput = document.getElementById('driverDepositOption');
+            const warningEl = document.getElementById('driverDepositShortfallWarning');
 
             if (optInput) {
                 if (actualVal >= total && total > 0) {
@@ -978,6 +980,16 @@
                     optInput.value = 'ZERO';
                 } else {
                     optInput.value = 'CUSTOM';
+                }
+            }
+
+            if (warningEl) {
+                if (currentType === 'OUT' && count > 0 && actualVal < total) {
+                    const shortfall = total - actualVal;
+                    warningEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> සම්පූර්ණ තැන්පතුව ලැබී නැත! (හිඟ මුදල: රු. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })} - Sales Manager අනුමැතිය අවශ්‍ය වේ)`;
+                    warningEl.style.display = 'block';
+                } else {
+                    warningEl.style.display = 'none';
                 }
             }
         }
