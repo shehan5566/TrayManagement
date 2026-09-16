@@ -35,13 +35,7 @@
                                 </div>
                                 <input type="hidden" id="customerId" name="customerId" required>
 
-                                <!-- Customer Outstanding Notice -->
-                                <div id="customerOutstandingNotice" style="display: none; margin-top: 8px; padding: 10px 14px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; color: #9f1239; font-size: 13px;">
-                                    <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
-                                        <i class="fa-solid fa-triangle-exclamation" style="color: #e11d48; font-size: 15px;"></i>
-                                        <span id="outstandingNoticeText">Approval Required</span>
-                                    </div>
-                                </div>
+
                             </div>
 
                             <div class="form-group">
@@ -494,19 +488,13 @@
                                 }
 
                                 const actualVal = parseFloat(actualDepositInput ? actualDepositInput.value : 0) || 0;
-                                const isShortfall = (typeSelect && typeSelect.value === 'OUT' && qty > 0 && actualVal < expectedTotal);
 
                                 if (totalDisplay) {
                                     totalDisplay.textContent = actualVal.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                                 }
 
                                 if (expectedDisplay) {
-                                    if (isShortfall) {
-                                        const shortfall = expectedTotal - actualVal;
-                                        expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + ' <span style="color:#dc2626; font-weight:700; margin-left:8px;"><i class="fa-solid fa-triangle-exclamation"></i> Shortfall: Rs. ' + shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + ' (Approval Required)</span>';
-                                    } else {
-                                        expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + (qty > 0 ? ' <span style="color:#16a34a; font-weight:700; margin-left:8px;"><i class="fa-solid fa-circle-check"></i> Full Deposit Paid</span>' : '');
-                                    }
+                                    expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 });
                                 }
 
                                 checkCustomerOutstanding();
@@ -748,44 +736,7 @@
                 let approvalPollingInterval = null;
 
                 function checkCustomerOutstanding() {
-                    const notice = document.getElementById('customerOutstandingNotice');
-                    const noticeText = document.getElementById('outstandingNoticeText');
-                    const typeSelect = document.getElementById('type');
-                    const type = typeSelect ? typeSelect.value : 'OUT';
-                    
-                    const countInput = document.getElementById('count');
-                    const countVal = parseFloat(countInput ? countInput.value : 0) || 0;
-                    
-                    const depositRateInput = document.getElementById('depositPerTray');
-                    const defaultRate = <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
-                    const rateVal = parseFloat(depositRateInput ? depositRateInput.value : defaultRate) || 0;
-                    const expectedTotal = countVal * rateVal;
-
-                    const actualDepositInput = document.getElementById('actualDeposit');
-                    const actualDepositVal = parseFloat(actualDepositInput ? actualDepositInput.value : 0) || 0;
-
-                    const isBlockEnabled = <%= (settings && settings.enableOutstandingBlock !== false) ? 'true' : 'false' %>;
-
-                    const pendingDeposit = Number(selectedCustomerObj ? (selectedCustomerObj.pendingDeposit || 0) : 0);
-                    const isUnderpaid = (countVal > 0 && actualDepositVal < expectedTotal);
-
-                    if (selectedCustomerObj && isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isUnderpaid)) {
-                        if (notice) {
-                            let text = '';
-                            const shortfall = Math.max(0, expectedTotal - actualDepositVal);
-                            if (pendingDeposit > 0 && isUnderpaid) {
-                                text = `Customer has Pending Deposit: Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} & Shortfall on this issue: Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Paid: Rs. ${actualDepositVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })} / Expected: Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}) - Approval Required`;
-                            } else if (pendingDeposit > 0) {
-                                text = `Customer has Pending Deposit: Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Approval Required)`;
-                            } else {
-                                text = `Actual Deposit paid (Rs. ${actualDepositVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}) is less than expected Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Shortfall: Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })} - Approval Required)`;
-                            }
-                            if (noticeText) noticeText.innerText = text;
-                            notice.style.display = 'block';
-                        }
-                    } else {
-                        if (notice) notice.style.display = 'none';
-                    }
+                    // Inline warning banner removed per user request
                 }
 
                 // Handle Form Submit with Unified Outstanding / Underpayment Block Check
