@@ -742,42 +742,23 @@
                     </div>
                 </div>
 
-                <!-- 4. Deposit Selector (1-Touch Chips) -->
+                <!-- 4. Deposit Section (Direct Cash Input & Quick Actions) -->
                 <div class="form-group">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                        <label class="form-label" style="margin-bottom:0;"><i class="fa-solid fa-coins"></i> තැන්පතු මුදල (Deposit)</label>
-                        <span id="expectedDepositDisplay" style="font-size: 12px; font-weight: 700; color: #107c41;">Rs. 0.00</span>
+                        <label class="form-label" style="margin-bottom:0;"><i class="fa-solid fa-coins"></i> ලැබුණු තැන්පතු මුදල (Deposit Collected - Rs.)</label>
+                        <span id="expectedDepositDisplay" style="font-size: 11.5px; font-weight: 700; color: #107c41;">නියමිත: Rs. 0.00</span>
                     </div>
 
-                    <div class="deposit-chips">
-                        <label class="deposit-chip selected" id="chipFull">
-                            <div>
-                                <input type="radio" name="depositOption" value="FULL" checked onchange="handleDepositChange('FULL')">
-                                <span id="labelFull">සම්පූර්ණ තැන්පතුව (Full Deposit)</span>
-                            </div>
-                            <span id="amountFull" style="font-weight: 700;">Rs. 0</span>
-                        </label>
+                    <input type="hidden" name="depositOption" id="driverDepositOption" value="FULL">
 
-                        <label class="deposit-chip" id="chipZero">
-                            <div>
-                                <input type="radio" name="depositOption" value="ZERO" onchange="handleDepositChange('ZERO')">
-                                <span>මුදල් ගත්තේ නෑ (No Deposit / Credit)</span>
-                            </div>
-                            <span style="font-weight: 700; color: #6b7280;">Rs. 0</span>
-                        </label>
+                    <input type="number" name="actualDeposit" id="driverActualDeposit" class="form-input" style="font-size: 20px; font-weight: 800; color: #107c41;" placeholder="0.00" step="0.01" oninput="handleDriverActualDepositInput()">
 
-                        <label class="deposit-chip" id="chipCustom">
-                            <div>
-                                <input type="radio" name="depositOption" value="CUSTOM" onchange="handleDepositChange('CUSTOM')">
-                                <span>වෙනත් මුදලක් (Custom Amount)</span>
-                            </div>
-                            <span style="font-size: 11px; color: #6b7280;">ටයිප් කිරීමට</span>
-                        </label>
+                    <div class="qty-chips" style="margin-top: 6px;">
+                        <div class="qty-chip" style="background:#e0f2fe; color:#0369a1; font-weight:700;" onclick="setDriverQuickDeposit('FULL')"><i class="fa-solid fa-circle-check"></i> සම්පූර්ණ මුදල (Full)</div>
+                        <div class="qty-chip" style="background:#fee2e2; color:#b91c1c; font-weight:700;" onclick="setDriverQuickDeposit('ZERO')"><i class="fa-solid fa-circle-xmark"></i> මුදල් නෑ (Rs. 0 / Credit)</div>
                     </div>
 
-                    <div id="customDepositBox" style="display: none; margin-top: 8px;">
-                        <input type="number" name="actualDeposit" id="customDepositInput" class="form-input" placeholder="ලැබුණු මුදල ඇතුළත් කරන්න (Rs.)..." step="0.01">
-                    </div>
+                    <div id="driverDepositShortfallWarning" style="display: none; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 600; margin-top: 6px;"></div>
                 </div>
 
                 <!-- 5. Remarks (Optional) -->
@@ -939,16 +920,22 @@
             calculateDeposit();
         }
 
+        let driverManualDepositEdit = false;
+
         function calculateDeposit() {
             const count = parseInt(document.getElementById('trayCountInput').value) || 0;
             const total = count * depositRate;
             const formatted = 'Rs. ' + total.toLocaleString('en-US', { minimumFractionDigits: 2 });
             
             const expDisp = document.getElementById('expectedDepositDisplay');
-            if (expDisp) expDisp.innerText = formatted;
-            
-            const amtFull = document.getElementById('amountFull');
-            if (amtFull) amtFull.innerText = 'Rs. ' + total.toLocaleString('en-US');
+            if (expDisp) expDisp.innerText = 'නියමිත: ' + formatted;
+
+            const actualInput = document.getElementById('driverActualDeposit');
+            if (actualInput && !driverManualDepositEdit) {
+                actualInput.value = total > 0 ? total.toFixed(2) : '';
+            }
+
+            updateDriverDepositStatus();
 
             const warningEl = document.getElementById('stockExceededWarning');
             const submitBtn = document.getElementById('btnSubmit');
@@ -973,19 +960,53 @@
             }
         }
 
-        function handleDepositChange(option) {
-            document.getElementById('chipFull').className = option === 'FULL' ? 'deposit-chip selected' : 'deposit-chip';
-            document.getElementById('chipZero').className = option === 'ZERO' ? 'deposit-chip selected' : 'deposit-chip';
-            document.getElementById('chipCustom').className = option === 'CUSTOM' ? 'deposit-chip selected' : 'deposit-chip';
+        function handleDriverActualDepositInput() {
+            driverManualDepositEdit = true;
+            updateDriverDepositStatus();
+        }
 
-            const customBox = document.getElementById('customDepositBox');
-            if (option === 'CUSTOM') {
-                customBox.style.display = 'block';
-                document.getElementById('customDepositInput').focus();
-            } else {
-                customBox.style.display = 'none';
-                document.getElementById('customDepositInput').value = '';
+        function updateDriverDepositStatus() {
+            const count = parseInt(document.getElementById('trayCountInput').value) || 0;
+            const total = count * depositRate;
+            const actualInput = document.getElementById('driverActualDeposit');
+            const actualVal = parseFloat(actualInput ? actualInput.value : 0) || 0;
+            const optInput = document.getElementById('driverDepositOption');
+            const warningEl = document.getElementById('driverDepositShortfallWarning');
+
+            if (optInput) {
+                if (actualVal >= total && total > 0) {
+                    optInput.value = 'FULL';
+                } else if (actualVal === 0) {
+                    optInput.value = 'ZERO';
+                } else {
+                    optInput.value = 'CUSTOM';
+                }
             }
+
+            if (warningEl) {
+                if (currentType === 'OUT' && count > 0 && actualVal < total) {
+                    const shortfall = total - actualVal;
+                    warningEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> සම්පූර්ණ තැන්පතුව ලැබී නැත! (හිඟ මුදල: රු. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })} - Sales Manager අනුමැතිය අවශ්‍ය වේ)`;
+                    warningEl.style.display = 'block';
+                } else {
+                    warningEl.style.display = 'none';
+                }
+            }
+        }
+
+        function setDriverQuickDeposit(mode) {
+            const count = parseInt(document.getElementById('trayCountInput').value) || 0;
+            const total = count * depositRate;
+            const actualInput = document.getElementById('driverActualDeposit');
+            
+            if (mode === 'FULL') {
+                driverManualDepositEdit = false;
+                if (actualInput) actualInput.value = total > 0 ? total.toFixed(2) : '0.00';
+            } else if (mode === 'ZERO') {
+                driverManualDepositEdit = true;
+                if (actualInput) actualInput.value = '0.00';
+            }
+            updateDriverDepositStatus();
         }
 
         // Customer Autocomplete Search
@@ -1124,20 +1145,22 @@
             }
 
             const cust = customers.find(c => String(c.id) === String(customerId));
-            const depositOptionEl = document.querySelector('input[name="depositOption"]:checked');
-            const depositOption = depositOptionEl ? depositOptionEl.value : 'FULL';
+            const actualInput = document.getElementById('driverActualDeposit');
+            const actualVal = parseFloat(actualInput ? actualInput.value : 0) || 0;
+            const expectedTotal = count * depositRate;
             const pendingDeposit = Number(cust ? (cust.pendingDeposit || 0) : 0);
-            const isNonFull = (depositOption !== 'FULL');
+            const isUnderpaid = (count > 0 && actualVal < expectedTotal);
+            const shortfall = Math.max(0, expectedTotal - actualVal);
 
             // Blocking condition on OUT transactions
-            if (currentType === 'OUT' && (pendingDeposit > 0 || isNonFull) && cust) {
+            if (currentType === 'OUT' && (pendingDeposit > 0 || isUnderpaid) && cust) {
                 let reasonSi = '';
-                if (pendingDeposit > 0 && isNonFull) {
-                    reasonSi = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල <strong style="color:#dc2626;">රු. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> කි.<br>තෝරාගත් ක්‍රමය: <strong style="color:#d97706;">${depositOption}</strong>`;
+                if (pendingDeposit > 0 && isUnderpaid) {
+                    reasonSi = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල <strong style="color:#dc2626;">රු. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> කි.<br>මෙම ගනුදෙනුව සඳහාද ලැබී ඇත්තේ රු. ${actualVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })} ක් පමණි (හිඟ මුදල: <strong style="color:#dc2626;">රු. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong>).`;
                 } else if (pendingDeposit > 0) {
                     reasonSi = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල <strong style="color:#dc2626;">රු. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> කි.`;
                 } else {
-                    reasonSi = `තෝරාගත් තැන්පතු ක්‍රමය <strong style="color:#d97706;">${depositOption}</strong> වේ (Full Payment නොවේ).`;
+                    reasonSi = `සම්පූර්ණ තැන්පතුව ලැබී නොමැත. නියමිත රු. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })} න් ලැබී ඇත්තේ <strong style="color:#dc2626;">රු. ${actualVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> ක් පමණි (හිඟ මුදල: <strong style="color:#dc2626;">රු. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong>).`;
                 }
 
                 Swal.fire({
@@ -1147,7 +1170,9 @@
                             <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; margin-bottom:12px;">
                                 <strong>Customer:</strong> <span style="font-weight:700; color:#1e293b;">${cust.name}</span><br>
                                 <strong>Pending Deposit:</strong> <span style="color:#dc2626; font-weight:800; font-size:15px;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span><br>
-                                <strong>Payment Option:</strong> <span style="color:#d97706; font-weight:800;">${depositOption}</span>
+                                <strong>Expected Deposit:</strong> <span style="color:#1e293b; font-weight:700;">Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span><br>
+                                <strong>Actual Paid:</strong> <span style="color:${isUnderpaid ? '#dc2626' : '#166534'}; font-weight:800;">Rs. ${actualVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span>
+                                ${isUnderpaid ? `<br><strong>Shortfall:</strong> <span style="color:#dc2626; font-weight:800;">Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span>` : ''}
                             </div>
                             <div style="color:#334155; margin-bottom:10px;">
                                 ${reasonSi}<br>
@@ -1166,14 +1191,38 @@
                     cancelButtonColor: '#64748b'
                 }).then(async (result) => {
                     if (result.isConfirmed) {
-                        initiateDriverApprovalRequest(form, cust, count, pendingDeposit, depositOption);
+                        const effectiveOpt = isUnderpaid ? (actualVal === 0 ? 'ZERO' : 'CUSTOM') : 'FULL';
+                        initiateDriverApprovalRequest(form, cust, count, pendingDeposit, effectiveOpt);
                     }
                 });
                 return;
             }
 
-            // Normal submit when pending deposit == 0 and FULL or IN
+            // Normal submit when pending deposit == 0 and full payment or IN
             await submitDriverTransactionForm(form);
+        }
+
+        function resetDriverFormAfterSuccess(data) {
+            const submitBtn = document.getElementById('btnSubmit');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-print"></i> තහවුරු කර රිසිට්පත මුද්‍රණය (Save & Print)';
+            }
+            const countInput = document.getElementById('trayCountInput');
+            if (countInput) countInput.value = '';
+            const actualInput = document.getElementById('driverActualDeposit');
+            if (actualInput) actualInput.value = '';
+            const searchInput = document.getElementById('customerSearch');
+            if (searchInput) searchInput.value = '';
+            const custId = document.getElementById('selectedCustomerId');
+            if (custId) custId.value = '';
+            const badge = document.getElementById('selectedCustomerBadge');
+            if (badge) badge.style.display = 'none';
+            const remarks = document.querySelector('input[name="remarks"]');
+            if (remarks) remarks.value = '';
+            driverManualDepositEdit = false;
+            calculateDeposit();
+            setTimeout(() => { window.location.reload(); }, 2500);
         }
 
         async function submitDriverTransactionForm(form) {

@@ -452,14 +452,34 @@
                             Rs. <%= (approval.refundableOutstanding || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                         </span>
                     </div>
-                    <% if (approval.txPayload && approval.txPayload.depositOption) { %>
+                    <% if (approval.txPayload) { %>
+                        <% 
+                            const countVal = Number(approval.requestedQty || approval.txPayload.count || 0);
+                            const rateVal = Number(approval.txPayload.depositPerTray || 2000);
+                            const expTotal = countVal * rateVal;
+                            const paidDeposit = (approval.txPayload.actualDeposit !== undefined && approval.txPayload.actualDeposit !== null && approval.txPayload.actualDeposit !== '') ? Number(approval.txPayload.actualDeposit) : expTotal;
+                            const shortfall = Math.max(0, expTotal - paidDeposit);
+                        %>
                         <div class="info-item">
-                            <span class="label">Payment Mode</span>
-                            <span class="val" style="color: <%= approval.txPayload.depositOption === 'FULL' ? '#16a34a' : '#d97706' %>; font-weight: 700;">
-                                <%= approval.txPayload.depositOption %>
-                                <%= approval.txPayload.depositOption === 'FULL' ? '(Full Payment)' : (approval.txPayload.depositOption === 'ZERO' ? '(No Deposit)' : (approval.txPayload.depositOption === 'HALF' ? '(Half Payment)' : '(Custom Amount)')) %>
+                            <span class="label">Expected Deposit (This Issue)</span>
+                            <span class="val" style="color: var(--text-dark);">
+                                Rs. <%= expTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                             </span>
                         </div>
+                        <div class="info-item">
+                            <span class="label">Actual Deposit Paid</span>
+                            <span class="val" style="color: <%= (shortfall > 0) ? '#dc2626' : '#16a34a' %>; font-weight: 800;">
+                                Rs. <%= paidDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                            </span>
+                        </div>
+                        <% if (shortfall > 0) { %>
+                            <div class="info-item">
+                                <span class="label">Deposit Shortfall</span>
+                                <span class="val" style="color: #dc2626; font-weight: 800;">
+                                    Rs. <%= shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                                </span>
+                            </div>
+                        <% } %>
                     <% } %>
                     <div class="info-item">
                         <span class="label">Branch / Location</span>

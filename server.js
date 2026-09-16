@@ -1072,15 +1072,30 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
         };
         
         // Check for customer block on OUT transactions:
-        // Blocked if customer has pending deposit balance > 0 OR if transaction deposit option is NOT 'FULL'
+        // Blocked if customer has pending deposit balance > 0 OR if actual deposit paid < expected deposit
         const settings = await SystemSetting.get();
         if (settings.enableOutstandingBlock !== false && type === 'OUT') {
             const customer = await Customer.getById(customerId);
             const custPendingDeposit = await Customer.getPendingDeposit(customerId);
-            const isDepositOptionNonFull = (!depositOption || depositOption !== 'FULL');
+            
+            const defaultRate = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
+            const rateVal = parseFloat(depositPerTray) || defaultRate;
+            const expectedDeposit = countVal * rateVal;
+
+            let paidDeposit = expectedDeposit;
+            if (actualDeposit !== undefined && actualDeposit !== null && actualDeposit !== '') {
+                paidDeposit = parseFloat(actualDeposit);
+                if (isNaN(paidDeposit)) paidDeposit = 0;
+            } else if (depositOption === 'ZERO') {
+                paidDeposit = 0;
+            } else if (depositOption === 'HALF') {
+                paidDeposit = expectedDeposit / 2;
+            }
+
+            const isUnderpaid = (paidDeposit < expectedDeposit);
             const hasPendingDeposit = (custPendingDeposit > 0);
 
-            if (hasPendingDeposit || isDepositOptionNonFull) {
+            if (hasPendingDeposit || isUnderpaid) {
                 // Check if special approval token or override is present
                 const { approvalToken } = req.body;
                 let isApproved = false;
@@ -1095,12 +1110,13 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
                 }
                 if (!isApproved) {
                     let blockReason = '';
-                    if (hasPendingDeposit && isDepositOptionNonFull) {
-                        blockReason = `Customer has a pending deposit balance of Rs. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} and payment option is '${depositOption}'!`;
+                    const shortfall = Math.max(0, expectedDeposit - paidDeposit);
+                    if (hasPendingDeposit && isUnderpaid) {
+                        blockReason = `Customer has an existing pending deposit of Rs. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} and this transaction is underpaid by Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Paid: Rs. ${paidDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} / Expected: Rs. ${expectedDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })})!`;
                     } else if (hasPendingDeposit) {
-                        blockReason = `Customer has a pending deposit balance of Rs. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}!`;
+                        blockReason = `Customer has an existing pending deposit balance of Rs. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}!`;
                     } else {
-                        blockReason = `Payment option '${depositOption}' is selected (requires Full Payment or Approval)!`;
+                        blockReason = `Full deposit not paid! Customer paid Rs. ${paidDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} out of expected Rs. ${expectedDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Shortfall: Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })})!`;
                     }
                     const errorMsg = `${blockReason} Sales Manager approval is required to issue trays.`;
                     if (isAjax) {
@@ -1110,7 +1126,10 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
                             customerName: customer ? customer.name : '',
                             currentBalance: customer ? customer.currentBalance : 0,
                             pendingDepositBalance: custPendingDeposit,
-                            depositOption: depositOption || 'FULL',
+                            expectedDeposit,
+                            actualDeposit: paidDeposit,
+                            shortfall,
+                            depositOption: isUnderpaid ? (paidDeposit === 0 ? 'ZERO' : 'CUSTOM') : 'FULL',
                             reason: blockReason,
                             managerPhone: settings.salesManagerPhone || '0770000000',
                             error: errorMsg
@@ -1463,14 +1482,30 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
         const managerPhone = settings.salesManagerPhone || '0770000000';
         const waNumber = smsService.formatWhatsAppNumber(managerPhone) || '94770000000';
 
-        const paymentMode = txData.depositOption || 'FULL';
+        const defaultRate = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
+        const rateVal = parseFloat(txData.depositPerTray) || defaultRate;
+        const expectedDeposit = countVal * rateVal;
+        let paidDeposit = expectedDeposit;
+        if (txData.actualDeposit !== undefined && txData.actualDeposit !== null && txData.actualDeposit !== '') {
+            paidDeposit = parseFloat(txData.actualDeposit);
+            if (isNaN(paidDeposit)) paidDeposit = 0;
+        } else if (txData.depositOption === 'ZERO') {
+            paidDeposit = 0;
+        } else if (txData.depositOption === 'HALF') {
+            paidDeposit = expectedDeposit / 2;
+        }
+
+        const isUnderpaid = (paidDeposit < expectedDeposit);
+        const shortfall = Math.max(0, expectedDeposit - paidDeposit);
+        const paymentMode = isUnderpaid ? (paidDeposit === 0 ? 'ZERO' : 'CUSTOM') : (txData.depositOption || 'FULL');
+
         let reason = '';
-        if (pendingDepositBalance > 0 && paymentMode !== 'FULL') {
-            reason = `Pending deposit balance (Rs. ${pendingDepositBalance.toLocaleString('en-LK')}) & payment mode is '${paymentMode}'`;
+        if (pendingDepositBalance > 0 && isUnderpaid) {
+            reason = `Pending deposit: Rs. ${pendingDepositBalance.toLocaleString('en-LK')} & this issue underpaid by Rs. ${shortfall.toLocaleString('en-LK')} (Paid: Rs. ${paidDeposit.toLocaleString('en-LK')} / Expected: Rs. ${expectedDeposit.toLocaleString('en-LK')})`;
         } else if (pendingDepositBalance > 0) {
-            reason = `Pending deposit balance of Rs. ${pendingDepositBalance.toLocaleString('en-LK')}`;
-        } else if (paymentMode !== 'FULL') {
-            reason = `Payment option is '${paymentMode}' (not Full Payment)`;
+            reason = `Customer has a pending deposit balance of Rs. ${pendingDepositBalance.toLocaleString('en-LK')}`;
+        } else if (isUnderpaid) {
+            reason = `Deposit paid (Rs. ${paidDeposit.toLocaleString('en-LK')}) is less than expected Rs. ${expectedDeposit.toLocaleString('en-LK')} (Shortfall: Rs. ${shortfall.toLocaleString('en-LK')})`;
         } else {
             reason = `Customer has ${customer.currentBalance || 0} unreturned trays`;
         }
@@ -1482,6 +1517,9 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
             requestedQty: approval.requestedQty,
             pendingDepositBalance,
             refundableOutstanding,
+            expectedDeposit,
+            actualDeposit: paidDeposit,
+            shortfall,
             depositOption: paymentMode,
             reason,
             txType: approval.txType,
@@ -2266,10 +2304,25 @@ app.post('/driver/transaction', async (req, res) => {
         if (settings.enableOutstandingBlock !== false && type === 'OUT') {
             const customer = await Customer.getById(customerId);
             const custPendingDeposit = await Customer.getPendingDeposit(customerId);
-            const isDepositOptionNonFull = (!depositOption || depositOption !== 'FULL');
+            
+            const defaultRate = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
+            const rateVal = parseFloat(txData.depositPerTray) || defaultRate;
+            const expectedDeposit = countVal * rateVal;
+
+            let paidDeposit = expectedDeposit;
+            if (txData.actualDeposit !== undefined && txData.actualDeposit !== null && txData.actualDeposit !== '') {
+                paidDeposit = parseFloat(txData.actualDeposit);
+                if (isNaN(paidDeposit)) paidDeposit = 0;
+            } else if (depositOption === 'ZERO') {
+                paidDeposit = 0;
+            } else if (depositOption === 'HALF') {
+                paidDeposit = expectedDeposit / 2;
+            }
+
+            const isUnderpaid = (paidDeposit < expectedDeposit);
             const hasPendingDeposit = (custPendingDeposit > 0);
 
-            if (hasPendingDeposit || isDepositOptionNonFull) {
+            if (hasPendingDeposit || isUnderpaid) {
                 const { approvalToken } = req.body;
                 let isApproved = false;
                 if (approvalToken) {
@@ -2283,12 +2336,13 @@ app.post('/driver/transaction', async (req, res) => {
                 }
                 if (!isApproved) {
                     let blockReason = '';
-                    if (hasPendingDeposit && isDepositOptionNonFull) {
-                        blockReason = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල රු. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} ක් වන අතර තෝරාගත් ක්‍රමය '${depositOption}' වේ.`;
+                    const shortfall = Math.max(0, expectedDeposit - paidDeposit);
+                    if (hasPendingDeposit && isUnderpaid) {
+                        blockReason = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල රු. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} ක් වන අතර, මෙම ගනුදෙනුව සඳහාද සම්පූර්ණ තැන්පතුව ගෙවා නොමැත (ගෙවූ මුදල: රු. ${paidDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} / නියමිත මුදල: රු. ${expectedDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}).`;
                     } else if (hasPendingDeposit) {
                         blockReason = `පාරිභෝගිකයාගේ හිඟ තැන්පතු මුදල රු. ${custPendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} කි.`;
                     } else {
-                        blockReason = `තෝරාගත් තැන්පතු ක්‍රමය '${depositOption}' වේ (Full Payment නොවේ).`;
+                        blockReason = `සම්පූර්ණ තැන්පතුව ගෙවා නොමැත! නියමිත රු. ${expectedDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} න් ගෙවා ඇත්තේ රු. ${paidDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} ක් පමණි (හිඟ මුදල: රු. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })}).`;
                     }
                     const errorMsg = `${blockReason} Sales Manager අනුමැතිය අවශ්‍යයි!`;
                     return res.status(403).json({
@@ -2297,7 +2351,10 @@ app.post('/driver/transaction', async (req, res) => {
                         customerName: customer ? customer.name : '',
                         currentBalance: customer ? customer.currentBalance : 0,
                         pendingDepositBalance: custPendingDeposit,
-                        depositOption: depositOption || 'FULL',
+                        expectedDeposit,
+                        actualDeposit: paidDeposit,
+                        shortfall,
+                        depositOption: isUnderpaid ? (paidDeposit === 0 ? 'ZERO' : 'CUSTOM') : 'FULL',
                         reason: blockReason,
                         managerPhone: settings.salesManagerPhone || '0770000000',
                         error: errorMsg

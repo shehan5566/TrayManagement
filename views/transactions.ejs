@@ -82,9 +82,9 @@
                                     value="<%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>" required>
                             </div>
 
-                            <div class="form-group">
+                            <div class="form-group" style="display: none;">
                                 <label for="depositOption">Deposit / Refund Option</label>
-                                <select id="depositOption" name="depositOption" required>
+                                <select id="depositOption" name="depositOption">
                                     <option value="FULL">Full Deposit / Refund (100%)</option>
                                     <option value="HALF">Half Payment / Half Refund (50%)</option>
                                     <option value="ZERO">No Deposit / No Refund (0%)</option>
@@ -93,10 +93,15 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="actualDeposit" id="actualDepositLabel">Actual Deposit Collected
-                                    (Rs.)</label>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label for="actualDeposit" id="actualDepositLabel" style="margin-bottom: 0;">Actual Deposit Collected (Rs.)</label>
+                                    <div style="display: flex; gap: 6px;">
+                                        <button type="button" class="btn" style="padding: 2px 8px; font-size: 11px; background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-weight: 700; border-radius: 4px; cursor: pointer;" onclick="setQuickDeposit('FULL')">Full Amount</button>
+                                        <button type="button" class="btn" style="padding: 2px 8px; font-size: 11px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-weight: 700; border-radius: 4px; cursor: pointer;" onclick="setQuickDeposit('ZERO')">Rs. 0 (Credit)</button>
+                                    </div>
+                                </div>
                                 <input type="number" id="actualDeposit" name="actualDeposit" min="0" step="0.01"
-                                    placeholder="Enter amount..." required>
+                                    placeholder="Enter actual cash collected..." required>
                             </div>
                         </div>
 
@@ -489,15 +494,40 @@
                                 }
 
                                 const actualVal = parseFloat(actualDepositInput ? actualDepositInput.value : 0) || 0;
+                                const isShortfall = (typeSelect && typeSelect.value === 'OUT' && qty > 0 && actualVal < expectedTotal);
 
                                 if (totalDisplay) {
                                     totalDisplay.textContent = actualVal.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                                 }
 
                                 if (expectedDisplay) {
-                                    expectedDisplay.textContent = 'Expected Standard Deposit (' + qty + ' Trays × Rs.' + rate.toLocaleString() + '): Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 });
+                                    if (isShortfall) {
+                                        const shortfall = expectedTotal - actualVal;
+                                        expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + ' <span style="color:#dc2626; font-weight:700; margin-left:8px;"><i class="fa-solid fa-triangle-exclamation"></i> Shortfall: Rs. ' + shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + ' (Approval Required)</span>';
+                                    } else {
+                                        expectedDisplay.innerHTML = 'Expected: Rs. ' + expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 }) + (qty > 0 ? ' <span style="color:#16a34a; font-weight:700; margin-left:8px;"><i class="fa-solid fa-circle-check"></i> Full Deposit Paid</span>' : '');
+                                    }
                                 }
+
+                                checkCustomerOutstanding();
                             }
+
+                            window.setQuickDeposit = function(opt) {
+                                isManualEdit = (opt !== 'FULL');
+                                const qty = parseFloat(countInput ? countInput.value : 0) || 0;
+                                const defaultRate = <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
+                                const rate = parseFloat(depositRateInput ? depositRateInput.value : defaultRate) || 0;
+                                const expectedTotal = qty * rate;
+
+                                if (opt === 'FULL') {
+                                    if (actualDepositInput) actualDepositInput.value = expectedTotal.toFixed(2);
+                                    if (depositOptionSelect) depositOptionSelect.value = 'FULL';
+                                } else if (opt === 'ZERO') {
+                                    if (actualDepositInput) actualDepositInput.value = (0).toFixed(2);
+                                    if (depositOptionSelect) depositOptionSelect.value = 'ZERO';
+                                }
+                                updateDepositDisplay();
+                            };
 
                             if (countInput) countInput.addEventListener('input', () => { isManualEdit = false; updateDepositDisplay(); });
                             if (depositRateInput) depositRateInput.addEventListener('input', () => { isManualEdit = false; updateDepositDisplay(); });
@@ -519,7 +549,7 @@
                                             const rate = parseFloat(depositRateInput ? depositRateInput.value : defaultRate) || 0;
                                             const expectedTotal = qty * rate;
 
-                                            if (val === expectedTotal) {
+                                            if (val >= expectedTotal) {
                                                 depositOptionSelect.value = 'FULL';
                                             } else if (val === expectedTotal / 2 && val > 0) {
                                                 depositOptionSelect.value = 'HALF';
@@ -722,23 +752,33 @@
                     const noticeText = document.getElementById('outstandingNoticeText');
                     const typeSelect = document.getElementById('type');
                     const type = typeSelect ? typeSelect.value : 'OUT';
-                    const depositOptionEl = document.getElementById('depositOption');
-                    const depositOption = depositOptionEl ? depositOptionEl.value : 'FULL';
                     
+                    const countInput = document.getElementById('count');
+                    const countVal = parseFloat(countInput ? countInput.value : 0) || 0;
+                    
+                    const depositRateInput = document.getElementById('depositPerTray');
+                    const defaultRate = <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
+                    const rateVal = parseFloat(depositRateInput ? depositRateInput.value : defaultRate) || 0;
+                    const expectedTotal = countVal * rateVal;
+
+                    const actualDepositInput = document.getElementById('actualDeposit');
+                    const actualDepositVal = parseFloat(actualDepositInput ? actualDepositInput.value : 0) || 0;
+
                     const isBlockEnabled = <%= (settings && settings.enableOutstandingBlock !== false) ? 'true' : 'false' %>;
 
                     const pendingDeposit = Number(selectedCustomerObj ? (selectedCustomerObj.pendingDeposit || 0) : 0);
-                    const isNonFull = (depositOption !== 'FULL');
+                    const isUnderpaid = (countVal > 0 && actualDepositVal < expectedTotal);
 
-                    if (selectedCustomerObj && isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isNonFull)) {
+                    if (selectedCustomerObj && isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isUnderpaid)) {
                         if (notice) {
                             let text = '';
-                            if (pendingDeposit > 0 && isNonFull) {
-                                text = `Customer has Pending Deposit: Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} & Mode is '${depositOption}' (Approval Required)`;
+                            const shortfall = Math.max(0, expectedTotal - actualDepositVal);
+                            if (pendingDeposit > 0 && isUnderpaid) {
+                                text = `Customer has Pending Deposit: Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} & Shortfall on this issue: Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Paid: Rs. ${actualDepositVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })} / Expected: Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}) - Approval Required`;
                             } else if (pendingDeposit > 0) {
                                 text = `Customer has Pending Deposit: Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Approval Required)`;
                             } else {
-                                text = `Payment Mode: '${depositOption}' selected (Not Full Payment - Approval Required)`;
+                                text = `Actual Deposit paid (Rs. ${actualDepositVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}) is less than expected Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })} (Shortfall: Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })} - Approval Required)`;
                             }
                             if (noticeText) noticeText.innerText = text;
                             notice.style.display = 'block';
@@ -748,31 +788,37 @@
                     }
                 }
 
-                // Handle Form Submit with Unified Outstanding / Payment Option Block Check
+                // Handle Form Submit with Unified Outstanding / Underpayment Block Check
                 async function handleTransactionFormSubmit(event, form) {
                     event.preventDefault();
                     const type = document.getElementById('type').value;
                     const count = parseInt(document.getElementById('count').value, 10) || 0;
                     const customerId = document.getElementById('customerId').value;
-                    const depositOptionEl = document.getElementById('depositOption');
-                    const depositOption = depositOptionEl ? depositOptionEl.value : 'FULL';
+                    const depositRateInput = document.getElementById('depositPerTray');
+                    const defaultRate = <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
+                    const rateVal = parseFloat(depositRateInput ? depositRateInput.value : defaultRate) || 0;
+                    const expectedTotal = count * rateVal;
+
+                    const actualDepositInput = document.getElementById('actualDeposit');
+                    const actualDepositVal = parseFloat(actualDepositInput ? actualDepositInput.value : 0) || 0;
                     const isBlockEnabled = <%= (settings && settings.enableOutstandingBlock !== false) ? 'true' : 'false' %>;
 
                     const cust = selectedCustomerObj || (typeof customersData !== 'undefined' ? customersData.find(c => c.id === customerId) : null);
                     const pendingDeposit = Number(cust ? (cust.pendingDeposit || 0) : 0);
-                    const isNonFull = (depositOption !== 'FULL');
-                    const isBlocked = isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isNonFull);
+                    const isUnderpaid = (count > 0 && actualDepositVal < expectedTotal);
+                    const isBlocked = isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isUnderpaid);
 
                     if (isBlocked && cust) {
                         const mgrPhone = "<%= (settings && settings.salesManagerPhone) ? settings.salesManagerPhone : '0770000000' %>";
-                        
+                        const shortfall = Math.max(0, expectedTotal - actualDepositVal);
+
                         let reasonHtml = '';
-                        if (pendingDeposit > 0 && isNonFull) {
-                            reasonHtml = `Customer has an unsettled pending deposit of <strong style="color:#dc2626;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> and payment option is <strong style="color:#d97706;">${depositOption}</strong>.`;
+                        if (pendingDeposit > 0 && isUnderpaid) {
+                            reasonHtml = `Customer has an unsettled pending deposit of <strong style="color:#dc2626;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> and this issue is underpaid by <strong style="color:#dc2626;">Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> (Paid: Rs. ${actualDepositVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })} / Expected: Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}).`;
                         } else if (pendingDeposit > 0) {
                             reasonHtml = `Customer has an unsettled pending deposit balance of <strong style="color:#dc2626;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong>.`;
                         } else {
-                            reasonHtml = `Payment option <strong style="color:#d97706;">${depositOption}</strong> is selected (Full Payment is required or Approval needed).`;
+                            reasonHtml = `Deposit paid (<strong>Rs. ${actualDepositVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong>) is less than expected full deposit <strong>Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong> (Shortfall: <strong style="color:#dc2626;">Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</strong>).`;
                         }
 
                         Swal.fire({
@@ -782,7 +828,9 @@
                                     <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; margin-bottom:14px;">
                                         <strong style="color:#9f1239;">Customer:</strong> <span style="font-weight:700; color:#1e293b;">${cust.name}</span><br>
                                         <strong style="color:#9f1239;">Pending Deposit:</strong> <span style="color:#dc2626; font-weight:800; font-size:15px;">Rs. ${pendingDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span><br>
-                                        <strong style="color:#9f1239;">Payment Option:</strong> <span style="color:#d97706; font-weight:800; font-size:14px;">${depositOption}</span>
+                                        <strong style="color:#9f1239;">Expected Deposit:</strong> <span style="color:#1e293b; font-weight:700;">Rs. ${expectedTotal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span><br>
+                                        <strong style="color:#9f1239;">Actual Paid:</strong> <span style="color:${isUnderpaid ? '#dc2626' : '#166534'}; font-weight:800;">Rs. ${actualDepositVal.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span>
+                                        ${isUnderpaid ? `<br><strong style="color:#9f1239;">Shortfall:</strong> <span style="color:#dc2626; font-weight:800;">Rs. ${shortfall.toLocaleString('en-LK', { minimumFractionDigits: 2 })}</span>` : ''}
                                     </div>
                                     <p style="color:#334155; margin-bottom:10px;">
                                         ${reasonHtml}<br>
