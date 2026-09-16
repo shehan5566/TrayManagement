@@ -1082,23 +1082,11 @@
                 matches.forEach(c => {
                     const item = document.createElement('div');
                     item.className = 'autocomplete-item';
-                    const trayBal = Number(c.currentBalance || 0);
-                    const pendDep = Number(c.pendingDeposit || 0);
-                    const trayColor = trayBal > 0 ? '#dc2626' : '#166534';
-                    const depColor = pendDep > 0 ? '#dc2626' : '#166534';
 
                     item.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
                             <strong style="color: #1f2937; font-size: 13.5px;">${c.name}</strong>
-                            <span style="font-size: 11px; color: #6b7280;">${c.phone || ''}</span>
-                        </div>
-                        <div style="display: flex; gap: 8px; margin-top: 5px; font-size: 11px; flex-wrap: wrap;">
-                            <span style="color: ${trayColor}; font-weight: 700; background: ${trayBal > 0 ? '#fef2f2' : '#f0fdf4'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${trayBal > 0 ? '#fecaca' : '#bbf7d0'};">
-                                <i class="fa-solid fa-boxes-stacked"></i> Balance: ${trayBal} Trays
-                            </span>
-                            <span style="color: ${depColor}; font-weight: 700; background: ${pendDep > 0 ? '#fef2f2' : '#f0fdf4'}; padding: 2px 6px; border-radius: 4px; border: 1px solid ${pendDep > 0 ? '#fecaca' : '#bbf7d0'};">
-                                <i class="fa-solid fa-coins"></i> Pending Deposit: Rs. ${pendDep.toLocaleString('en-LK', { minimumFractionDigits: 2 })}
-                            </span>
+                            <span style="font-size: 11.5px; color: #6b7280; font-weight: 500;">${c.phone || ''}</span>
                         </div>
                     `;
                     item.addEventListener('click', function() {
