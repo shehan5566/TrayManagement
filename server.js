@@ -2449,6 +2449,12 @@ app.get('/driver/receipt/:id/print', async (req, res) => {
     }
 });
 
+// Alias / fallback route for thermal print preview (redirects /transactions/:id/thermal-print to /driver/receipt/:id/print)
+app.get('/transactions/:id/thermal-print', async (req, res) => {
+    const queryString = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    res.redirect(`/driver/receipt/${req.params.id}/print${queryString}`);
+});
+
 app.get('/transfers/printByRef/:refNo', requireAuth, async (req, res) => {
     try {
         const { StockTransferModel } = require('./db');

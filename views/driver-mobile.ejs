@@ -1353,7 +1353,7 @@
                                             timer: 1500,
                                             showConfirmButton: false
                                         }).then(() => {
-                                            const printUrl = `/transactions/${stData.transactionId}/thermal-print?autoprint=1`;
+                                            const printUrl = `/driver/receipt/${stData.transactionId}/print?autoprint=1`;
                                             openReceiptPreviewModal(printUrl);
                                             resetDriverFormAfterSuccess(data);
                                         });
@@ -1423,7 +1423,7 @@
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
-                        const printUrl = `/transactions/${json.transactionId}/thermal-print?autoprint=1`;
+                        const printUrl = `/driver/receipt/${json.transactionId}/print?autoprint=1`;
                         openReceiptPreviewModal(printUrl);
                         resetDriverFormAfterSuccess({});
                     });
