@@ -89,7 +89,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                     <label for="actualDeposit" id="actualDepositLabel" style="margin-bottom: 0;">Actual Deposit Collected (Rs.)</label>
                                     <div style="display: flex; gap: 6px;">
-                                        <button type="button" class="btn" style="padding: 2px 8px; font-size: 11px; background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-weight: 700; border-radius: 4px; cursor: pointer;" onclick="setQuickDeposit('FULL')">Full Amount</button>
+                                        <button type="button" class="btn" style="padding: 2px 8px; font-size: 11px; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; font-weight: 700; border-radius: 4px; cursor: pointer;" onclick="setQuickDeposit('FULL')">Full Amount</button>
                                         <button type="button" class="btn" style="padding: 2px 8px; font-size: 11px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-weight: 700; border-radius: 4px; cursor: pointer;" onclick="setQuickDeposit('ZERO')">Rs. 0 (Credit)</button>
                                     </div>
                                 </div>
@@ -583,8 +583,8 @@
 
                                 const trayBal = Number(c.balance || 0);
                                 const pendDep = Number(c.pendingDeposit || 0);
-                                const trayColor = trayBal > 0 ? '#dc2626' : '#166534';
-                                const depColor = pendDep > 0 ? '#dc2626' : '#166534';
+                                const trayColor = '#107c41';
+                                const depColor = '#107c41';
 
                                 badge.style.display = 'block';
                                 badge.innerHTML = `
