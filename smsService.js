@@ -155,11 +155,25 @@ Thank you!`;
     return await sendSMS(phone, msg);
 };
 
-const buildApprovalMessage = (details, approvalUrl, pin) => {
-    return `👉 *Click Link to APPROVE or REJECT:*
+const buildApprovalMessage = (details = {}, approvalUrl, pin) => {
+    const cust = details.customerName || 'Customer';
+    const reqQty = details.requestedQty !== undefined ? details.requestedQty : 0;
+    const dueQty = details.currentBalance !== undefined ? details.currentBalance : 0;
+    const vehicle = (details.vehicleNo && details.vehicleNo !== 'N/A') ? ` | 🚛 ${details.vehicleNo}` : '';
+    const location = details.locationName ? `📍 ${details.locationName}${vehicle}` : (vehicle ? `🚛 ${details.vehicleNo}` : '');
+    const pendingDep = Number(details.pendingDepositBalance) || 0;
+    const pendingDepStr = pendingDep > 0 ? `\n💰 *Pending Deposit:* Rs. ${pendingDep.toLocaleString('en-LK')}` : '';
+
+    return `🔔 *NELNA AGRI - TRAY APPROVAL REQUEST*
+━━━━━━━━━━━━━━━━━━━━
+👤 *Customer:* ${cust}
+📦 *Requested Tray Issue:* *${reqQty} Trays*
+⚠️ *Outstanding (Due):* *${dueQty} Trays*${pendingDepStr}
+${location ? `${location}\n` : ''}━━━━━━━━━━━━━━━━━━━━
+👉 *Click Link to APPROVE or REJECT TRAY ISSUE:*
 ${approvalUrl}
 
-(Or Override PIN: *${pin}*)`;
+🔑 *Or Override PIN:* *${pin}*`;
 };
 
 /**
