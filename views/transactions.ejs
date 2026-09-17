@@ -34,8 +34,7 @@
                                     style="position: absolute; border: 1px solid #d4d4d4; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; background-color: #fff; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 4px;">
                                 </div>
                                 <input type="hidden" id="customerId" name="customerId" required>
-
-
+                                <div id="selectedCustomerBadge" style="display: none; margin-top: 6px;"></div>
                             </div>
 
                             <div class="form-group">
@@ -567,11 +566,52 @@
 
                             const customersData = [
                         <% customers.forEach(c => { %>
-                                { name: "<%= c.name.replace(/\"/g, '&quot;') %>", id: "<%= c.id %>", balance: <%= c.currentBalance || 0 %>, pendingDeposit: <%= c.pendingDeposit || 0 %> },
+                                { name: "<%= c.name.replace(/\"/g, '&quot;') %>", id: "<%= c.id %>", phone: "<%= (c.phone || '').replace(/\"/g, '&quot;') %>", balance: <%= c.currentBalance || 0 %>, pendingDeposit: <%= c.pendingDeposit || 0 %> },
                                 <% }) %>
                             ];
 
                             let currentFocus = -1;
+
+                            function renderSelectedCustomerBadge(c) {
+                                const badge = document.getElementById('selectedCustomerBadge');
+                                if (!badge) return;
+                                if (!c) {
+                                    badge.style.display = 'none';
+                                    badge.innerHTML = '';
+                                    return;
+                                }
+
+                                const trayBal = Number(c.balance || 0);
+                                const pendDep = Number(c.pendingDeposit || 0);
+                                const trayColor = trayBal > 0 ? '#dc2626' : '#166534';
+                                const depColor = pendDep > 0 ? '#dc2626' : '#166534';
+
+                                badge.style.display = 'block';
+                                badge.innerHTML = `
+                                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 11.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                            <span style="font-weight: 700; color: #1e293b; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                                                <i class="fa-solid fa-circle-check" style="color: #107c41;"></i> ${c.name}
+                                            </span>
+                                            ${c.phone ? `<span style="color: #64748b; font-size: 11px;">${c.phone}</span>` : ''}
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 4px; border-top: 1px dashed #e2e8f0;">
+                                            <div style="background: #fff; padding: 4px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                                <div style="font-size: 9.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Net Tray Balance</div>
+                                                <strong style="color: ${trayColor}; font-size: 12px; display: block;">
+                                                    ${trayBal} Trays
+                                                </strong>
+                                            </div>
+                                            <div style="background: #fff; padding: 4px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                                <div style="font-size: 9.5px; color: #64748b; font-weight: 700; text-transform: uppercase;">Pending Deposit</div>
+                                                <strong style="color: ${depColor}; font-size: 12px; display: block;">
+                                                    Rs. ${pendDep.toLocaleString('en-LK', { minimumFractionDigits: 2 })}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
 
                             function removeActive(items) {
                                 for (let i = 0; i < items.length; i++) {
@@ -622,15 +662,10 @@
                                         div.style.borderBottom = "1px solid #d4d4d4";
                                         div.style.color = "#333";
                                         div.style.fontSize = "14px";
-                                        const pDep = Number(c.pendingDeposit || 0);
-                                        const bal = Number(c.balance || 0);
                                         div.innerHTML = `
                                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                                 <span style="font-weight: 600;">${c.name}</span>
-                                                <div style="display: flex; gap: 6px; font-size: 11px;">
-                                                    ${pDep > 0 ? `<span style="background: #fee2e2; color: #dc2626; padding: 2px 6px; border-radius: 4px; font-weight: 700; border: 1px solid #fca5a5;"><i class="fa-solid fa-coins"></i> Pending: Rs. ${pDep.toLocaleString('en-LK')}</span>` : ''}
-                                                    ${bal > 0 ? `<span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: 600; border: 1px solid #fde68a;"><i class="fa-solid fa-boxes-stacked"></i> ${bal} Trays</span>` : ''}
-                                                </div>
+                                                ${c.phone ? `<span style="font-size: 11.5px; color: #6b7280; font-weight: 500;">${c.phone}</span>` : ''}
                                             </div>
                                         `;
 
@@ -655,6 +690,7 @@
                                             autocompleteList.style.display = 'none';
                                             currentFocus = -1;
                                             selectedCustomerObj = c;
+                                            renderSelectedCustomerBadge(c);
                                             checkCustomerOutstanding();
                                         });
                                         autocompleteList.appendChild(div);
@@ -670,6 +706,8 @@
                                 searchInput.addEventListener('input', function () {
                                     hiddenId.value = ''; // reset on typing
                                     selectedCustomerObj = null;
+                                    const badge = document.getElementById('selectedCustomerBadge');
+                                    if (badge) badge.style.display = 'none';
                                     checkCustomerOutstanding();
                                     renderAutocomplete(this.value);
                                 });
@@ -734,6 +772,13 @@
                         }
 
                         // Check Outstanding on load if customer pre-selected
+                        if (hiddenId && hiddenId.value) {
+                            const preCust = customersData.find(c => c.id === hiddenId.value);
+                            if (preCust) {
+                                selectedCustomerObj = preCust;
+                                renderSelectedCustomerBadge(preCust);
+                            }
+                        }
                         checkCustomerOutstanding();
                 });
 
