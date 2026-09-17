@@ -402,6 +402,8 @@
             <span class="val"><%= modeText %></span>
         </div>
         <% 
+            var hasApproval = !!(tx.approvedBy || tx.specialApprovalId || (tx.remarks && /approved by/i.test(tx.remarks)));
+            var approverTitle = tx.approvedBy || 'Sales Manager';
             var cleanRemarks = (tx.remarks || '').replace(/\|?\s*Approved by\b[^|]*/gi, '').trim();
             cleanRemarks = cleanRemarks.replace(/^\|\s*|\s*\|$/g, '').trim();
         %>
@@ -411,10 +413,10 @@
             <span class="val" style="font-style: italic;"><%= cleanRemarks %></span>
         </div>
         <% } %>
-        <% if (tx.approvedBy || tx.specialApprovalId) { %>
+        <% if (hasApproval) { %>
         <div class="row" style="margin-top: 3px;">
             <span class="label">Approved By:</span>
-            <span class="val text-bold" style="color: #15803d;"><%= tx.approvedBy || 'Sales Manager' %></span>
+            <span class="val text-bold" style="color: #15803d;"><%= approverTitle %></span>
         </div>
         <% } %>
 
@@ -598,6 +600,8 @@
             text(formatLine(pendLabel, "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(formatLine("Payment Mode:", txData.depositOption || 'FULL'));
 
+            const hasApproval = !!(txData.approvedBy || txData.specialApprovalId || (txData.remarks && /approved by/i.test(txData.remarks)));
+            const approverTitle = txData.approvedBy || "Sales Manager";
             let cleanRemarks = (txData.remarks || '').replace(/\|?\s*Approved by\b[^|]*/gi, '').trim();
             cleanRemarks = cleanRemarks.replace(/^\|\s*|\s*\|$/g, '').trim();
 
@@ -605,8 +609,8 @@
                 text(formatLine("Remarks:", cleanRemarks));
             }
 
-            if (txData.approvedBy || txData.specialApprovalId) {
-                text(formatLine("Approved By:", txData.approvedBy || "Sales Manager"));
+            if (hasApproval) {
+                text(formatLine("Approved By:", approverTitle));
             }
 
             text(divider);

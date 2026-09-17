@@ -2407,6 +2407,31 @@ app.get('/driver/receipt/:id/print', async (req, res) => {
         if (!tx) {
             return res.send('<script>alert("Receipt not found or deleted"); window.location.href="/driver";</script>');
         }
+
+        // Ensure approval information is populated even if transaction was saved previously
+        if (!tx.approvedBy && !tx.specialApprovalId) {
+            if (tx.remarks && /approved by/i.test(tx.remarks)) {
+                tx.approvedBy = 'Sales Manager';
+                tx.specialApprovalId = 'approved';
+            } else {
+                try {
+                    const { ApprovalRequestModel } = require('./db');
+                    const txIdStr = String(tx.id || tx._id || req.params.id);
+                    const appr = await ApprovalRequestModel.findOne({
+                        $or: [
+                            { transactionId: txIdStr },
+                            { receiptNo: tx.receiptNo }
+                        ],
+                        status: 'APPROVED'
+                    }).lean();
+                    if (appr) {
+                        tx.approvedBy = appr.approvedBy || 'Sales Manager';
+                        tx.specialApprovalId = appr._id;
+                    }
+                } catch (e) {}
+            }
+        }
+
         const customer = await Customer.getById(tx.customerId);
         if (!customer) {
             return res.send('<script>alert("Customer record not found"); window.location.href="/driver";</script>');

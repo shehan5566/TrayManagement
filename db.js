@@ -979,7 +979,9 @@ const Transaction = {
             driverName: driverName,
             receiptNo: nextReceiptNo,
             locationId: txData.locationId || customer.locationId || 'main',
-            tripId: tripId
+            tripId: tripId,
+            specialApprovalId: txData.specialApprovalId || null,
+            approvedBy: txData.approvedBy || (txData.specialApprovalId ? 'Sales Manager' : null)
         });
 
         await newTx.save();
