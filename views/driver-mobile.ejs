@@ -1020,34 +1020,27 @@
             resultsDiv.style.display = 'none';
 
             const badge = document.getElementById('selectedCustomerBadge');
+            if (!badge) return;
             badge.style.display = 'block';
 
-            const trayBal = Number(c.currentBalance || 0);
+            const trayBal = Number(c.currentBalance !== undefined ? c.currentBalance : (c.balance || 0));
             const pendDep = Number(c.pendingDeposit || 0);
-            const trayColor = trayBal > 0 ? '#dc2626' : '#166534';
-            const depColor = pendDep > 0 ? '#dc2626' : '#166534';
+            const trayColor = '#166534';
+            const depColor = '#166534';
 
             badge.innerHTML = `
-                <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; margin-top: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span style="font-weight: 800; color: #1f2937; font-size: 13.5px;">
-                            <i class="fa-solid fa-circle-check" style="color: #107c41;"></i> ${c.name}
-                        </span>
-                        <span style="font-size: 11.5px; color: #64748b; font-weight: 600;">${c.phone || 'No Phone'}</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                        <span style="font-size: 10px; color: #64748b; font-weight: 700;">Net Trays:</span>
+                        <strong style="color: ${trayColor}; font-size: 11px; margin-left: 6px;">
+                            ${trayBal} Trays
+                        </strong>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; font-size: 12px;">
-                        <div style="background: #fff; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">Net Tray Balance</div>
-                            <strong style="color: ${trayColor}; font-size: 13.5px; display: block; margin-top: 2px;">
-                                ${trayBal} Trays
-                            </strong>
-                        </div>
-                        <div style="background: #fff; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                            <div style="font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase;">Pending Deposit</div>
-                            <strong style="color: ${depColor}; font-size: 13.5px; display: block; margin-top: 2px;">
-                                Rs. ${pendDep.toLocaleString('en-LK', { minimumFractionDigits: 2 })}
-                            </strong>
-                        </div>
+                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                        <span style="font-size: 10px; color: #64748b; font-weight: 700;">Pending:</span>
+                        <strong style="color: ${depColor}; font-size: 11px; margin-left: 6px;">
+                            Rs. ${pendDep.toLocaleString('en-LK', { minimumFractionDigits: 2 })}
+                        </strong>
                     </div>
                 </div>
             `;
