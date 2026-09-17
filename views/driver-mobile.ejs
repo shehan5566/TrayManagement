@@ -243,7 +243,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.75);
-            z-index: 1050;
+            z-index: 99999;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1342,7 +1342,7 @@
                                 const stRes = await fetch('/api/approvals/status/' + requestId);
                                 const stData = await stRes.json();
                                 if (stData.success) {
-                                    if (stData.status === 'APPROVED') {
+                                    if (stData.status === 'APPROVED' && stData.transactionId) {
                                         clearInterval(driverApprovalInterval);
                                         clearInterval(timerInterval);
                                         const receiptNo = stData.receiptNo ? `RE-${String(stData.receiptNo).padStart(6, '0')}` : '';
@@ -1353,6 +1353,7 @@
                                             timer: 1500,
                                             showConfirmButton: false
                                         }).then(() => {
+                                            try { Swal.close(); } catch(e) {}
                                             const printUrl = `/driver/receipt/${stData.transactionId}/print?autoprint=1`;
                                             openReceiptPreviewModal(printUrl);
                                             resetDriverFormAfterSuccess(data);

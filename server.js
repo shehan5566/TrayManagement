@@ -1561,9 +1561,15 @@ app.get('/api/approvals/status/:id', requireUserOrDriver, async (req, res) => {
     try {
         const approval = await ApprovalRequest.getById(req.params.id);
         if (!approval) return res.status(404).json({ success: false, error: 'Approval request not found' });
+
+        // If status is APPROVED but transactionId has not been set yet (creation in progress),
+        // keep reporting status as PENDING so the client waits for transactionId to be populated
+        const isReady = approval.status === 'APPROVED' && !!approval.transactionId;
+        const reportedStatus = (approval.status === 'APPROVED' && !approval.transactionId) ? 'PENDING' : approval.status;
+
         res.json({
             success: true,
-            status: approval.status,
+            status: reportedStatus,
             approvedBy: approval.approvedBy,
             rejectionReason: approval.rejectionReason,
             transactionId: approval.transactionId,

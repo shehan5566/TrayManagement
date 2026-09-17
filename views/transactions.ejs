@@ -938,7 +938,7 @@
                                         const statusRes = await fetch('/api/approvals/status/' + requestId);
                                         const statusData = await statusRes.json();
                                         if (statusData.success) {
-                                            if (statusData.status === 'APPROVED') {
+                                            if (statusData.status === 'APPROVED' && statusData.transactionId) {
                                                 clearInterval(approvalPollingInterval);
                                                 clearInterval(timerInterval);
                                                 const receiptNo = statusData.receiptNo ? `RE-${String(statusData.receiptNo).padStart(6, '0')}` : '';
