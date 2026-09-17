@@ -1593,7 +1593,7 @@ app.post('/api/approvals/verify-pin', requireUserOrDriver, async (req, res) => {
             return res.status(400).json({ success: false, error: pinResult.error });
         }
 
-        const approval = await ApprovalRequest.approve(requestId, 'Sales Manager (via PIN)', 'Authorized via Override PIN');
+        const approval = await ApprovalRequest.approve(requestId, 'Sales Manager', 'Authorized via Override PIN');
         
         let newTx = null;
         if (!approval.transactionId && approval.txPayload) {

@@ -1485,9 +1485,8 @@ const ApprovalRequest = {
         doc.status = 'APPROVED';
         doc.approvedBy = approverName || 'Sales Manager';
         doc.approvedAt = new Date();
-        if (notes && doc.txPayload) {
-            doc.txPayload.remarks = (doc.txPayload.remarks ? doc.txPayload.remarks + ' | ' : '') + `Approved by ${doc.approvedBy}: ${notes}`;
-            doc.markModified('txPayload');
+        if (notes) {
+            doc.notes = notes;
         }
         await doc.save();
         return mapDoc(doc);

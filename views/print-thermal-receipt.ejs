@@ -401,10 +401,20 @@
             <span class="label">Payment Mode:</span>
             <span class="val"><%= modeText %></span>
         </div>
-        <% if (tx.remarks) { %>
+        <% 
+            var cleanRemarks = (tx.remarks || '').replace(/\|?\s*Approved by\b[^|]*/gi, '').trim();
+            cleanRemarks = cleanRemarks.replace(/^\|\s*|\s*\|$/g, '').trim();
+        %>
+        <% if (cleanRemarks) { %>
         <div class="row" style="margin-top: 3px;">
             <span class="label">Remarks:</span>
-            <span class="val" style="font-style: italic;"><%= tx.remarks %></span>
+            <span class="val" style="font-style: italic;"><%= cleanRemarks %></span>
+        </div>
+        <% } %>
+        <% if (tx.approvedBy || tx.specialApprovalId) { %>
+        <div class="row" style="margin-top: 3px;">
+            <span class="label">Approved By:</span>
+            <span class="val text-bold" style="color: #15803d;"><%= tx.approvedBy || 'Sales Manager' %></span>
         </div>
         <% } %>
 
@@ -588,8 +598,15 @@
             text(formatLine(pendLabel, "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(formatLine("Payment Mode:", txData.depositOption || 'FULL'));
 
-            if (txData.remarks) {
-                text(formatLine("Remarks:", txData.remarks));
+            let cleanRemarks = (txData.remarks || '').replace(/\|?\s*Approved by\b[^|]*/gi, '').trim();
+            cleanRemarks = cleanRemarks.replace(/^\|\s*|\s*\|$/g, '').trim();
+
+            if (cleanRemarks) {
+                text(formatLine("Remarks:", cleanRemarks));
+            }
+
+            if (txData.approvedBy || txData.specialApprovalId) {
+                text(formatLine("Approved By:", txData.approvedBy || "Sales Manager"));
             }
 
             text(divider);
