@@ -252,9 +252,9 @@ const requireAuth = (req, res, next) => {
     if (req.session.lastActivity && (now - req.session.lastActivity > INACTIVITY_TIMEOUT)) {
         req.session.destroy(() => {
             if (req.headers.accept && req.headers.accept.includes('application/json')) {
-                return res.status(401).json({ success: false, error: 'Session expired due to 20 minutes of inactivity.', redirect: '/login?reason=inactivity' });
+                return res.status(401).json({ success: false, redirect: '/login' });
             }
-            return res.redirect('/login?reason=inactivity');
+            return res.redirect('/login');
         });
         return;
     }
@@ -412,11 +412,7 @@ app.get('/login', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
     }
-    let error = null;
-    if (req.query.reason === 'inactivity') {
-        error = 'You were automatically logged out due to 20 minutes of inactivity.';
-    }
-    res.render('login', { error });
+    res.render('login', { error: null });
 });
 
 app.post('/login', async (req, res) => {
@@ -444,13 +440,8 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    const reason = req.query.reason;
     req.session.destroy(() => {
-        if (reason) {
-            res.redirect('/login?reason=' + encodeURIComponent(reason));
-        } else {
-            res.redirect('/login');
-        }
+        res.redirect('/login');
     });
 });
 
