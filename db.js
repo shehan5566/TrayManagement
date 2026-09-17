@@ -115,7 +115,13 @@ const SystemSettingSchema = new mongoose.Schema({
     receiptFooterNote: { type: String, default: 'Official Inward Stock Receipt & Verification Log' },
     enableOutstandingBlock: { type: Boolean, default: true },
     salesManagerPhone: { type: String, default: '0770000000' },
-    allowedGraceTrays: { type: Number, default: 0 }
+    allowedGraceTrays: { type: Number, default: 0 },
+    approvers: [{
+        id: { type: String },
+        name: { type: String, default: 'Sales Manager' },
+        phone: { type: String, required: true },
+        enabled: { type: Boolean, default: true }
+    }]
 });
 
 const RoleSchema = new mongoose.Schema({
@@ -1400,7 +1406,16 @@ const SystemSetting = {
             setting = new SystemSettingModel({ _id: 'global_config' });
             await setting.save();
         }
-        return mapDoc(setting);
+        const obj = mapDoc(setting);
+        if (!obj.approvers || obj.approvers.length === 0) {
+            obj.approvers = [{
+                id: 'appr_default',
+                name: 'Sales Manager',
+                phone: obj.salesManagerPhone || '0770000000',
+                enabled: true
+            }];
+        }
+        return obj;
     },
     update: async (data) => {
         let setting = await SystemSettingModel.findById('global_config');
@@ -1415,6 +1430,27 @@ const SystemSetting = {
         if (data.enableOutstandingBlock !== undefined) setting.enableOutstandingBlock = (data.enableOutstandingBlock === 'true' || data.enableOutstandingBlock === true || data.enableOutstandingBlock === 'on');
         if (data.salesManagerPhone !== undefined) setting.salesManagerPhone = data.salesManagerPhone;
         if (data.allowedGraceTrays !== undefined && data.allowedGraceTrays !== '') setting.allowedGraceTrays = parseInt(data.allowedGraceTrays, 10);
+        
+        if (data.approvers !== undefined) {
+            let approversList = [];
+            if (typeof data.approvers === 'string') {
+                try { approversList = JSON.parse(data.approvers); } catch(e) { approversList = []; }
+            } else if (Array.isArray(data.approvers)) {
+                approversList = data.approvers;
+            }
+            setting.approvers = approversList.map(a => ({
+                id: a.id || ('appr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
+                name: (a.name || 'Sales Manager').trim(),
+                phone: (a.phone || '').trim(),
+                enabled: (a.enabled === true || a.enabled === 'true' || a.enabled === 'on' || a.enabled === 1 || a.enabled === '1')
+            })).filter(a => a.phone);
+
+            const firstActive = setting.approvers.find(a => a.enabled);
+            if (firstActive) {
+                setting.salesManagerPhone = firstActive.phone;
+            }
+        }
+        
         await setting.save();
         return mapDoc(setting);
     }

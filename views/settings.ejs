@@ -91,14 +91,37 @@
             </p>
         </div>
 
-        <div style="margin-bottom: 20px;">
-            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
-                Sales Manager Mobile Number (for WhatsApp / SMS Alerts)
-            </label>
-            <input type="text" name="salesManagerPhone" class="form-control" value="<%= settings.salesManagerPhone || '0770000000' %>" style="width: 100%; font-family: monospace;" placeholder="e.g. 0771234567" required>
-            <small style="display: block; margin-top: 6px; color: var(--text-light); font-size: 12px;">
-                <i class="fa-brands fa-whatsapp" style="color:#25d366;"></i> WhatsApp approval links and override PIN codes will be dispatched to this mobile number.
-            </small>
+        <div style="margin-bottom: 24px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <label style="font-size: 14.5px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; margin: 0;">
+                        <i class="fa-solid fa-user-shield" style="color: var(--primary-green);"></i> Authorized Approvers & WhatsApp Alert Recipients
+                    </label>
+                    <p style="font-size: 12px; color: var(--text-light); margin: 3px 0 0 0;">
+                        WhatsApp alerts will only be sent to selected (checked) approvers. The entered title will be printed on receipts as <code>Approved By: &lt;Title&gt;</code>.
+                    </p>
+                </div>
+                <button type="button" onclick="addNewApproverRow()" class="btn" style="background: #107c41; color: white; padding: 6px 14px; font-size: 12.5px; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;">
+                    <i class="fa-solid fa-plus"></i> Add Approver
+                </button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr style="border-bottom: 1.5px solid #cbd5e1; text-align: left; color: #475569;">
+                            <th style="padding: 8px 10px; width: 80px; text-align: center;">Send Alert</th>
+                            <th style="padding: 8px 10px;">Designation / Receipt Name <span style="color:red;">*</span></th>
+                            <th style="padding: 8px 10px;">Mobile Number <span style="color:red;">*</span></th>
+                            <th style="padding: 8px 10px; width: 60px; text-align: center;">Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approversTableBody">
+                        <!-- Rendered by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <input type="hidden" name="salesManagerPhone" id="salesManagerPhoneHidden" value="<%= settings.salesManagerPhone || '0770000000' %>">
         </div>
 
         <div style="margin-bottom: 32px;">
@@ -150,12 +173,98 @@
 </div>
 
 <script>
+    const initialApprovers = <%- JSON.stringify(settings.approvers || [{ id: 'appr_default', name: 'Sales Manager', phone: settings.salesManagerPhone || '0770000000', enabled: true }]) %>;
+    let approversList = [...initialApprovers];
+
+    function escapeHtml(text) {
+        return String(text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderApproversTable() {
+        const tbody = document.getElementById('approversTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (approversList.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 16px; color: #94a3b8; font-style: italic;">
+                        No approvers configured. Click "+ Add Approver" to add one.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        approversList.forEach((appr, idx) => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #e2e8f0';
+            tr.innerHTML = `
+                <td style="padding: 10px; text-align: center;">
+                    <input type="checkbox" onchange="updateApproverField(${idx}, 'enabled', this.checked)" ${appr.enabled !== false ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: #107c41; cursor: pointer;" title="Check to send alerts to this approver">
+                </td>
+                <td style="padding: 10px;">
+                    <input type="text" class="form-control" style="width: 100%; font-size: 13.5px; padding: 7px 10px; font-weight: 600;" value="${escapeHtml(appr.name || 'Sales Manager')}" placeholder="e.g. Sales Manager, Area Manager" oninput="updateApproverField(${idx}, 'name', this.value)" required>
+                </td>
+                <td style="padding: 10px;">
+                    <input type="text" class="form-control" style="width: 100%; font-size: 13.5px; font-family: monospace; padding: 7px 10px;" value="${escapeHtml(appr.phone || '')}" placeholder="e.g. 0771234567" oninput="updateApproverField(${idx}, 'phone', this.value)" required>
+                </td>
+                <td style="padding: 10px; text-align: center;">
+                    <button type="button" onclick="deleteApproverRow(${idx})" style="background: none; border: none; color: #dc2626; cursor: pointer; padding: 6px 10px; font-size: 15px;" title="Remove this approver">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Update hidden input for legacy compatibility
+        const firstActive = approversList.find(a => a.enabled && a.phone);
+        const hiddenPhone = document.getElementById('salesManagerPhoneHidden');
+        if (hiddenPhone && firstActive) {
+            hiddenPhone.value = firstActive.phone;
+        }
+    }
+
+    function addNewApproverRow() {
+        approversList.push({
+            id: 'appr_' + Date.now(),
+            name: 'Sales Manager',
+            phone: '',
+            enabled: true
+        });
+        renderApproversTable();
+    }
+
+    function deleteApproverRow(index) {
+        if (approversList.length <= 1) {
+            Swal.fire('Warning', 'At least one approver must remain in the configuration.', 'warning');
+            return;
+        }
+        approversList.splice(index, 1);
+        renderApproversTable();
+    }
+
+    function updateApproverField(index, field, value) {
+        if (approversList[index]) {
+            approversList[index][field] = value;
+            if (field === 'phone' || field === 'enabled') {
+                const firstActive = approversList.find(a => a.enabled && a.phone);
+                const hiddenPhone = document.getElementById('salesManagerPhoneHidden');
+                if (hiddenPhone && firstActive) {
+                    hiddenPhone.value = firstActive.phone;
+                }
+            }
+        }
+    }
+
     async function handleSettingsSubmit(e) {
         e.preventDefault();
         const form = e.target;
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         data.enableOutstandingBlock = form.enableOutstandingBlock ? form.enableOutstandingBlock.checked : false;
+        data.approvers = approversList;
 
         try {
             const res = await fetch('/settings/update', {
@@ -346,6 +455,7 @@
 
     // Start live polling status
     document.addEventListener('DOMContentLoaded', () => {
+        renderApproversTable();
         checkWhatsAppStatus();
         waPollInterval = setInterval(checkWhatsAppStatus, 3000);
     });

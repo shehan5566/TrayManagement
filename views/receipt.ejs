@@ -133,14 +133,28 @@
                     <td class="label" style="font-weight: 600; color: #1b5e20;">Vehicle No</td>
                     <td class="value"><code><%= tx.vehicleNo %></code></td>
                 </tr>
-                <% if (tx.remarks) { %>
+                <% 
+                    var hasApproval = !!(tx.approvedBy || tx.specialApprovalId || (tx.remarks && /approved by/i.test(tx.remarks)));
+                    var approverTitle = tx.approvedBy || 'Sales Manager';
+                    var cleanRemarks = (tx.remarks || '').replace(/\|?\s*Approved by\b[^|]*/gi, '').trim();
+                    cleanRemarks = cleanRemarks.replace(/^\|\s*|\s*\|$/g, '').trim();
+                %>
+                <% if (cleanRemarks) { %>
                     <tr>
                         <td class="label" style="font-weight: 600; color: #1b5e20;">Remarks</td>
                         <td class="value" style="font-style: italic;">
-                            <%= tx.remarks %>
+                            <%= cleanRemarks %>
                         </td>
                     </tr>
-                    <% } %>
+                <% } %>
+                <% if (hasApproval) { %>
+                    <tr>
+                        <td class="label" style="font-weight: 600; color: #1b5e20;">Approved By</td>
+                        <td class="value" style="font-weight: 600; color: #1b5e20;">
+                            <%= approverTitle %>
+                        </td>
+                    </tr>
+                <% } %>
             </table>
 
             <!-- Deposit & Refund Summary Highlight Box -->

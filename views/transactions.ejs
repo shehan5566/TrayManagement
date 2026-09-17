@@ -885,7 +885,7 @@
                                         <i class="fa-solid fa-spinner fa-spin" style="font-size: 38px; color: #107c41;"></i>
                                     </div>
                                     <p style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
-                                        WhatsApp Alert Sent to Sales Manager (${managerPhone})
+                                        ${data.approverLinks && data.approverLinks.length > 1 ? `WhatsApp Alerts Dispatched to ${data.approverLinks.length} Approvers` : `WhatsApp Alert Sent to Approver (${managerPhone})`}
                                     </p>
                                     <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">
                                         The system will automatically record this transaction the moment approval is given.
@@ -900,7 +900,21 @@
                                         </div>
                                     </div>
                                     
-                                    ${data.whatsAppUrl ? `
+                                    ${data.approverLinks && data.approverLinks.length > 1 ? `
+                                    <div style="margin-bottom: 14px; text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                                        <div style="font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                                            <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> WhatsApp Alert Dispatched to:
+                                        </div>
+                                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                                            ${data.approverLinks.map(al => `
+                                                <a href="${al.whatsAppUrl}" target="_blank" style="background: #25d366; color: #fff; font-weight: 600; font-size: 12px; padding: 6px 12px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; text-decoration: none;">
+                                                    <span><i class="fa-brands fa-whatsapp"></i> ${al.name}</span>
+                                                    <span style="font-family: monospace; font-size: 11px; opacity: 0.95;">${al.phone}</span>
+                                                </a>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                    ` : (data.whatsAppUrl ? `
                                     <div style="margin-bottom: 14px;">
                                         <a href="${data.whatsAppUrl}" target="_blank" style="background: #25d366; color: #fff; font-weight: 600; font-size: 13px; padding: 9px 14px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.25);">
                                             <i class="fa-brands fa-whatsapp" style="font-size: 17px;"></i> Send via WhatsApp (${managerPhone})
@@ -909,7 +923,7 @@
                                             (Optional) Click if you want to open WhatsApp manually
                                         </div>
                                     </div>
-                                    ` : ''}
+                                    ` : '')}
                                     
                                     <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 14px; border-radius: 10px; margin-top: 10px; text-align: left;">
                                         <span style="font-size: 12px; font-weight: 600; color: #334155; display: block; margin-bottom: 6px;">

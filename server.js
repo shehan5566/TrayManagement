@@ -1479,8 +1479,20 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
         const host = req.get('host');
         const approvalUrl = `${protocol}://${host}/approval/${approval.token}`;
 
-        const managerPhone = settings.salesManagerPhone || '0770000000';
-        const waNumber = smsService.formatWhatsAppNumber(managerPhone) || '94770000000';
+        // Filter active approvers from settings
+        const configuredApprovers = (settings.approvers && Array.isArray(settings.approvers) && settings.approvers.length > 0)
+            ? settings.approvers
+            : [{ id: 'appr_default', name: 'Sales Manager', phone: settings.salesManagerPhone || '0770000000', enabled: true }];
+
+        const activeApprovers = configuredApprovers.filter(a => a.enabled !== false && a.phone && a.phone.trim().length > 0);
+        if (activeApprovers.length === 0) {
+            activeApprovers.push({
+                id: 'appr_default',
+                name: 'Sales Manager',
+                phone: settings.salesManagerPhone || '0770000000',
+                enabled: true
+            });
+        }
 
         const defaultRate = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
         const rateVal = parseFloat(txData.depositPerTray) || defaultRate;
@@ -1528,16 +1540,38 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
             vehicleNo: txData.vehicleNo
         };
 
-        const messageText = smsService.buildApprovalMessage(alertDetails, approvalUrl, approval.pin);
-        const whatsAppUrl = `https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(messageText)}`;
+        // Generate personalized links and text for each active approver
+        const approverLinks = activeApprovers.map(appr => {
+            const personalApprovalUrl = `${approvalUrl}?approver=${encodeURIComponent(appr.name)}`;
+            const waNum = smsService.formatWhatsAppNumber(appr.phone) || '94770000000';
+            const msg = smsService.buildApprovalMessage(alertDetails, personalApprovalUrl, approval.pin);
+            const waUrl = `https://api.whatsapp.com/send?phone=${waNum}&text=${encodeURIComponent(msg)}`;
+            return {
+                name: appr.name,
+                phone: appr.phone,
+                approvalUrl: personalApprovalUrl,
+                whatsAppUrl: waUrl,
+                messageText: msg
+            };
+        });
 
+        // Send alert in background to all active approvers
         setImmediate(async () => {
-            try {
-                await smsService.sendApprovalAlert(managerPhone, alertDetails, approvalUrl, approval.pin);
-            } catch (notifyErr) {
-                console.error('[APPROVAL NOTIFY ERROR]:', notifyErr);
+            for (const appr of activeApprovers) {
+                try {
+                    const personalApprovalUrl = `${approvalUrl}?approver=${encodeURIComponent(appr.name)}`;
+                    await smsService.sendApprovalAlert(appr.phone, alertDetails, personalApprovalUrl, approval.pin);
+                } catch (notifyErr) {
+                    console.error(`[APPROVAL NOTIFY ERROR - ${appr.name} (${appr.phone})]:`, notifyErr);
+                }
             }
         });
+
+        // Primary approver info for legacy compatibility
+        const primaryLink = approverLinks[0] || {};
+        const managerPhone = primaryLink.phone || settings.salesManagerPhone || '0770000000';
+        const whatsAppUrl = primaryLink.whatsAppUrl || '';
+        const messageText = primaryLink.messageText || '';
 
         res.json({
             success: true,
@@ -1545,9 +1579,11 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
             token: approval.token,
             pin: approval.pin,
             managerPhone,
-            approvalUrl,
+            approvalUrl: primaryLink.approvalUrl || approvalUrl,
             whatsAppUrl,
             messageText,
+            approverLinks,
+            activeApprovers,
             expiresAt: approval.expiresAt
         });
     } catch (err) {
@@ -1593,7 +1629,12 @@ app.post('/api/approvals/verify-pin', requireUserOrDriver, async (req, res) => {
             return res.status(400).json({ success: false, error: pinResult.error });
         }
 
-        const approval = await ApprovalRequest.approve(requestId, 'Sales Manager', 'Authorized via Override PIN');
+        const settings = await SystemSetting.get();
+        const firstActiveApprover = (settings && settings.approvers && settings.approvers.length > 0)
+            ? settings.approvers.find(a => a.enabled !== false && a.name)
+            : null;
+        const approverTitle = firstActiveApprover ? firstActiveApprover.name : 'Sales Manager';
+        const approval = await ApprovalRequest.approve(requestId, approverTitle, 'Authorized via Override PIN');
         
         let newTx = null;
         if (!approval.transactionId && approval.txPayload) {
@@ -1626,25 +1667,27 @@ app.post('/api/approvals/verify-pin', requireUserOrDriver, async (req, res) => {
     }
 });
 
-// Sales Manager Web Approval View (Open from WhatsApp Link)
+// Approver Web Approval View (Open from WhatsApp Link)
 app.get('/approval/:token', async (req, res) => {
     try {
         const approval = await ApprovalRequest.getByToken(req.params.token);
-        res.render('approval-portal', { approval });
+        const approverName = req.query.approver || (approval && approval.approvedBy) || 'Sales Manager';
+        res.render('approval-portal', { approval, approverName });
     } catch (err) {
         console.error('GET /approval/:token error:', err);
-        res.status(500).render('approval-portal', { approval: null });
+        res.status(500).render('approval-portal', { approval: null, approverName: 'Sales Manager' });
     }
 });
 
-// Sales Manager Action (Approve / Reject)
+// Approver Action (Approve / Reject)
 app.post('/approval/:token/action', async (req, res) => {
     try {
-        const { action, notes, approverName } = req.body;
+        const { action, notes } = req.body;
+        const approverName = req.body.approverName || req.query.approver || 'Sales Manager';
         const token = req.params.token;
 
         if (action === 'APPROVE') {
-            const approval = await ApprovalRequest.approve(token, approverName || 'Sales Manager', notes);
+            const approval = await ApprovalRequest.approve(token, approverName, notes);
             let newTx = null;
             if (!approval.transactionId && approval.txPayload) {
                 const txData = { ...approval.txPayload };

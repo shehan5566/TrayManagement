@@ -424,6 +424,10 @@
 
                 <!-- Details List -->
                 <div class="info-list">
+                    <div class="info-item" style="background: #f0fdf4; padding: 6px 10px; border-radius: 6px; margin-bottom: 2px; border: 1px solid #bbf7d0;">
+                        <span class="label" style="color: #166534; font-weight: 600;"><i class="fa-solid fa-user-check"></i> Authorizing As</span>
+                        <span class="val" style="color: #15803d; font-weight: 800;"><%= (typeof approverName !== 'undefined' && approverName) ? approverName : 'Sales Manager' %></span>
+                    </div>
                     <div class="info-item">
                         <span class="label">Customer Name</span>
                         <span class="val" style="color: var(--primary-dark);"><%= approval.customerName %></span>
@@ -566,11 +570,12 @@
             }
         }
 
+        const activeApproverName = "<%= (typeof approverName !== 'undefined' && approverName) ? approverName : 'Sales Manager' %>";
         let finalNotes = notes;
         if (action === 'REJECT') {
             const reason = prompt("Please enter the reason for REJECTING this request (or click OK to proceed):", notes || "Previous outstanding trays must be returned first.");
             if (reason === null) return; // Manager cancelled prompt
-            finalNotes = reason.trim() || 'Rejected by Sales Manager';
+            finalNotes = reason.trim() || `Rejected by ${activeApproverName}`;
         }
 
         btnContainer.style.display = 'none';
@@ -580,7 +585,7 @@
             const res = await fetch('/approval/<%= (approval && approval.token) ? approval.token : "" %>/action', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, notes: finalNotes, approverName: 'Sales Manager' })
+                body: JSON.stringify({ action, notes: finalNotes, approverName: activeApproverName })
             });
 
             const result = await res.json();

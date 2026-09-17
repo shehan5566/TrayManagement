@@ -1285,7 +1285,7 @@
                                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: #107c41;"></i>
                             </div>
                             <p style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 2px;">
-                                Sales Manager වෙත Alert එක යවන ලදී (${managerPhone})
+                                ${resp.approverLinks && resp.approverLinks.length > 1 ? `අනුමැතිය සඳහා Approvers ${resp.approverLinks.length} දෙනෙකුට Alert යවන ලදී` : `Alert එක යවන ලදී (${managerPhone})`}
                             </p>
                             <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
                                 අනුමැතිය ලැබුණු සැණින් රිසිට්පත ස්වයංක්‍රීයව Print වේ.
@@ -1300,13 +1300,27 @@
                                 </div>
                             </div>
                             
-                            ${resp.whatsAppUrl ? `
+                            ${resp.approverLinks && resp.approverLinks.length > 1 ? `
+                            <div style="margin-bottom: 12px; text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;">
+                                <div style="font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 5px;">
+                                    <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> WhatsApp Alert Dispatched to:
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 5px;">
+                                    ${resp.approverLinks.map(al => `
+                                        <a href="${al.whatsAppUrl}" target="_blank" style="background: #25d366; color: #fff; font-weight: 600; font-size: 11.5px; padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; text-decoration: none;">
+                                            <span><i class="fa-brands fa-whatsapp"></i> ${al.name}</span>
+                                            <span style="font-family: monospace; font-size: 10.5px; opacity: 0.95;">${al.phone}</span>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : (resp.whatsAppUrl ? `
                             <div style="margin-bottom: 12px;">
                                 <a href="${resp.whatsAppUrl}" target="_blank" style="background: #25d366; color: #fff; font-weight: 600; font-size: 12.5px; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none;">
                                     <i class="fa-brands fa-whatsapp" style="font-size: 15px;"></i> Send via WhatsApp (${managerPhone})
                                 </a>
                             </div>
-                            ` : ''}
+                            ` : '')}
                             
                             <div style="background: #f8fafc; border: 1px dashed #cbd5e1; padding: 10px; border-radius: 8px; text-align: left;">
                                 <span style="font-size: 11.5px; font-weight: 600; color: #334155; display: block; margin-bottom: 4px;">
