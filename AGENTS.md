@@ -30,4 +30,28 @@ The layout, ESC/POS byte sequence generation, and mobile preview in `views/print
 - **Footer**: Centered `*** THANK YOU! ***` only. System application name ("Nelna Agri Smart Tray System") must remain removed from the receipt footer.
 - **UI Controls**: Clean action bar containing only "‹ Back" and "Print" buttons. No temporary radio buttons, font-size selectors, or width toggles.
 - **Mobile Card Preview**: Screen preview card (`.receipt-container`) styled with `max-width: 380px` for mobile app usability, keeping all transaction data fields fully visible.
+- **Approved Transactions Receipt Format**:
+  - `Remarks:` line must NEVER display system/approval phrases (`Approved by sales manager...`). Any such string must be filtered out so only genuine user remarks are shown.
+  - Directly beneath the `Remarks:` line, a dedicated line `Approved By: Sales Manager` must be printed (in HTML: `.row` with `.val text-bold` and color `#15803d`; in ESC/POS: `formatLine("Approved By:", approverTitle)`).
+  - This line is strictly reserved for approved transactions (`hasApproval` / `tx.approvedBy` / `tx.specialApprovalId`). It must never appear on regular non-approved transactions.
+
+## 4. Locked Customer Balance Badges
+The selected customer balance display beneath the customer search input is LOCKED in both desktop and mobile views:
+- **Layout**: Single-row, 2-column grid (`display: grid; grid-template-columns: 1fr 1fr; gap: 8px;`) showing only:
+  `[ Net Trays: X Trays ] [ Pending: Rs. Y ]`
+- **Exclusions**: Redundant customer name and phone number must remain completely excluded from the badge.
+- **Desktop Transactions (`views/transactions.ejs`)**:
+  - Label font size: `10px` (`#64748b`, bold).
+  - Value font size: `11px`, styled in Dark Green (`#166534`).
+  - Container padding: `4px 8px`, `border-radius: 6px`.
+  - Autocomplete dropdown suggestions must display customer name only (no phone number or balance badges).
+- **Driver Mobile App (`views/driver-mobile.ejs`)**:
+  - Label font size: `11.5px` (`#64748b`, bold).
+  - Value font size: `13px`, styled in Red (`#dc2626`).
+  - Container padding: `6px 10px`, `border-radius: 8px`.
+
+## 5. Locked Approval Workflow & Modal Configuration
+- **Approval Status Endpoint (`server.js` `/api/approvals/status/:id`)**: Must keep returning `status: 'PENDING'` while `transactionId` is not yet populated, preventing clients from receiving `undefined` transaction IDs during the creation window.
+- **Receipt Print Preview Modal (`views/driver-mobile.ejs`)**: `.receipt-preview-overlay` must have `z-index: 99999` so it is never occluded by SweetAlert backdrops (`z-index: 1060`).
+- **Database Persistence (`db.js`)**: `Transaction.create` must always persist `specialApprovalId` and `approvedBy` into the `TransactionModel`.
 
