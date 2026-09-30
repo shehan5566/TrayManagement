@@ -148,6 +148,7 @@ const CustomerSchema = new mongoose.Schema({
     phone: { type: String },
     initialBalance: { type: Number, default: 0 },
     currentBalance: { type: Number, default: 0 },
+    initialDeposit: { type: Number, default: 0 },
     locationId: { type: String, default: 'main' }
 });
 
@@ -577,8 +578,13 @@ const StockTransfer = {
 // Customers CRUD
 const Customer = {
     getPendingDepositsMap: async () => {
-        const allTransactions = await TransactionModel.find({ isDeleted: { $ne: true } }).lean();
+        const allCustomers = await CustomerModel.find({}).lean();
         const pendingDepositMap = {};
+        allCustomers.forEach(c => {
+            pendingDepositMap[String(c._id)] = Number(c.initialDeposit) || 0;
+        });
+
+        const allTransactions = await TransactionModel.find({ isDeleted: { $ne: true } }).lean();
         allTransactions.forEach(t => {
             const custId = String(t.customerId);
             if (!custId) return;
@@ -597,7 +603,7 @@ const Customer = {
             }
 
             const diff = expected - paid;
-            if (!pendingDepositMap[custId]) pendingDepositMap[custId] = 0;
+            if (pendingDepositMap[custId] === undefined) pendingDepositMap[custId] = 0;
             if (t.type === 'OUT') {
                 pendingDepositMap[custId] += diff;
             } else if (t.type === 'IN') {
@@ -637,8 +643,10 @@ const Customer = {
     getPendingDeposit: async (customerId) => {
         const custId = String(customerId);
         if (!custId) return 0;
+        const cust = await CustomerModel.findById(custId).lean();
+        const initialDep = (cust && cust.initialDeposit) ? Number(cust.initialDeposit) : 0;
         const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
-        let pending = 0;
+        let pending = initialDep;
         custTxs.forEach(t => {
             const rate = Number(t.depositPerTray) || 2000;
             const countQty = Number(t.count) || 0;
@@ -672,6 +680,7 @@ const Customer = {
             phone: customerData.phone,
             initialBalance: parseInt(customerData.initialBalance) || 0,
             currentBalance: parseInt(customerData.initialBalance) || 0,
+            initialDeposit: parseFloat(customerData.initialDeposit || customerData.depositAmount) || 0,
             locationId: customerData.locationId || 'main'
         });
         await newCustomer.save();
@@ -683,6 +692,9 @@ const Customer = {
             customer.name = customerData.name;
             customer.address = customerData.address;
             customer.phone = customerData.phone;
+            if (customerData.initialDeposit !== undefined && customerData.initialDeposit !== null) {
+                customer.initialDeposit = parseFloat(customerData.initialDeposit) || 0;
+            }
 
             // Recalculate balance based on initialBalance and all transactions
             const transactions = await TransactionModel.find({ customerId: id, isDeleted: { $ne: true } });

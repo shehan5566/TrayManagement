@@ -41,8 +41,14 @@
 
                 <div class="form-group">
                     <label for="initialBalance">Opening Tray Balance (Issued)</label>
-                    <input type="number" id="initialBalance" name="initialBalance" min="0" value="<%= editCustomer ? editCustomer.initialBalance : '0' %>" placeholder="0" <%= editCustomer ? '' : '' %>>
+                    <input type="number" id="initialBalance" name="initialBalance" min="0" value="<%= editCustomer ? editCustomer.initialBalance : '0' %>" placeholder="0">
                     <span style="font-size: 11px; color: var(--text-light);">Opening quantity of trays already with the customer.</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="initialDeposit">Opening Deposit Amount (Rs.)</label>
+                    <input type="number" id="initialDeposit" name="initialDeposit" min="0" step="0.01" value="<%= editCustomer ? (editCustomer.initialDeposit || 0) : '0' %>" placeholder="0.00">
+                    <span style="font-size: 11px; color: var(--text-light);">Opening cash deposit balance held for customer.</span>
                 </div>
 
                 <% if (editCustomer) { %>
@@ -101,6 +107,7 @@
                             <th>Address</th>
                             <th>Phone</th>
                             <th>Initial Balance</th>
+                            <th>Initial Deposit</th>
                             <th>Current Balance</th>
                             <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
                             <th style="text-align: center; width: 150px;">Actions</th>
@@ -118,6 +125,7 @@
                                 <td><%= c.address || '-' %></td>
                                 <td><%= c.phone %></td>
                                 <td><%= c.initialBalance %></td>
+                                <td>Rs. <%= Number(c.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></td>
                                 <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                         <span><%= c.currentBalance %></span>
@@ -143,6 +151,7 @@
                                             data-address="<%= c.address || '' %>"
                                             data-phone="<%= c.phone || '' %>"
                                             data-initial-balance="<%= c.initialBalance || 0 %>"
+                                            data-initial-deposit="<%= c.initialDeposit || 0 %>"
                                             data-current-balance="<%= c.currentBalance || 0 %>"
                                             onclick="handleEditCustomerClick(this)"
                                             class="btn btn-secondary" 
@@ -208,6 +217,12 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="modalCustomerInitialDeposit" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Opening Deposit Amount (Rs.)</label>
+                    <input type="number" id="modalCustomerInitialDeposit" name="initialDeposit" min="0" step="0.01" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                    <span style="font-size: 11px; color: var(--text-light); margin-top: 3px; display: block;">Opening cash deposit balance held for customer.</span>
+                </div>
+
+                <div class="form-group">
                     <label for="modalCustomerCurrentBalance" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">
                         Current Tray Balance
                     </label>
@@ -229,7 +244,7 @@
 </div>
 
 <script>
-function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance) {
+function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit) {
     const form = document.getElementById('editCustomerForm');
     if (form) form.action = '/customers/' + id + '/edit';
     const nameInput = document.getElementById('modalCustomerName');
@@ -240,6 +255,8 @@ function openEditCustomerModal(id, name, address, phone, initialBalance, current
     if (phoneInput) phoneInput.value = phone || '';
     const initBalInput = document.getElementById('modalCustomerInitialBalance');
     if (initBalInput) initBalInput.value = (initialBalance !== undefined && initialBalance !== null) ? initialBalance : 0;
+    const initDepInput = document.getElementById('modalCustomerInitialDeposit');
+    if (initDepInput) initDepInput.value = (initialDeposit !== undefined && initialDeposit !== null) ? initialDeposit : 0;
     const currBalInput = document.getElementById('modalCustomerCurrentBalance');
     if (currBalInput) currBalInput.value = (currentBalance !== undefined && currentBalance !== null) ? currentBalance : 0;
     
@@ -259,8 +276,9 @@ function handleEditCustomerClick(btn) {
     const address = btn.getAttribute('data-address');
     const phone = btn.getAttribute('data-phone');
     const initialBalance = btn.getAttribute('data-initial-balance');
+    const initialDeposit = btn.getAttribute('data-initial-deposit');
     const currentBalance = btn.getAttribute('data-current-balance');
-    openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance);
+    openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit);
 }
 
 window.addEventListener('click', function(event) {
@@ -278,7 +296,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <%- JSON.stringify(editCustomer.address || '') %>,
         <%- JSON.stringify(editCustomer.phone || '') %>,
         <%= editCustomer.initialBalance || 0 %>,
-        <%= editCustomer.currentBalance || 0 %>
+        <%= editCustomer.currentBalance || 0 %>,
+        <%= editCustomer.initialDeposit || 0 %>
     );
 });
 <% } %>

@@ -8,8 +8,8 @@ if (!fs.existsSync(dir)) {
 }
 
 const data = [
-    { Name: 'John Doe', Phone: '0712345678', Address: 'Colombo 7', InitialBalance: 50 },
-    { Name: 'Jane Smith', Phone: '0779876543', Address: 'Kandy', InitialBalance: 0 }
+    { Name: 'John Doe', Phone: '0712345678', Address: 'Colombo 7', InitialBalance: 50, DepositAmount: 100000 },
+    { Name: 'Jane Smith', Phone: '0779876543', Address: 'Kandy', InitialBalance: 0, DepositAmount: 0 }
 ];
 
 const ws = xlsx.utils.json_to_sheet(data);

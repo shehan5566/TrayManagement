@@ -866,7 +866,7 @@ app.get('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), 
 });
 
 app.post('/customers', requireEditAccess, async (req, res) => {
-    const { name, address, phone, initialBalance } = req.body;
+    const { name, address, phone, initialBalance, initialDeposit, depositAmount } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
@@ -882,7 +882,7 @@ app.post('/customers', requireEditAccess, async (req, res) => {
         return res.render('customers', { customers, editCustomer: null, error: 'Phone number must be exactly 10 digits!' });
     }
     try {
-        const newCustomer = await Customer.create({ name, address, phone, initialBalance });
+        const newCustomer = await Customer.create({ name, address, phone, initialBalance, initialDeposit: initialDeposit || depositAmount });
         await ActivityLog.log(req.session.user.username, 'CREATE', 'Customer', `Added customer: ${newCustomer.name}`);
         if (isAjax) return res.json({ success: true, message: 'Customer created successfully', data: newCustomer });
         res.redirect('/customers');
@@ -912,10 +912,11 @@ app.post('/customers/import', requireEditAccess, upload.single('excelFile'), asy
         let skipCount = 0;
 
         for (const row of data) {
-            const name = row['Name'] || row['name'] || row['NAME'];
-            const phoneStr = row['Phone'] || row['phone'] || row['PHONE'];
+            const name = row['Name'] || row['name'] || row['NAME'] || row['Customer Name'] || row['CustomerName'];
+            const phoneStr = row['Phone'] || row['phone'] || row['PHONE'] || row['Contact'] || row['Phone Number'];
             const address = row['Address'] || row['address'] || row['ADDRESS'] || '';
-            const initialBalance = parseInt(row['InitialBalance'] || row['initialBalance'] || 0) || 0;
+            const initialBalance = parseInt(row['InitialBalance'] || row['initialBalance'] || row['Initial Balance'] || row['initial balance'] || row['INITIAL BALANCE'] || row['Opening Balance'] || 0) || 0;
+            const depositAmount = parseFloat(row['Deposit Amount'] || row['deposit amount'] || row['DEPOSIT AMOUNT'] || row['DepositAmount'] || row['depositAmount'] || row['Deposit'] || row['deposit'] || row['DEPOSIT'] || 0) || 0;
 
             if (!name || !phoneStr) {
                 skipCount++;
@@ -941,7 +942,7 @@ app.post('/customers/import', requireEditAccess, upload.single('excelFile'), asy
             const exists = existing.find(c => c.phone === phone || c.name.toLowerCase() === name.toLowerCase());
             
             if (!exists) {
-                await Customer.create({ name, address, phone, initialBalance });
+                await Customer.create({ name, address, phone, initialBalance, initialDeposit: depositAmount });
                 successCount++;
             } else {
                 skipCount++;
@@ -962,7 +963,7 @@ app.post('/customers/import', requireEditAccess, upload.single('excelFile'), asy
 });
 
 app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), async (req, res) => {
-    const { name, address, phone, initialBalance, currentBalance } = req.body;
+    const { name, address, phone, initialBalance, currentBalance, initialDeposit, depositAmount } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
@@ -980,7 +981,10 @@ app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'),
         return res.render('customers', { customers, editCustomer, error: 'Phone number must be exactly 10 digits!' });
     }
     try {
-        const updatedCustomer = await Customer.update(req.params.id, { name, address, phone, initialBalance, currentBalance });
+        const updatedCustomer = await Customer.update(req.params.id, {
+            name, address, phone, initialBalance, currentBalance,
+            initialDeposit: initialDeposit !== undefined ? initialDeposit : depositAmount
+        });
         if (updatedCustomer) {
             await ActivityLog.log(req.session.user.username, 'UPDATE', 'Customer', `Updated customer: ${updatedCustomer.name} (Current Balance: ${updatedCustomer.currentBalance})`);
         }
