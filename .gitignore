@@ -9,3 +9,6 @@ scratch/
 
 .vercel
 whatsapp_session/
+backups/
+*.zip
+
