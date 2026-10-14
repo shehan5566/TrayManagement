@@ -1509,7 +1509,6 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
             });
         }
 
-        const defaultRate = (settings && settings.depositPerTray) ? settings.depositPerTray : 2000;
         const rateVal = parseFloat(txData.depositPerTray) || defaultRate;
         const expectedDeposit = countVal * rateVal;
         let paidDeposit = expectedDeposit;
