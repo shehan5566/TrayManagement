@@ -850,6 +850,7 @@ const Customer = {
                 name: c.name,
                 phone: c.phone,
                 initialBalance: openingBalance,
+                initialDeposit: Number(c.initialDeposit) || 0,
                 totalOut: stats.periodOut,
                 totalIn: stats.periodIn,
                 currentBalance: closingBalance,

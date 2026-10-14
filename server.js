@@ -3122,10 +3122,10 @@ app.get('/reports/export/balance-csv', requireAuth, async (req, res) => {
         const customerBalances = await Customer.getAggregatedCustomerBalances(startDate, endDate, req.session.user.locationId, req.session.user.role);
 
         let csvContent = '\uFEFF'; // BOM for UTF-8 Excel support
-        csvContent += 'Customer Name,Phone Number,Opening Balance (Trays),Trays Out,Trays In,Closing Balance (Trays),Deposit Collected (Rs.),Deposit Refunded (Rs.),Outstanding Deposit Balance (Rs.)\n';
+        csvContent += 'Customer Name,Phone Number,Opening Balance (Trays),Trays Out,Trays In,Closing Balance (Trays),Initial Deposit (Rs.),Deposit Collected (Rs.),Deposit Refunded (Rs.),Outstanding Deposit Balance (Rs.)\n';
 
         customerBalances.forEach(c => {
-            csvContent += `"${(c.name || '').replace(/"/g, '""')}","${c.phone || ''}",${c.initialBalance},${c.totalOut},${c.totalIn},${c.currentBalance},${c.depositCollected},${c.depositRefunded},${c.depositOutstanding}\n`;
+            csvContent += `"${(c.name || '').replace(/"/g, '""')}","${c.phone || ''}",${c.initialBalance},${c.totalOut},${c.totalIn},${c.currentBalance},${c.initialDeposit || 0},${c.depositCollected},${c.depositRefunded},${c.depositOutstanding}\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -3153,6 +3153,7 @@ app.get('/api/reports/master-export', requireAuth, async (req, res) => {
             "Trays Issued (Out)": c.totalOut || 0,
             "Trays Returned (In)": c.totalIn || 0,
             "Closing Balance (Trays)": c.currentBalance || 0,
+            "Initial Deposit (Rs)": c.initialDeposit || 0,
             "Deposit Collected (Rs)": c.depositCollected || 0,
             "Deposit Refunded (Rs)": c.depositRefunded || 0,
             "Outstanding Deposit (Rs)": c.depositOutstanding || 0
