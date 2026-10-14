@@ -172,6 +172,48 @@ async function runQA() {
         assert(cleanRemarks === 'Customer requested quick dispatch', 'Clean remarks retains genuine user remark');
 
         // ----------------------------------------------------
+        // TEST SUITE 6: Customer Pending Deposit Calculation & Aggregation
+        // ----------------------------------------------------
+        console.log('\n▶ [TEST 6] Customer Pending Deposit Calculation & Aggregation');
+        const testCust1 = await Customer.create({
+            name: 'QA Pending Dep Zero Deposit',
+            phone: '0771112233',
+            initialBalance: 50,
+            initialDeposit: 0
+        });
+        const testCust2 = await Customer.create({
+            name: 'QA Pending Dep Partial Deposit',
+            phone: '0772223344',
+            initialBalance: 50,
+            initialDeposit: 60000
+        });
+        const testCust3 = await Customer.create({
+            name: 'QA Pending Dep Excess Deposit',
+            phone: '0773334455',
+            initialBalance: 10,
+            initialDeposit: 50000
+        });
+
+        const pending1 = await Customer.getPendingDeposit(testCust1.id || testCust1._id);
+        const pending2 = await Customer.getPendingDeposit(testCust2.id || testCust2._id);
+        const pending3 = await Customer.getPendingDeposit(testCust3.id || testCust3._id);
+
+        assert(pending1 === 50 * 2000, `Zero deposit customer pending deposit is Rs. ${50 * 2000} (calculated: ${pending1})`);
+        assert(pending2 === (50 * 2000) - 60000, `Partial deposit customer pending deposit is Rs. ${(50 * 2000) - 60000} (calculated: ${pending2})`);
+        assert(pending3 === 0, `Excess deposit customer pending deposit is Rs. 0 (calculated: ${pending3})`);
+
+        const aggregated = await Customer.getAggregatedCustomerBalances();
+        const aggCust1 = aggregated.find(c => String(c.id) === String(testCust1.id || testCust1._id));
+        const aggCust2 = aggregated.find(c => String(c.id) === String(testCust2.id || testCust2._id));
+
+        assert(aggCust1 && aggCust1.pendingDeposit === 100000, 'Aggregated report contains correct pendingDeposit for customer 1 (100,000)');
+        assert(aggCust2 && aggCust2.pendingDeposit === 40000, 'Aggregated report contains correct pendingDeposit for customer 2 (40,000)');
+
+        await Customer.delete(testCust1.id || testCust1._id);
+        await Customer.delete(testCust2.id || testCust2._id);
+        await Customer.delete(testCust3.id || testCust3._id);
+
+        // ----------------------------------------------------
         // CLEANUP (Remove temporary QA test data)
         // ----------------------------------------------------
         console.log('\n▶ Cleaning up QA test records...');

@@ -585,18 +585,30 @@ const StockTransfer = {
 
 // Customers CRUD
 const Customer = {
-    getPendingDepositsMap: async () => {
+    getPendingDepositsMap: async (endDateStr = null) => {
+        const settings = await SystemSettingModel.findById('global_config').lean();
+        const defaultRate = (settings && settings.depositPerTray) ? Number(settings.depositPerTray) : 2000;
+
         const allCustomers = await CustomerModel.find({}).lean();
         const pendingDepositMap = {};
         allCustomers.forEach(c => {
-            pendingDepositMap[String(c._id)] = Number(c.initialDeposit) || 0;
+            const initBal = Number(c.initialBalance) || 0;
+            const initDep = Number(c.initialDeposit) || 0;
+            const expectedInit = initBal * defaultRate;
+            pendingDepositMap[String(c._id)] = Math.max(0, expectedInit - initDep);
         });
 
-        const allTransactions = await TransactionModel.find({ isDeleted: { $ne: true } }).lean();
+        let txFilter = { isDeleted: { $ne: true } };
+        if (endDateStr) {
+            const endTimestamp = new Date(endDateStr + 'T23:59:59').getTime();
+            txFilter.date = { $lte: new Date(endTimestamp) };
+        }
+
+        const allTransactions = await TransactionModel.find(txFilter).lean();
         allTransactions.forEach(t => {
             const custId = String(t.customerId);
             if (!custId) return;
-            const rate = Number(t.depositPerTray) || 2000;
+            const rate = Number(t.depositPerTray) || defaultRate;
             const countQty = Number(t.count) || 0;
             const expected = Number(t.expectedDeposit) || (countQty * rate);
             let paid = 0;
@@ -652,11 +664,18 @@ const Customer = {
         const custId = String(customerId);
         if (!custId) return 0;
         const cust = await CustomerModel.findById(custId).lean();
-        const initialDep = (cust && cust.initialDeposit) ? Number(cust.initialDeposit) : 0;
+        if (!cust) return 0;
+
+        const settings = await SystemSettingModel.findById('global_config').lean();
+        const defaultRate = (settings && settings.depositPerTray) ? Number(settings.depositPerTray) : 2000;
+
+        const initBal = Number(cust.initialBalance) || 0;
+        const initDep = Number(cust.initialDeposit) || 0;
+        let pending = Math.max(0, (initBal * defaultRate) - initDep);
+
         const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
-        let pending = initialDep;
         custTxs.forEach(t => {
-            const rate = Number(t.depositPerTray) || 2000;
+            const rate = Number(t.depositPerTray) || defaultRate;
             const countQty = Number(t.count) || 0;
             const expected = Number(t.expectedDeposit) || (countQty * rate);
             let paid = 0;
@@ -838,6 +857,8 @@ const Customer = {
             txStatsMap[stat._id] = stat;
         });
 
+        const pendingMap = await Customer.getPendingDepositsMap(endDateStr);
+
         let filter = {};
         if (role !== 'admin' && locationId) {
             filter.locationId = locationId;
@@ -851,6 +872,7 @@ const Customer = {
 
             const closingBalance = openingBalance + stats.periodOut - stats.periodIn;
             const depositOutstanding = openingDepositOutstanding + stats.depositCollected - stats.depositRefunded;
+            const pendingDeposit = pendingMap[String(c._id)] || 0;
 
             return {
                 id: String(c._id),
@@ -863,7 +885,8 @@ const Customer = {
                 currentBalance: closingBalance,
                 depositCollected: stats.depositCollected,
                 depositRefunded: stats.depositRefunded,
-                depositOutstanding
+                depositOutstanding,
+                pendingDeposit
             };
         });
 

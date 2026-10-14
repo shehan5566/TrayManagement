@@ -1439,13 +1439,16 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
         }
 
         // Calculate Customer Pending Deposit Balance & Refundable Outstanding
-        let pendingDepositBalance = 0;
-        let depositCollected = 0;
+        const defaultRate = (settings && settings.depositPerTray) ? Number(settings.depositPerTray) : 2000;
+        const initBal = Number(customer.initialBalance) || 0;
+        const initDep = Number(customer.initialDeposit) || 0;
+        let pendingDepositBalance = Math.max(0, (initBal * defaultRate) - initDep);
+        let depositCollected = initDep;
         let depositRefunded = 0;
         
         const custTxs = await TransactionModel.find({ customerId: customer.id, isDeleted: { $ne: true } }).lean();
         custTxs.forEach(t => {
-            const rate = Number(t.depositPerTray) || 2000;
+            const rate = Number(t.depositPerTray) || defaultRate;
             const countQty = Number(t.count) || 0;
             const expected = Number(t.expectedDeposit) || (countQty * rate);
             let paid = 0;
@@ -1557,7 +1560,7 @@ app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
             const personalApprovalUrl = `${approvalUrl}?approver=${encodeURIComponent(appr.name)}`;
             const waNum = smsService.formatWhatsAppNumber(appr.phone) || '94770000000';
             const msg = smsService.buildApprovalMessage(alertDetails, personalApprovalUrl, approval.pin);
-            const waUrl = `https://api.whatsapp.com/send?phone=${waNum}&text=${encodeURIComponent(msg)}`;
+            const waUrl = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
             return {
                 name: appr.name,
                 phone: appr.phone,
@@ -3137,10 +3140,10 @@ app.get('/reports/export/balance-csv', requireAuth, async (req, res) => {
         const customerBalances = await Customer.getAggregatedCustomerBalances(startDate, endDate, req.session.user.locationId, req.session.user.role);
 
         let csvContent = '\uFEFF'; // BOM for UTF-8 Excel support
-        csvContent += 'Customer Name,Phone Number,Opening Balance (Trays),Trays Out,Trays In,Closing Balance (Trays),Initial Deposit (Rs.),Deposit Collected (Rs.),Deposit Refunded (Rs.),Outstanding Deposit Balance (Rs.)\n';
+        csvContent += 'Customer Name,Phone Number,Opening Balance (Trays),Trays Out,Trays In,Closing Balance (Trays),Initial Deposit (Rs.),Deposit Collected (Rs.),Deposit Refunded (Rs.),Refundable Outstanding (Rs.),Pending Deposit (Rs.)\n';
 
         customerBalances.forEach(c => {
-            csvContent += `"${(c.name || '').replace(/"/g, '""')}","${c.phone || ''}",${c.initialBalance},${c.totalOut},${c.totalIn},${c.currentBalance},${c.initialDeposit || 0},${c.depositCollected},${c.depositRefunded},${c.depositOutstanding}\n`;
+            csvContent += `"${(c.name || '').replace(/"/g, '""')}","${c.phone || ''}",${c.initialBalance},${c.totalOut},${c.totalIn},${c.currentBalance},${c.initialDeposit || 0},${c.depositCollected},${c.depositRefunded},${c.depositOutstanding},${c.pendingDeposit || 0}\n`;
         });
 
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -3171,7 +3174,8 @@ app.get('/api/reports/master-export', requireAuth, async (req, res) => {
             "Initial Deposit (Rs)": c.initialDeposit || 0,
             "Deposit Collected (Rs)": c.depositCollected || 0,
             "Deposit Refunded (Rs)": c.depositRefunded || 0,
-            "Outstanding Deposit (Rs)": c.depositOutstanding || 0
+            "Refundable Outstanding (Rs)": c.depositOutstanding || 0,
+            "Pending Deposit (Rs)": c.pendingDeposit || 0
         }));
 
         // 2. Stock Transfers (Dispatch & GRN combined or separated)
