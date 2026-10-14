@@ -125,7 +125,7 @@
                                 <td><%= c.address || '-' %></td>
                                 <td><%= c.phone %></td>
                                 <td><%= c.initialBalance %></td>
-                                <td>Rs. <%= Number(c.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></td>
+                                <td><%= Number(c.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></td>
                                 <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
                                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                         <span><%= c.currentBalance %></span>
