@@ -33,9 +33,14 @@
         </div>
 
         <div style="margin-bottom: 24px;">
-            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
-                Total Net Tray Balance (Company Total Inventory)
-            </label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <label style="font-size: 14px; font-weight: 600; color: var(--text-dark); margin: 0;">
+                    Total Net Tray Balance (Company Total Inventory)
+                </label>
+                <button type="button" onclick="openNetTrayHistoryModal()" class="btn btn-sm" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary-green);"></i> View History
+                </button>
+            </div>
             <input type="number" name="netTrayBalance" class="form-control" value="<%= settings.netTrayBalance || 0 %>" style="width: 100%; font-size: 16px; font-weight: 700;" min="0">
             <p style="font-size: 12px; color: var(--text-light); margin-top: 6px;">
                 Total quantity of trays owned by the company across all branches. Used on the dashboard to calculate <strong>Stock Shortage</strong>: <code>Net Tray Balance - Warehouse Balances - Damages</code>.
@@ -474,5 +479,6 @@
     });
 </script>
 
+<%- include('partials/net-tray-history-modal') %>
 <%- include('partials/footer') %>
 

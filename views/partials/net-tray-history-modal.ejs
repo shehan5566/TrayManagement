@@ -1,0 +1,189 @@
+<!-- Net Tray Balance History Modal -->
+<div id="netTrayHistoryModal" class="modal" style="display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <div class="modal-content" style="background-color: #ffffff; margin: 40px auto; padding: 0; border-radius: 14px; width: 92%; max-width: 680px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e2e8f0;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 19px; border: 1px solid #a7f3d0;">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                        Net Tray Balance Update History
+                    </h3>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">
+                        Audit log of total company inventory adjustments
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="closeNetTrayHistoryModal()" style="background: none; border: none; font-size: 26px; color: #94a3b8; cursor: pointer; line-height: 1; padding: 4px; border-radius: 6px; transition: color 0.15s;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'" title="Close">&times;</button>
+        </div>
+
+        <!-- Body / Content -->
+        <div id="netTrayHistoryContent" style="overflow-y: auto; flex: 1; padding: 20px 24px; background: #f8fafc;">
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #059669;"></i>
+                <p style="margin-top: 12px; font-size: 13.5px; font-weight: 500;">Loading update history...</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-top: 1px solid #e2e8f0; background: #ffffff;">
+            <span id="netTrayHistorySummary" style="font-size: 12.5px; color: #64748b; font-weight: 500;"></span>
+            <button type="button" class="btn" onclick="closeNetTrayHistoryModal()" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 7px 18px; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer;">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function openNetTrayHistoryModal() {
+        const modal = document.getElementById('netTrayHistoryModal');
+        if (!modal) return;
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+
+        const content = document.getElementById('netTrayHistoryContent');
+        const summary = document.getElementById('netTrayHistorySummary');
+        if (summary) summary.textContent = '';
+
+        content.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #059669;"></i>
+                <p style="margin-top: 12px; font-size: 13.5px; font-weight: 500;">Loading update history...</p>
+            </div>
+        `;
+
+        try {
+            const res = await fetch('/api/net-tray-balance/history');
+            const data = await res.json();
+
+            if (!data.success || !data.history || data.history.length === 0) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 45px 20px; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 10px;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: #f1f5f9; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; color: #94a3b8; font-size: 22px;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <h4 style="margin: 0 0 6px 0; font-size: 15px; color: #334155; font-weight: 600;">No Update History Yet</h4>
+                        <p style="margin: 0; font-size: 12.5px; color: #64748b; max-width: 380px; margin: 0 auto;">
+                            Whenever an Admin updates the Net Tray Balance, the previous quantity, new quantity, date, and user will be logged here.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (summary) {
+                summary.textContent = `Total updates recorded: ${data.history.length}`;
+            }
+
+            let rowsHtml = '';
+            data.history.forEach((item, idx) => {
+                const dateObj = new Date(item.updatedAt);
+                const dateStr = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                const prev = Number(item.previousBalance) || 0;
+                const next = Number(item.newBalance) || 0;
+                const diff = Number(item.change !== undefined ? item.change : (next - prev));
+
+                let badgeHtml = '';
+                if (diff > 0) {
+                    badgeHtml = `
+                        <span style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-arrow-up" style="font-size: 9px;"></i> +${diff.toLocaleString()}
+                        </span>
+                    `;
+                } else if (diff < 0) {
+                    badgeHtml = `
+                        <span style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11.5px; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-arrow-down" style="font-size: 9px;"></i> ${diff.toLocaleString()}
+                        </span>
+                    `;
+                } else {
+                    badgeHtml = `
+                        <span style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 12px; font-weight: 600; font-size: 11.5px;">
+                            No change
+                        </span>
+                    `;
+                }
+
+                rowsHtml += `
+                    <tr style="border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+                        <td style="padding: 12px 10px; color: #94a3b8; text-align: center; font-size: 12px;">${idx + 1}</td>
+                        <td style="padding: 12px 14px; white-space: nowrap;">
+                            <div style="font-weight: 600; color: #0f172a; font-size: 13px;">${dateStr}</div>
+                            <div style="font-size: 11.5px; color: #64748b; margin-top: 1px;">${timeStr}</div>
+                        </td>
+                        <td style="padding: 12px 14px; text-align: right; color: #64748b; font-family: monospace; font-size: 13px;">
+                            ${prev.toLocaleString()}
+                        </td>
+                        <td style="padding: 12px 14px; text-align: right; font-weight: 700; color: #0f172a; font-family: monospace; font-size: 13.5px;">
+                            ${next.toLocaleString()}
+                        </td>
+                        <td style="padding: 12px 14px; text-align: center;">
+                            ${badgeHtml}
+                        </td>
+                        <td style="padding: 12px 14px; text-align: center;">
+                            <span style="background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; padding: 3px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fa-solid fa-user-shield" style="color: #64748b; font-size: 10px;"></i> ${item.updatedBy || 'admin'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            content.innerHTML = `
+                <div style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="max-height: 52vh; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead style="position: sticky; top: 0; z-index: 2;">
+                                <tr style="background: #f1f5f9; border-bottom: 1px solid #cbd5e1; font-size: 11.5px; text-transform: uppercase; color: #475569; font-weight: 700; letter-spacing: 0.5px;">
+                                    <th style="padding: 10px; text-align: center; width: 40px;">#</th>
+                                    <th style="padding: 10px 14px;">Date & Time</th>
+                                    <th style="padding: 10px 14px; text-align: right;">Previous</th>
+                                    <th style="padding: 10px 14px; text-align: right;">New Balance</th>
+                                    <th style="padding: 10px 14px; text-align: center;">Change</th>
+                                    <th style="padding: 10px 14px; text-align: center;">Updated By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            console.error('Error loading net tray balance history:', err);
+            content.innerHTML = `
+                <div style="text-align: center; padding: 35px 20px; background: #ffffff; border: 1px solid #fecaca; border-radius: 10px; color: #b91c1c;">
+                    <i class="fa-solid fa-triangle-exclamation fa-2x" style="margin-bottom: 8px;"></i>
+                    <p style="margin: 0; font-size: 13.5px; font-weight: 600;">Failed to load update history.</p>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: #64748b;">Please try again later or check console logs.</p>
+                </div>
+            `;
+        }
+    }
+
+    function closeNetTrayHistoryModal() {
+        const modal = document.getElementById('netTrayHistoryModal');
+        if (modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    // Close on backdrop click or Escape key
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('netTrayHistoryModal');
+        if (modal && e.target === modal) {
+            closeNetTrayHistoryModal();
+        }
+    });
+
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeNetTrayHistoryModal();
+        }
+    });
+</script>

@@ -18,6 +18,9 @@
             <span style="background-color: var(--accent-yellow); color: #333; border-radius: 12px; padding: 2px 8px; font-weight: bold; font-size: 12px;">
                 <%= typeof netTrayBalance !== 'undefined' ? netTrayBalance : 0 %>
             </span>
+            <button type="button" onclick="openNetTrayHistoryModal()" title="View Net Tray Balance Update History" style="background: none; border: none; padding: 0 2px; cursor: pointer; color: #64748b; font-size: 12.5px; display: inline-flex; align-items: center; transition: color 0.15s;" onmouseover="this.style.color='#107c41'" onmouseout="this.style.color='#64748b'">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
         </div>
 
         <% if (allLocations && allLocations.length > 0) { %>
@@ -496,4 +499,5 @@
     }
 </script>
 
+<%- include('partials/net-tray-history-modal') %>
 <%- include('partials/footer') %>

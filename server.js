@@ -626,13 +626,26 @@ app.post('/api/net-tray-balance', requireAuth, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid net tray balance value.' });
         }
 
-        const updated = await SystemSetting.update({ netTrayBalance });
+        const updated = await SystemSetting.update({ 
+            netTrayBalance,
+            updatedBy: currentUser.username || 'admin'
+        });
         await ActivityLog.log(currentUser.username, 'UPDATE', 'SystemSetting', `Updated Net Tray Balance to ${netTrayBalance}`);
 
         res.json({ success: true, netTrayBalance: updated.netTrayBalance });
     } catch (err) {
         console.error('Error updating net tray balance:', err);
         res.status(500).json({ success: false, error: 'Failed to update net tray balance' });
+    }
+});
+
+app.get('/api/net-tray-balance/history', requireAuth, async (req, res) => {
+    try {
+        const history = await SystemSetting.getNetTrayBalanceHistory();
+        res.json({ success: true, history });
+    } catch (err) {
+        console.error('Error fetching net tray balance history:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch net tray balance history' });
     }
 });
 
@@ -4043,7 +4056,12 @@ app.post('/settings/update', requireAuth, async (req, res) => {
             return res.status(403).json({ success: false, error: 'Permission denied. Admin only.' });
         }
 
-        const updatedSettings = await SystemSetting.update(req.body);
+        const updateData = {
+            ...req.body,
+            updatedBy: currentUser.username || 'admin'
+        };
+
+        const updatedSettings = await SystemSetting.update(updateData);
 
         await ActivityLog.create({
             user: currentUser.username,
