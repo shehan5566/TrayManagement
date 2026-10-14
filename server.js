@@ -557,13 +557,15 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
         const sysSetting = await SystemSetting.get();
         const netTrayBalance = (sysSetting && sysSetting.netTrayBalance !== undefined) ? sysSetting.netTrayBalance : 0;
-        const totalShortage = netTrayBalance - totalAllBranchStock;
 
         const damageLogs = await DamageLog.getAll(null); // System-wide total across all locations
         let totalDamages = 0;
         damageLogs.forEach(d => {
             totalDamages += (d.qty || 0);
         });
+
+        // Stock Shortage = NET TRAY BALANCE - warehouse balances - damages
+        const totalShortage = netTrayBalance - totalAllBranchStock - totalDamages;
 
         const totalBranchStock = (warehouseCurrentBalance || 0) + (currentBalance || 0);
 
