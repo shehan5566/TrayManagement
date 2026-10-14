@@ -116,6 +116,7 @@ const SystemSettingSchema = new mongoose.Schema({
     enableOutstandingBlock: { type: Boolean, default: true },
     salesManagerPhone: { type: String, default: '0770000000' },
     allowedGraceTrays: { type: Number, default: 0 },
+    netTrayBalance: { type: Number, default: 0 },
     approvers: [{
         id: { type: String },
         name: { type: String, default: 'Sales Manager' },
@@ -1442,6 +1443,7 @@ const SystemSetting = {
         if (data.enableOutstandingBlock !== undefined) setting.enableOutstandingBlock = (data.enableOutstandingBlock === 'true' || data.enableOutstandingBlock === true || data.enableOutstandingBlock === 'on');
         if (data.salesManagerPhone !== undefined) setting.salesManagerPhone = data.salesManagerPhone;
         if (data.allowedGraceTrays !== undefined && data.allowedGraceTrays !== '') setting.allowedGraceTrays = parseInt(data.allowedGraceTrays, 10);
+        if (data.netTrayBalance !== undefined && data.netTrayBalance !== '') setting.netTrayBalance = parseInt(data.netTrayBalance, 10) || 0;
         
         if (data.approvers !== undefined) {
             let approversList = [];

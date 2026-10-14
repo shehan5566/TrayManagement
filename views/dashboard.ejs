@@ -11,6 +11,18 @@
         <span style="font-size: 13px; color: var(--text-light); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
             <i class="fa-solid fa-network-wired"></i> Branch Stocks:
         </span>
+
+        <!-- NET TRAY BALANCE Tab -->
+        <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" title="Global Net Tray Balance (Company Total Inventory)">
+            <span style="color: var(--primary-green-dark); font-weight: 700;">NET TRAY BALANCE</span>
+            <span style="background-color: var(--accent-yellow); color: #333; border-radius: 12px; padding: 2px 8px; font-weight: bold; font-size: 12px;">
+                <%= typeof netTrayBalance !== 'undefined' ? netTrayBalance : 0 %>
+            </span>
+            <% if (user && (user.role === 'admin' || user.username === 'admin')) { %>
+                <i class="fa-solid fa-pen" style="cursor: pointer; color: var(--primary-green-dark); font-size: 11px; margin-left: 2px;" onclick="openNetTrayBalanceModal(<%= typeof netTrayBalance !== 'undefined' ? netTrayBalance : 0 %>)" title="Edit Net Tray Balance"></i>
+            <% } %>
+        </div>
+
         <% if (allLocations && allLocations.length > 0) { %>
             <% allLocations.forEach(loc => { %>
                 <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" title="Warehouse Stock (<%= loc.currentStock %>) + Customer Balance (<%= loc.customerBalance || 0 %>)">
@@ -24,7 +36,7 @@
             <span style="font-size: 13px; color: #999;">No branches available</span>
         <% } %>
 
-        <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" title="Total Tray Variance / Shortage from Vehicle Unloading and Transfers GRN">
+        <div style="background-color: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 4px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" title="Stock Shortage = Net Tray Balance (<%= typeof netTrayBalance !== 'undefined' ? netTrayBalance : 0 %>) - Branch Stocks (<%= typeof totalAllBranchStock !== 'undefined' ? totalAllBranchStock : 0 %>)">
             <span style="color: #dc2626; font-weight: 700; display: flex; align-items: center; gap: 5px;">
                 <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> STOCK SHORTAGE
             </span>
@@ -486,5 +498,75 @@
         }
     }
 </script>
+
+<% if (user && (user.role === 'admin' || user.username === 'admin')) { %>
+<!-- Net Tray Balance Modal (Admin Only) -->
+<div id="netTrayBalanceModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
+            <h3 style="margin: 0; color: var(--primary-green-dark); font-size: 18px;"><i class="fa-solid fa-boxes-stacked"></i> Update Net Tray Balance</h3>
+            <span onclick="document.getElementById('netTrayBalanceModal').style.display='none'" style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+        </div>
+
+        <form id="netTrayBalanceForm" onsubmit="submitNetTrayBalance(event)">
+            <div class="form-group">
+                <label style="font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: block;">Total Net Tray Balance</label>
+                <input type="number" id="netTrayBalanceInput" name="netTrayBalance" class="form-control" style="font-size: 16px; font-weight: bold;" required min="0">
+                <small style="color: var(--text-light); font-size: 12px; margin-top: 6px; display: block; line-height: 1.4;">
+                    Used to calculate Stock Shortage on dashboard: <br><code>STOCK SHORTAGE = NET TRAY BALANCE - BRANCH STOCKS</code>
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; padding: 10px 16px; font-weight: bold;">
+                <i class="fa-solid fa-check"></i> Save Net Balance
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openNetTrayBalanceModal(currentBalance) {
+        document.getElementById('netTrayBalanceInput').value = currentBalance;
+        document.getElementById('netTrayBalanceModal').style.display = 'block';
+    }
+
+    async function submitNetTrayBalance(e) {
+        e.preventDefault();
+        const netTrayBalance = document.getElementById('netTrayBalanceInput').value;
+
+        try {
+            const res = await fetch('/api/net-tray-balance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ netTrayBalance: parseInt(netTrayBalance, 10) })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved!',
+                        text: 'Net Tray Balance updated successfully.',
+                        timer: 1200,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    alert('Net Tray Balance updated successfully!');
+                    location.reload();
+                }
+            } else {
+                alert('Error: ' + (data.error || 'Failed to update Net Tray Balance'));
+            }
+        } catch (err) {
+            alert('A network error occurred.');
+            console.error(err);
+        }
+    }
+</script>
+<% } %>
 
 <%- include('partials/footer') %>

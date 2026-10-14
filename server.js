@@ -536,51 +536,28 @@ app.get('/dashboard', requireAuth, async (req, res) => {
         const allCustomersForLocations = await CustomerModel.find({}).lean();
 
         // Calculate total branch stock for each location (Warehouse stock + sum of customer balances for this location)
+        let totalAllBranchStock = 0;
         allLocations.forEach(loc => {
             const branchCustBalance = allCustomersForLocations
                 .filter(c => String(c.locationId) === String(loc.id))
                 .reduce((sum, c) => sum + (c.currentBalance || 0), 0);
             loc.totalBranchStock = (loc.currentStock || 0) + branchCustBalance;
             loc.customerBalance = branchCustBalance;
+            totalAllBranchStock += loc.totalBranchStock;
         });
 
-        const isUserAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
-        const userLocId = req.session.user.locationId;
-
-        let transferShortageQuery = { isDeleted: { $ne: true }, status: 'ACCEPTED' };
-        let tripShortageQuery = { isDeleted: { $ne: true }, status: 'COMPLETED' };
-
-        if (!isUserAdmin && userLocId) {
-            transferShortageQuery.$or = [
-                { fromLocationId: userLocId },
-                { toLocationId: userLocId }
-            ];
-            tripShortageQuery.locationId = userLocId;
-        }
-
-        const acceptedTransfers = await StockTransferModel.find(transferShortageQuery).lean();
-        let totalShortage = 0;
-        acceptedTransfers.forEach(t => {
-            const dispatched = t.dispatchedQty || 0;
-            const received = (t.receivedQty !== undefined && t.receivedQty !== null) ? t.receivedQty : dispatched;
-            if (dispatched > received) {
-                totalShortage += (dispatched - received);
-            }
+        // Ensure KADUWELA-HEAD OFFICE is first in allLocations
+        allLocations.sort((a, b) => {
+            const aIsHead = a.id === 'main' || (a.name && (a.name.toUpperCase().includes('HEAD OFFICE') || a.name.toUpperCase().includes('KADUWELA')));
+            const bIsHead = b.id === 'main' || (b.name && (b.name.toUpperCase().includes('HEAD OFFICE') || b.name.toUpperCase().includes('KADUWELA')));
+            if (aIsHead && !bIsHead) return -1;
+            if (!aIsHead && bIsHead) return 1;
+            return 0;
         });
 
-        // Add vehicle trip unloading shortages (where variance is negative / actual unloaded < expected)
-        const completedTrips = await LorryTripModel.find(tripShortageQuery).lean();
-        completedTrips.forEach(t => {
-            if (typeof t.variance === 'number' && t.variance < 0) {
-                totalShortage += Math.abs(t.variance);
-            } else if (t.variance === undefined || t.variance === null) {
-                const expected = (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0);
-                const actual = (t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null) ? t.actualUnloadedQty : expected;
-                if (actual < expected) {
-                    totalShortage += (expected - actual);
-                }
-            }
-        });
+        const sysSetting = await SystemSetting.get();
+        const netTrayBalance = (sysSetting && sysSetting.netTrayBalance !== undefined) ? sysSetting.netTrayBalance : 0;
+        const totalShortage = netTrayBalance - totalAllBranchStock;
 
         const damageLogs = await DamageLog.getAll(null); // System-wide total across all locations
         let totalDamages = 0;
@@ -598,7 +575,9 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             alerts,
             allLocations,
             totalShortage,
-            totalDamages
+            totalDamages,
+            netTrayBalance,
+            totalAllBranchStock
         });
     } catch (err) {
         console.error('Error rendering dashboard:', err);
@@ -629,6 +608,29 @@ app.post('/api/monthly-balance', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('Error saving monthly balance:', err);
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/net-tray-balance', requireAuth, async (req, res) => {
+    try {
+        const currentUser = req.session.user;
+        const isUserAdmin = currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin');
+        if (!isUserAdmin) {
+            return res.status(403).json({ success: false, error: 'Permission denied. Admin only.' });
+        }
+
+        const netTrayBalance = parseInt(req.body.netTrayBalance, 10);
+        if (isNaN(netTrayBalance) || netTrayBalance < 0) {
+            return res.status(400).json({ success: false, error: 'Invalid net tray balance value.' });
+        }
+
+        const updated = await SystemSetting.update({ netTrayBalance });
+        await ActivityLog.log(currentUser.username, 'UPDATE', 'SystemSetting', `Updated Net Tray Balance to ${netTrayBalance}`);
+
+        res.json({ success: true, netTrayBalance: updated.netTrayBalance });
+    } catch (err) {
+        console.error('Error updating net tray balance:', err);
+        res.status(500).json({ success: false, error: 'Failed to update net tray balance' });
     }
 });
 
