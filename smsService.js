@@ -112,6 +112,21 @@ const sendSMS = async (phone, message) => {
  * Send an SMS for a new transaction
  */
 const sendTransactionSMS = async (phone, name, tx, newBalance) => {
+    let helpline = '0761391535 (Sales Admin)';
+    try {
+        const { SystemSettingModel } = require('./db');
+        const setting = await SystemSettingModel.findById('global_config').lean();
+        if (setting) {
+            if (setting.enableCustomerSms === false) {
+                console.log('[SMS] Customer SMS alerts are currently disabled in Settings. Skipping transaction SMS.');
+                return false;
+            }
+            if (setting.smsHelpline) {
+                helpline = setting.smsHelpline;
+            }
+        }
+    } catch (e) {}
+
     const action = tx.type === 'OUT' ? 'Issued' : 'Returned';
     
     // Format receipt number
@@ -129,6 +144,9 @@ ${tx.vehicleNo ? `Vehicle: ${tx.vehicleNo}\n` : ''}-----------------
 Trays ${action}: ${tx.count}
 -----------------
 New Balance: ${newBalance} Trays
+----------------------------------------
+📞 විමසීම් සඳහා අමතන්න: ${helpline}
+
 Thank you!`;
     
     return await sendSMS(phone, msg);
@@ -139,6 +157,21 @@ Thank you!`;
  * Send an SMS manually for balance reminder
  */
 const sendManualSMS = async (phone, name, balance) => {
+    let helpline = '0761391535 (Sales Admin)';
+    try {
+        const { SystemSettingModel } = require('./db');
+        const setting = await SystemSettingModel.findById('global_config').lean();
+        if (setting) {
+            if (setting.enableCustomerSms === false) {
+                console.log('[SMS] Customer SMS alerts are currently disabled in Settings. Skipping reminder SMS.');
+                return false;
+            }
+            if (setting.smsHelpline) {
+                helpline = setting.smsHelpline;
+            }
+        }
+    } catch (e) {}
+
     const d = new Date();
     const dateStr = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'});
     
@@ -150,6 +183,9 @@ Customer: ${name}
 Current Balance: ${balance} Trays
 -----------------
 Please return the due trays at your earliest convenience.
+----------------------------------------
+📞 විමසීම් සඳහා අමතන්න: ${helpline}
+
 Thank you!`;
     
     return await sendSMS(phone, msg);

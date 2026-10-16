@@ -114,6 +114,8 @@ const SystemSettingSchema = new mongoose.Schema({
     emailReceiver: { type: String, default: 'shehand@nelna.lk' },
     receiptFooterNote: { type: String, default: 'Official Inward Stock Receipt & Verification Log' },
     enableOutstandingBlock: { type: Boolean, default: true },
+    enableCustomerSms: { type: Boolean, default: true },
+    smsHelpline: { type: String, default: '0761391535 (Sales Admin)' },
     salesManagerPhone: { type: String, default: '0770000000' },
     allowedGraceTrays: { type: Number, default: 0 },
     netTrayBalance: { type: Number, default: 0 },
@@ -1472,6 +1474,8 @@ const SystemSetting = {
         if (data.emailReceiver !== undefined) setting.emailReceiver = data.emailReceiver;
         if (data.receiptFooterNote) setting.receiptFooterNote = data.receiptFooterNote;
         if (data.enableOutstandingBlock !== undefined) setting.enableOutstandingBlock = (data.enableOutstandingBlock === 'true' || data.enableOutstandingBlock === true || data.enableOutstandingBlock === 'on');
+        if (data.enableCustomerSms !== undefined) setting.enableCustomerSms = (data.enableCustomerSms === 'true' || data.enableCustomerSms === true || data.enableCustomerSms === 'on');
+        if (data.smsHelpline !== undefined) setting.smsHelpline = data.smsHelpline.trim();
         if (data.salesManagerPhone !== undefined) setting.salesManagerPhone = data.salesManagerPhone;
         if (data.allowedGraceTrays !== undefined && data.allowedGraceTrays !== '') setting.allowedGraceTrays = parseInt(data.allowedGraceTrays, 10);
         if (data.netTrayBalance !== undefined && data.netTrayBalance !== '') {

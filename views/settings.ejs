@@ -73,6 +73,45 @@
             </h3>
         </div>
 
+        <!-- Master Switch for Customer SMS & Tray Balance Alerts -->
+        <div style="margin-bottom: 24px; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 18px 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: #dcfce7; display: flex; align-items: center; justify-content: center; color: #166534; font-size: 20px;">
+                        <i class="fa-solid fa-comment-sms"></i>
+                    </div>
+                    <div>
+                        <label for="enableCustomerSmsSwitch" style="font-size: 15px; font-weight: 700; color: #14532d; margin: 0; cursor: pointer; display: block;">
+                            Customer SMS & Tray Balance Alerts (ස්වයංක්‍රීය SMS සහ Alerts)
+                        </label>
+                        <p style="font-size: 12.5px; color: #166534; margin: 2px 0 0 0;">
+                            Turn ON/OFF to control whether customer transaction receipts and overdue balance reminders are sent via SMS.
+                        </p>
+                    </div>
+                </div>
+                <label style="position: relative; display: inline-block; width: 52px; height: 28px; margin: 0; cursor: pointer;">
+                    <input type="checkbox" id="enableCustomerSmsSwitch" name="enableCustomerSms" value="true" <%= (settings.enableCustomerSms !== false) ? 'checked' : '' %> style="opacity: 0; width: 0; height: 0;" onchange="toggleSmsBadge(this.checked)">
+                    <span id="smsToggleSlider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: <%= (settings.enableCustomerSms !== false) ? '#107c41' : '#cbd5e1' %>; transition: .3s; border-radius: 28px;">
+                        <span id="smsToggleKnob" style="position: absolute; content: ''; height: 20px; width: 20px; left: <%= (settings.enableCustomerSms !== false) ? '26px' : '4px' %>; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.25);"></span>
+                    </span>
+                </label>
+            </div>
+            <div id="smsStatusText" style="margin-top: 10px; font-size: 12.5px; font-weight: 600; color: <%= (settings.enableCustomerSms !== false) ? '#15803d' : '#b91c1c' %>; padding-left: 54px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid <%= (settings.enableCustomerSms !== false) ? 'fa-circle-check' : 'fa-circle-xmark' %>"></i>
+                <span><%= (settings.enableCustomerSms !== false) ? 'SMS Alerts are currently ACTIVE (පණිවිඩ යැවීම සක්‍රීයයි)' : 'SMS Alerts are currently MUTED / PAUSED (පණිවිඩ යැවීම තාවකාලිකව නවතා ඇත)' %></span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
+                SMS Helpline / Inquiry Contact Note (විමසීම් අංකය)
+            </label>
+            <input type="text" name="smsHelpline" class="form-control" value="<%= settings.smsHelpline || '0761391535 (Sales Admin)' %>" style="width: 100%; font-size: 14px;" placeholder="e.g. 0761391535 (Sales Admin)">
+            <small style="display: block; margin-top: 6px; color: var(--text-light); font-size: 12px;">
+                Included at the bottom of customer SMS (e.g. <code>📞 විමසීම් සඳහා අමතන්න: ...</code>).
+            </small>
+        </div>
+
         <div style="margin-bottom: 20px;">
             <label style="display: block; font-size: 14px; font-weight: 600; color: var(--text-dark); margin-bottom: 8px;">
                 SMS Gateway Webhook URL (MacroDroid / Twilio)
@@ -273,11 +312,31 @@
         }
     }
 
+    function toggleSmsBadge(isChecked) {
+        const slider = document.getElementById('smsToggleSlider');
+        const knob = document.getElementById('smsToggleKnob');
+        const statusText = document.getElementById('smsStatusText');
+        if (slider && knob && statusText) {
+            if (isChecked) {
+                slider.style.backgroundColor = '#107c41';
+                knob.style.left = '26px';
+                statusText.style.color = '#15803d';
+                statusText.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>SMS Alerts are currently ACTIVE (පණිවිඩ යැවීම සක්‍රීයයි)</span>';
+            } else {
+                slider.style.backgroundColor = '#cbd5e1';
+                knob.style.left = '4px';
+                statusText.style.color = '#b91c1c';
+                statusText.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <span>SMS Alerts are currently MUTED / PAUSED (පණිවිඩ යැවීම තාවකාලිකව නවතා ඇත)</span>';
+            }
+        }
+    }
+
     async function handleSettingsSubmit(e) {
         e.preventDefault();
         const form = e.target;
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
+        data.enableCustomerSms = form.enableCustomerSms ? form.enableCustomerSms.checked : false;
         data.enableOutstandingBlock = form.enableOutstandingBlock ? form.enableOutstandingBlock.checked : false;
         data.approvers = approversList;
 

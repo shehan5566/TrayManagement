@@ -65,6 +65,12 @@ cron.schedule('0 9 * * *', async () => {
     console.log('[CRON] Running automated 1-week overdue tray balance SMS reminders...');
     try {
         await connectDB();
+        const { SystemSettingModel } = require('./db');
+        const setting = await SystemSettingModel.findById('global_config').lean();
+        if (setting && setting.enableCustomerSms === false) {
+            console.log('[CRON] Customer SMS alerts are turned OFF in System Settings. Skipping automated daily reminders.');
+            return;
+        }
         const alerts = await Customer.getAlerts();
         for (const alert of alerts) {
             if ((alert.daysPending >= 7 || alert.currentBalance >= 50) && alert.phone) {
@@ -391,6 +397,10 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
 // Endpoint to trigger automated 1-week overdue tray balance SMS reminders
 app.post('/api/sms/send-overdue-reminders', requireAuth, requireAdmin, async (req, res) => {
     try {
+        const sysSetting = await SystemSetting.get();
+        if (sysSetting && sysSetting.enableCustomerSms === false) {
+            return res.status(400).json({ success: false, error: 'Customer SMS alerts are currently turned OFF in System Settings. Please enable them first.' });
+        }
         const alerts = await Customer.getAlerts();
         let sentCount = 0;
         for (const alert of alerts) {
@@ -818,6 +828,11 @@ app.post('/api/sms/send-balance', requireAuth, async (req, res) => {
         }
         if (!customer.phone) {
             return res.status(400).json({ success: false, error: 'Customer does not have a phone number registered' });
+        }
+        
+        const sysSetting = await SystemSetting.get();
+        if (sysSetting && sysSetting.enableCustomerSms === false) {
+            return res.status(400).json({ success: false, error: 'Customer SMS alerts are currently turned OFF in System Settings. Please enable them first.' });
         }
         
         const success = await smsService.sendManualSMS(customer.phone, customer.name, customer.currentBalance);
