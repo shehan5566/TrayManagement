@@ -217,6 +217,9 @@ const permissionAliases = {
 app.use(async (req, res, next) => {
     let locationName = 'Head Office';
     let userPermissions = [];
+    let canSwitchLocation = false;
+    let availableLocations = [];
+
     if (req.session.user) {
         try {
             const loc = await Location.getById(req.session.user.locationId || 'main');
@@ -224,9 +227,41 @@ app.use(async (req, res, next) => {
         } catch (e) {
             console.error('Error loading user location name:', e);
         }
+
+        // Determine if user has permission to switch locations (Admin or Finance role)
+        if (req.session.user.role === 'admin' || req.session.user.username === 'admin') {
+            canSwitchLocation = true;
+        } else if (req.session.user.roleId) {
+            try {
+                const userRole = await Role.getById(req.session.user.roleId);
+                if (userRole && (userRole.isSuperUser || /finance|admin/i.test(userRole.name))) {
+                    canSwitchLocation = true;
+                }
+            } catch (e) {
+                console.error('Error checking user role for location switcher:', e);
+            }
+        }
+
+        if (canSwitchLocation) {
+            try {
+                availableLocations = await Location.getAll();
+                availableLocations.sort((a, b) => {
+                    const aIsHead = a.id === 'main' || (a.name && (a.name.toUpperCase().includes('HEAD OFFICE') || a.name.toUpperCase().includes('KADUWELA')));
+                    const bIsHead = b.id === 'main' || (b.name && (b.name.toUpperCase().includes('HEAD OFFICE') || b.name.toUpperCase().includes('KADUWELA')));
+                    if (aIsHead && !bIsHead) return -1;
+                    if (!aIsHead && bIsHead) return 1;
+                    return (a.name || '').localeCompare(b.name || '');
+                });
+            } catch (e) {
+                console.error('Error fetching locations for location switcher:', e);
+            }
+        }
+
         userPermissions = await getUserPermissions(req.session.user);
-        res.locals.user = { ...req.session.user, locationName, permissions: userPermissions };
+        res.locals.user = { ...req.session.user, locationName, permissions: userPermissions, canSwitchLocation };
         res.locals.userPermissions = userPermissions;
+        res.locals.canSwitchLocation = canSwitchLocation;
+        res.locals.availableLocations = availableLocations;
         res.locals.hasPerm = (perm) => {
             if (!userPermissions) return false;
             if (userPermissions.includes('*')) return true;
@@ -236,6 +271,8 @@ app.use(async (req, res, next) => {
     } else {
         res.locals.user = null;
         res.locals.userPermissions = [];
+        res.locals.canSwitchLocation = false;
+        res.locals.availableLocations = [];
         res.locals.hasPerm = () => false;
     }
     res.locals.activePath = req.path;
@@ -598,6 +635,70 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 });
 
 // Location Management Routes
+// Switch Active Location (Admin & Finance users only)
+app.post('/api/user/switch-location', requireAuth, async (req, res) => {
+    try {
+        const currentUser = req.session.user;
+        let isAllowed = false;
+
+        if (currentUser.role === 'admin' || currentUser.username === 'admin') {
+            isAllowed = true;
+        } else if (currentUser.roleId) {
+            const userRole = await Role.getById(currentUser.roleId);
+            if (userRole && (userRole.isSuperUser || /finance|admin/i.test(userRole.name))) {
+                isAllowed = true;
+            }
+        }
+
+        if (!isAllowed) {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'Permission denied. Location switching is restricted to Admin and Finance users.' 
+            });
+        }
+
+        const { locationId } = req.body;
+        if (!locationId) {
+            return res.status(400).json({ success: false, error: 'Location ID is required' });
+        }
+
+        const targetLocation = await Location.getById(locationId);
+        if (!targetLocation) {
+            return res.status(404).json({ success: false, error: 'Target location not found' });
+        }
+
+        // Update session active location
+        req.session.user.locationId = targetLocation.id;
+        req.session.user.locationName = targetLocation.name;
+
+        await new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+
+        await ActivityLog.log(
+            currentUser.username, 
+            'UPDATE', 
+            'UserLocation', 
+            `Switched active branch to ${targetLocation.name}`
+        );
+
+        res.json({ 
+            success: true, 
+            message: `Switched location to ${targetLocation.name}`,
+            location: {
+                id: targetLocation.id,
+                name: targetLocation.name
+            }
+        });
+    } catch (err) {
+        console.error('Error switching location:', err);
+        res.status(500).json({ success: false, error: 'Failed to switch location: ' + (err.message || err) });
+    }
+});
+
 app.post('/api/monthly-balance', requireAuth, async (req, res) => {
     try {
         const { month, openingBalance } = req.body;
@@ -1095,7 +1196,8 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
             actualDeposit,
             vehicleNo,
             remarks,
-            date
+            date,
+            locationId: req.session.user.locationId || 'main'
         };
         
         // Check for customer block on OUT transactions:

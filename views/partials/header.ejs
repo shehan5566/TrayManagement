@@ -69,10 +69,47 @@
                             <img src="/images/logo.png" alt="Nelna Logo" class="brand-logo-img">
                             <div class="brand-text">
                                 <h1>NELNA AGRI DEVELOPMENT (PVT) LTD</h1>
-                                <p>Tray Management System &nbsp; <span class="header-location-badge"><i
-                                            class="fa-solid fa-location-dot"></i>
-                                        <%= (user && user.locationName) ? user.locationName : 'Head Office' %>
-                                    </span></p>
+                                <p style="display: flex; align-items: center; gap: 6px; margin: 0;">
+                                    <span>Tray Management System</span> &nbsp;
+                                    <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation && typeof availableLocations !== 'undefined' && availableLocations.length > 0) { %>
+                                        <span class="header-location-dropdown-wrapper" onclick="event.preventDefault(); event.stopPropagation();">
+                                            <span class="header-location-badge location-switcher-badge" id="headerLocationBtn" role="button" tabindex="0" onclick="toggleLocationDropdown(event)" title="Click to switch active location">
+                                                <i class="fa-solid fa-location-dot"></i>
+                                                <span class="location-name-text"><%= (user && user.locationName) ? user.locationName : 'Head Office' %></span>
+                                                <i class="fa-solid fa-chevron-down loc-caret"></i>
+                                            </span>
+                                            <div class="header-location-menu" id="headerLocationMenu">
+                                                <div class="loc-menu-header">
+                                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                                        <i class="fa-solid fa-building-circle-check" style="color: var(--primary-green);"></i>
+                                                        <span style="font-weight: 700;">Switch Active Location</span>
+                                                    </div>
+                                                    <span class="loc-count-pill"><%= availableLocations.length %> branches</span>
+                                                </div>
+                                                <div class="loc-menu-list">
+                                                    <% availableLocations.forEach(loc => { 
+                                                        const isCurrent = String(user.locationId) === String(loc.id) || (!user.locationId && loc.id === 'main');
+                                                    %>
+                                                        <div class="loc-menu-item <%= isCurrent ? 'active' : '' %>" role="button" tabindex="0" onclick="switchUserLocation('<%= loc.id %>', '<%= loc.name.replace(/'/g, "\\'") %>')">
+                                                            <div class="loc-item-left">
+                                                                <span class="loc-item-dot <%= isCurrent ? 'loc-item-dot-active' : '' %>"></span>
+                                                                <span class="loc-item-name"><%= loc.name %></span>
+                                                            </div>
+                                                            <% if (isCurrent) { %>
+                                                                <span class="loc-active-tag"><i class="fa-solid fa-check"></i> Active</span>
+                                                            <% } %>
+                                                        </div>
+                                                    <% }) %>
+                                                </div>
+                                            </div>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="header-location-badge"><i
+                                                class="fa-solid fa-location-dot"></i>
+                                            <%= (user && user.locationName) ? user.locationName : 'Head Office' %>
+                                        </span>
+                                    <% } %>
+                                </p>
                             </div>
                         </a>
                     </div>
@@ -130,8 +167,108 @@
                             </div>
                         </div>
                     </div>
-                </div>
             </header>
+
+            <script>
+                function toggleLocationDropdown(event) {
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    const menu = document.getElementById('headerLocationMenu');
+                    const btn = document.getElementById('headerLocationBtn');
+                    if (!menu) return;
+
+                    const isOpen = menu.classList.contains('show');
+                    // Close other dropdowns
+                    const userDropdown = document.querySelector('.user-dropdown-menu');
+                    if (userDropdown) userDropdown.classList.remove('show');
+                    const notifDropdown = document.getElementById('notificationDropdownMenu');
+                    if (notifDropdown) notifDropdown.classList.remove('show');
+
+                    if (isOpen) {
+                        menu.classList.remove('show');
+                        if (btn) btn.classList.remove('open');
+                    } else {
+                        menu.classList.add('show');
+                        if (btn) btn.classList.add('open');
+                    }
+                }
+
+                async function switchUserLocation(locationId, locationName) {
+                    const menu = document.getElementById('headerLocationMenu');
+                    const btn = document.getElementById('headerLocationBtn');
+                    if (menu) menu.classList.remove('show');
+                    if (btn) btn.classList.remove('open');
+
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Switching Location...',
+                            html: `Switching active branch to <strong>${locationName}</strong>`,
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                    }
+
+                    try {
+                        const res = await fetch('/api/user/switch-location', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ locationId })
+                        });
+
+                        const data = await res.json();
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: data.error || 'Failed to switch location'
+                                });
+                            } else {
+                                alert(data.error || 'Failed to switch location');
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error switching location:', err);
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Network Error',
+                                text: 'Could not contact server.'
+                            });
+                        } else {
+                            alert('Could not contact server.');
+                        }
+                    }
+                }
+
+                document.addEventListener('click', function(e) {
+                    const locDropdown = document.getElementById('headerLocationMenu');
+                    const locBtn = document.getElementById('headerLocationBtn');
+                    if (locDropdown && locBtn && !locBtn.contains(e.target) && !locDropdown.contains(e.target)) {
+                        locDropdown.classList.remove('show');
+                        locBtn.classList.remove('open');
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        const locDropdown = document.getElementById('headerLocationMenu');
+                        const locBtn = document.getElementById('headerLocationBtn');
+                        if (locDropdown) locDropdown.classList.remove('show');
+                        if (locBtn) locBtn.classList.remove('open');
+                    }
+                });
+            </script>
 
             <div class="main-body">
                 <!-- Sidebar -->

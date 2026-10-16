@@ -127,6 +127,13 @@
             if (notifDropdown && notifBtn && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
                 notifDropdown.classList.remove('show');
             }
+
+            const locDropdown = document.getElementById('headerLocationMenu');
+            const locBtn = document.getElementById('headerLocationBtn');
+            if (locDropdown && locBtn && !locBtn.contains(e.target) && !locDropdown.contains(e.target)) {
+                locDropdown.classList.remove('show');
+                locBtn.classList.remove('open');
+            }
         });
 
         // 20-Minute (1200 seconds) Client-Side Inactivity Auto-Logout
