@@ -93,8 +93,21 @@
                                             <span class="loc-count-pill"><%= availableLocations.length %> branches</span>
                                         </div>
                                         <div class="loc-menu-list">
+                                            <% if (user.role === 'admin' || user.username === 'admin') { 
+                                                const isAllActive = user.locationId === 'all';
+                                            %>
+                                                <div class="loc-menu-item <%= isAllActive ? 'active' : '' %>" role="button" tabindex="0" onclick="switchUserLocation('all', 'All Locations (Global)')" style="border-bottom: 1px dashed rgba(0,0,0,0.1); margin-bottom: 4px; padding-bottom: 8px;">
+                                                    <div class="loc-item-left">
+                                                        <span class="loc-item-dot <%= isAllActive ? 'loc-item-dot-active' : '' %>" style="background: <%= isAllActive ? '#10b981' : '#64748b' %>;"></span>
+                                                        <span class="loc-item-name" style="font-weight: 700;">🌐 All Locations (Global)</span>
+                                                    </div>
+                                                    <% if (isAllActive) { %>
+                                                        <span class="loc-active-tag"><i class="fa-solid fa-check"></i> Active</span>
+                                                    <% } %>
+                                                </div>
+                                            <% } %>
                                             <% availableLocations.forEach(loc => { 
-                                                const isCurrent = String(user.locationId) === String(loc.id) || (!user.locationId && loc.id === 'main');
+                                                const isCurrent = (String(user.locationId) === String(loc.id)) || (!user.locationId && loc.id === 'main');
                                             %>
                                                 <div class="loc-menu-item <%= isCurrent ? 'active' : '' %>" role="button" tabindex="0" onclick="switchUserLocation('<%= loc.id %>', '<%= loc.name.replace(/'/g, "\\'") %>')">
                                                     <div class="loc-item-left">

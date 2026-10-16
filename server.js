@@ -213,6 +213,40 @@ const permissionAliases = {
     'backdate_records': ['backdate_records', 'transactions_backdate', 'stock_transfers_backdate', 'receive_stock_backdate']
 };
 
+// Helper for Mongo location filter in server routes
+const getBranchFilter = (userLoc, field = 'locationId') => {
+    if (!userLoc || userLoc === 'all') return null;
+    if (userLoc === 'main') {
+        return {
+            $or: [
+                { [field]: 'main' },
+                { [field]: null },
+                { [field]: { $exists: false } }
+            ]
+        };
+    }
+    return { [field]: userLoc };
+};
+
+const applyBranchFilter = (query, userLoc, field = 'locationId') => {
+    const bf = getBranchFilter(userLoc, field);
+    if (!bf) return;
+    if (bf.$or) {
+        if (query.$or) {
+            const oldOr = query.$or;
+            delete query.$or;
+            query.$and = query.$and || [];
+            query.$and.push({ $or: oldOr }, bf);
+        } else if (query.$and) {
+            query.$and.push(bf);
+        } else {
+            Object.assign(query, bf);
+        }
+    } else {
+        Object.assign(query, bf);
+    }
+};
+
 // Global view variables
 app.use(async (req, res, next) => {
     let locationName = 'Head Office';
@@ -222,8 +256,12 @@ app.use(async (req, res, next) => {
 
     if (req.session.user) {
         try {
-            const loc = await Location.getById(req.session.user.locationId || 'main');
-            if (loc) locationName = loc.name;
+            if (req.session.user.locationId === 'all') {
+                locationName = 'All Locations (Global)';
+            } else {
+                const loc = await Location.getById(req.session.user.locationId || 'main');
+                if (loc) locationName = loc.name;
+            }
         } catch (e) {
             console.error('Error loading user location name:', e);
         }
@@ -519,25 +557,35 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
         // Warehouse (Branch) Stats
         const myLocationId = req.session.user.locationId;
-        const myLocation = await Location.getById(myLocationId);
-        const warehouseCurrentBalance = myLocation ? myLocation.currentStock : 0;
-        
-        const allTransfers = await StockTransfer.getAll(myLocationId, 'user'); // Force 'user' role to get only this location's transfers
+        let warehouseCurrentBalance = 0;
         let totalTransferQty = 0;
         let totalGRNQty = 0;
-        
-        allTransfers.forEach(t => {
-            if (t.fromLocationId === myLocationId) {
-                totalTransferQty += t.dispatchedQty;
-            }
-            if (t.toLocationId === myLocationId && t.status === 'ACCEPTED') {
-                totalGRNQty += t.receivedQty || 0;
-            }
-        });
+
+        if (myLocationId === 'all') {
+            const allLocs = await Location.getAll();
+            warehouseCurrentBalance = allLocs.reduce((sum, l) => sum + (l.currentStock || 0), 0);
+            const allTransfers = await StockTransfer.getAll('all');
+            allTransfers.forEach(t => {
+                totalTransferQty += t.dispatchedQty || 0;
+                if (t.status === 'ACCEPTED') totalGRNQty += t.receivedQty || 0;
+            });
+        } else {
+            const myLocation = await Location.getById(myLocationId || 'main');
+            warehouseCurrentBalance = myLocation ? (myLocation.currentStock || 0) : 0;
+            const allTransfers = await StockTransfer.getAll(myLocationId || 'main');
+            allTransfers.forEach(t => {
+                if (t.fromLocationId === myLocationId) {
+                    totalTransferQty += t.dispatchedQty;
+                }
+                if (t.toLocationId === myLocationId && t.status === 'ACCEPTED') {
+                    totalGRNQty += t.receivedQty || 0;
+                }
+            });
+        }
         
         let warehouseOpeningBalance = warehouseCurrentBalance + totalTransferQty - totalGRNQty;
         const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-        const manualBalance = await MonthlyBalance.getByMonth(myLocationId, currentMonth);
+        const manualBalance = await MonthlyBalance.getByMonth(myLocationId || 'main', currentMonth);
         let isManualBalance = false;
         if (manualBalance) {
             warehouseOpeningBalance = manualBalance.openingBalance;
@@ -578,7 +626,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             }
         });
 
-        const alerts = await Customer.getAlerts();
+        const alerts = await Customer.getAlerts(req.session.user.locationId);
         const allLocations = await Location.getAll();
         const allCustomersForLocations = await CustomerModel.find({}).lean();
 
@@ -586,7 +634,10 @@ app.get('/dashboard', requireAuth, async (req, res) => {
         let totalAllBranchStock = 0;
         allLocations.forEach(loc => {
             const branchCustBalance = allCustomersForLocations
-                .filter(c => String(c.locationId) === String(loc.id))
+                .filter(c => {
+                    const cLoc = c.locationId || 'main';
+                    return String(cLoc) === String(loc.id);
+                })
                 .reduce((sum, c) => sum + (c.currentBalance || 0), 0);
             loc.totalBranchStock = (loc.currentStock || 0) + branchCustBalance;
             loc.customerBalance = branchCustBalance;
@@ -660,6 +711,24 @@ app.post('/api/user/switch-location', requireAuth, async (req, res) => {
         const { locationId } = req.body;
         if (!locationId) {
             return res.status(400).json({ success: false, error: 'Location ID is required' });
+        }
+
+        if (locationId === 'all') {
+            req.session.user.locationId = 'all';
+            req.session.user.locationName = 'All Locations (Global)';
+            await new Promise((resolve, reject) => {
+                req.session.save((err) => {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+            await ActivityLog.log(
+                currentUser.username, 
+                'UPDATE', 
+                'UserLocation', 
+                `Switched active view to All Locations (Global)`
+            );
+            return res.json({ success: true, message: 'Switched to All Locations', location: { id: 'all', name: 'All Locations (Global)' } });
         }
 
         const targetLocation = await Location.getById(locationId);
@@ -1015,7 +1084,8 @@ app.post('/customers', requireEditAccess, async (req, res) => {
         return res.render('customers', { customers, editCustomer: null, error: 'Phone number must be exactly 10 digits!' });
     }
     try {
-        const newCustomer = await Customer.create({ name, address, phone, initialBalance, initialDeposit: initialDeposit || depositAmount });
+        const customerLoc = (req.session.user && req.session.user.locationId && req.session.user.locationId !== 'all') ? req.session.user.locationId : 'main';
+        const newCustomer = await Customer.create({ name, address, phone, initialBalance, initialDeposit: initialDeposit || depositAmount, locationId: customerLoc });
         await ActivityLog.log(req.session.user.username, 'CREATE', 'Customer', `Added customer: ${newCustomer.name}`);
         if (isAjax) return res.json({ success: true, message: 'Customer created successfully', data: newCustomer });
         res.redirect('/customers');
@@ -1075,7 +1145,8 @@ app.post('/customers/import', requireEditAccess, upload.single('excelFile'), asy
             const exists = existing.find(c => c.phone === phone || c.name.toLowerCase() === name.toLowerCase());
             
             if (!exists) {
-                await Customer.create({ name, address, phone, initialBalance, initialDeposit: depositAmount });
+                const customerLoc = (req.session.user && req.session.user.locationId && req.session.user.locationId !== 'all') ? req.session.user.locationId : 'main';
+                await Customer.create({ name, address, phone, initialBalance, initialDeposit: depositAmount, locationId: customerLoc });
                 successCount++;
             } else {
                 skipCount++;
@@ -2923,9 +2994,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (startDate) txQuery.date.$gte = startDate + "T00:00:00";
             if (endDate) txQuery.date.$lte = endDate + "T23:59:59";
         }
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            txQuery.locationId = req.session.user.locationId;
-        }
+        const userLoc = req.session.user.locationId;
+        applyBranchFilter(txQuery, userLoc, 'locationId');
         txQuery.isDeleted = { $ne: true };
         
         // Use lean() for faster queries if we had raw mongoose, but we'll use find
@@ -2951,14 +3021,14 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         let dateFilteredRecQuery = { ...recQuery };
         let dateFilteredDmgQuery = { ...dmgQuery };
 
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            tfrQuery.fromLocationId = req.session.user.locationId;
-            recQuery.toLocationId = req.session.user.locationId;
-            dmgQuery.locationId = req.session.user.locationId;
+        if (userLoc && userLoc !== 'all') {
+            tfrQuery.fromLocationId = userLoc;
+            recQuery.toLocationId = userLoc;
+            applyBranchFilter(dmgQuery, userLoc, 'locationId');
 
-            dateFilteredTfrQuery.fromLocationId = req.session.user.locationId;
-            dateFilteredRecQuery.toLocationId = req.session.user.locationId;
-            dateFilteredDmgQuery.locationId = req.session.user.locationId;
+            dateFilteredTfrQuery.fromLocationId = userLoc;
+            dateFilteredRecQuery.toLocationId = userLoc;
+            applyBranchFilter(dateFilteredDmgQuery, userLoc, 'locationId');
         }
 
         // Apply date range filters if provided
@@ -3000,9 +3070,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
 
         // Query Lorry Trips for Loading & Unloading Reports
         let tripReportQuery = { isDeleted: { $ne: true } };
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            tripReportQuery.locationId = req.session.user.locationId;
-        }
+        applyBranchFilter(tripReportQuery, userLoc, 'locationId');
 
         let dateFilteredLoadingQuery = { ...tripReportQuery };
         let dateFilteredUnloadingQuery = { ...tripReportQuery, status: { $in: ['COMPLETED', 'CANCELLED'] } };
@@ -3066,24 +3134,23 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         // Build Warehouse Tray Balance Ledger (Date, Stock Transfer No, GRN No, Opening Balance, Dispatched Qty, GRN Qty, Closing Balance)
         // Fetch all non-deleted transfers to compute complete running balances
         let allTransfersQuery = { isDeleted: false };
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
+        if (userLoc && userLoc !== 'all') {
             allTransfersQuery = {
                 isDeleted: false,
                 $or: [
-                    { fromLocationId: req.session.user.locationId },
-                    { toLocationId: req.session.user.locationId }
+                    { fromLocationId: userLoc },
+                    { toLocationId: userLoc }
                 ]
             };
         }
         const allTransfers = await StockTransferModel.find(allTransfersQuery).sort({ dispatchedDate: 1 }).lean().catch(() => []);
 
         let warehouseEvents = [];
-        const userLoc = req.session.user.locationId;
 
         allTransfers.forEach(t => {
             if (t.isDeleted) return;
-            const isFromLoc = !userLoc || t.fromLocationId === userLoc || req.session.user.role === 'admin';
-            const isToLoc = !userLoc || t.toLocationId === userLoc || req.session.user.role === 'admin';
+            const isFromLoc = !userLoc || userLoc === 'all' || t.fromLocationId === userLoc;
+            const isToLoc = !userLoc || userLoc === 'all' || t.toLocationId === userLoc;
 
             const dispatchDate = t.dispatchedDate || t.createdDate || t.date || (t._id && !isNaN(Number(t._id)) ? Number(t._id) : null);
             const receiveDate = t.receivedDate || t.dispatchedDate || t.createdDate || t.date || (t._id && !isNaN(Number(t._id)) ? Number(t._id) : null);
@@ -3200,9 +3267,8 @@ app.get('/api/customers/:id/transactions', requireAuth, async (req, res) => {
         const { TransactionModel } = require('./db');
         
         let txQuery = { customerId, isDeleted: { $ne: true } };
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            txQuery.locationId = req.session.user.locationId;
-        }
+        const userLoc = req.session.user.locationId;
+        applyBranchFilter(txQuery, userLoc, 'locationId');
 
         const rawTxs = await TransactionModel.find(txQuery).sort({ date: 1 }).lean();
         const txs = rawTxs.map(t => ({ ...t, id: t._id }));
@@ -3226,9 +3292,8 @@ app.get('/reports/export/damages-csv', requireAuth, async (req, res) => {
             if (startDate) dmgQuery.date = { $gte: new Date(startDate + "T00:00:00") };
             if (endDate) dmgQuery.date = { ...dmgQuery.date, $lte: new Date(endDate + "T23:59:59") };
         }
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            dmgQuery.locationId = req.session.user.locationId;
-        }
+        const userLoc = req.session.user.locationId;
+        applyBranchFilter(dmgQuery, userLoc, 'locationId');
         
         const logs = await DamageLogModel.find(dmgQuery).sort({ date: -1 }).limit(10000).lean();
         
@@ -3302,7 +3367,7 @@ app.get('/api/reports/master-export', requireAuth, async (req, res) => {
         // Filter out Dispatches (from this location) and GRNs (to this location)
         // If admin, everything is visible, so we'll just sort by Dispatch vs Receive logic based on the user's location,
         // OR we can just list all transfers and include the 'Status' and 'Type' (Outward / Inward).
-        const transferData = allTransfers.filter(t => userRole === 'admin' || t.fromLocationId === userLoc).map(t => ({
+        const transferData = allTransfers.filter(t => (!userLoc || userLoc === 'all') || t.fromLocationId === userLoc).map(t => ({
             "Date": new Date(t.dispatchedDate).toLocaleDateString(),
             "Time": new Date(t.dispatchedDate).toLocaleTimeString(),
             "Doc No": t.transferDocNo || '',
@@ -3321,7 +3386,7 @@ app.get('/api/reports/master-export', requireAuth, async (req, res) => {
             if (startDate) grnQuery.receivedDate.$gte = new Date(startDate + "T00:00:00");
             if (endDate) grnQuery.receivedDate.$lte = new Date(endDate + "T23:59:59");
         }
-        if (userRole !== 'admin' && userLoc) {
+        if (userLoc && userLoc !== 'all') {
             grnQuery.toLocationId = userLoc;
         }
 
@@ -3347,9 +3412,7 @@ app.get('/api/reports/master-export', requireAuth, async (req, res) => {
             if (startDate) txQuery.date.$gte = startDate + "T00:00:00";
             if (endDate) txQuery.date.$lte = endDate + "T23:59:59";
         }
-        if (userRole !== 'admin' && userLoc) {
-            txQuery.locationId = userLoc;
-        }
+        applyBranchFilter(txQuery, userLoc, 'locationId');
         txQuery.isDeleted = { $ne: true };
         
         const periodTransactionsRaw = await TransactionModel.find(txQuery).sort({ date: -1 }).limit(10000).lean();
@@ -3410,9 +3473,8 @@ app.get('/reports/export/transactions-csv', requireAuth, async (req, res) => {
             if (startDate) txQuery.date.$gte = startDate + "T00:00:00";
             if (endDate) txQuery.date.$lte = endDate + "T23:59:59";
         }
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            txQuery.locationId = req.session.user.locationId;
-        }
+        const userLoc = req.session.user.locationId;
+        applyBranchFilter(txQuery, userLoc, 'locationId');
         txQuery.isDeleted = { $ne: true };
         
         // Use cursor or lean for very large data, here lean() and mapping to normal format.
@@ -3450,8 +3512,9 @@ app.get('/reports/export/transfers-csv', requireAuth, async (req, res) => {
             if (startDate) tfrQuery.dispatchedDate = { $gte: parseLocalDatetime(startDate + "T00:00:00") };
             if (endDate) tfrQuery.dispatchedDate = { ...tfrQuery.dispatchedDate, $lte: parseLocalDatetime(endDate + "T23:59:59") };
         }
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            tfrQuery.fromLocationId = req.session.user.locationId;
+        const userLoc = req.session.user.locationId;
+        if (userLoc && userLoc !== 'all') {
+            tfrQuery.fromLocationId = userLoc;
         }
         
         const transfers = await StockTransferModel.find(tfrQuery).sort({ dispatchedDate: -1 }).limit(10000).lean();
@@ -3483,8 +3546,9 @@ app.get('/reports/export/received-csv', requireAuth, async (req, res) => {
             if (startDate) recQuery.receivedDate = { $gte: parseLocalDatetime(startDate + "T00:00:00") };
             if (endDate) recQuery.receivedDate = { ...recQuery.receivedDate, $lte: parseLocalDatetime(endDate + "T23:59:59") };
         }
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            recQuery.toLocationId = req.session.user.locationId;
+        const userLoc = req.session.user.locationId;
+        if (userLoc && userLoc !== 'all') {
+            recQuery.toLocationId = userLoc;
         }
         
         const transfers = await StockTransferModel.find(recQuery).sort({ receivedDate: -1 }).limit(10000).lean();
@@ -3517,9 +3581,8 @@ app.get('/reports/export/loading-csv', requireAuth, async (req, res) => {
             if (endDate) dCond.$lte = parseLocalDatetime(endDate + "T23:59:59");
             tripQuery.dispatchedDate = dCond;
         }
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            tripQuery.locationId = req.session.user.locationId;
-        }
+        const userLoc = req.session.user.locationId;
+        applyBranchFilter(tripQuery, userLoc, 'locationId');
         
         const trips = await LorryTripModel.find(tripQuery).sort({ dispatchedDate: -1 }).limit(10000).lean();
         const locations = await LocationModel.find({}).lean().catch(() => []);
@@ -3558,9 +3621,8 @@ app.get('/reports/export/unloading-csv', requireAuth, async (req, res) => {
                 { returnedDate: { $exists: false }, dispatchedDate: dCond }
             ];
         }
-        if (req.session.user.role !== 'admin' && req.session.user.locationId) {
-            tripQuery.locationId = req.session.user.locationId;
-        }
+        const userLoc = req.session.user.locationId;
+        applyBranchFilter(tripQuery, userLoc, 'locationId');
         
         const trips = await LorryTripModel.find(tripQuery).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(10000).lean();
         const locations = await LocationModel.find({}).lean().catch(() => []);
@@ -4034,7 +4096,7 @@ Examples:
 app.get('/damages', requireAuth, async (req, res) => {
     try {
         const currentUser = req.session.user;
-        const userLocId = currentUser.role === 'admin' || currentUser.username === 'admin' ? null : currentUser.locationId;
+        const userLocId = currentUser.locationId;
         const logs = await DamageLog.getAll(userLocId);
         const locations = await Location.getAll();
         res.render('damages', {

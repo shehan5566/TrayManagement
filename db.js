@@ -299,6 +299,21 @@ const mapDoc = (doc) => {
     return obj;
 };
 
+// Helper function to build location isolation filter for Mongo queries
+const getLocationFilter = (locationId, fieldName = 'locationId') => {
+    if (!locationId || locationId === 'all') return null;
+    if (locationId === 'main') {
+        return {
+            $or: [
+                { [fieldName]: 'main' },
+                { [fieldName]: null },
+                { [fieldName]: { $exists: false } }
+            ]
+        };
+    }
+    return { [fieldName]: locationId };
+};
+
 // Helper function to generate location-specific document numbers
 const generateDocNo = async (locationCode, type) => {
     // type: 'TFR' or 'GRN'
@@ -358,11 +373,15 @@ const StockTransfer = {
     getAll: async (locationId = null, role = 'user', queryParams = {}) => {
         let filter = { isDeleted: { $ne: true } };
 
-        if (role !== 'admin' && locationId) {
-            filter.$or = [
-                { fromLocationId: locationId },
-                { toLocationId: locationId }
-            ];
+        if (locationId && locationId !== 'all') {
+            if (queryParams.page === 'receive') {
+                filter.toLocationId = locationId;
+            } else {
+                filter.$or = [
+                    { fromLocationId: locationId },
+                    { toLocationId: locationId }
+                ];
+            }
         }
 
         if (queryParams.startDate || queryParams.endDate) {
@@ -587,11 +606,15 @@ const StockTransfer = {
 
 // Customers CRUD
 const Customer = {
-    getPendingDepositsMap: async (endDateStr = null) => {
+    getPendingDepositsMap: async (endDateStr = null, locationId = null) => {
         const settings = await SystemSettingModel.findById('global_config').lean();
         const defaultRate = (settings && settings.depositPerTray) ? Number(settings.depositPerTray) : 2000;
 
-        const allCustomers = await CustomerModel.find({}).lean();
+        let custFilter = {};
+        const custLocFilter = getLocationFilter(locationId, 'locationId');
+        if (custLocFilter) Object.assign(custFilter, custLocFilter);
+
+        const allCustomers = await CustomerModel.find(custFilter).lean();
         const pendingDepositMap = {};
         allCustomers.forEach(c => {
             const initBal = Number(c.initialBalance) || 0;
@@ -604,6 +627,15 @@ const Customer = {
         if (endDateStr) {
             const endTimestamp = new Date(endDateStr + 'T23:59:59').getTime();
             txFilter.date = { $lte: new Date(endTimestamp) };
+        }
+        const txLocFilter = getLocationFilter(locationId, 'locationId');
+        if (txLocFilter) {
+            if (txLocFilter.$or) {
+                txFilter.$and = txFilter.$and || [];
+                txFilter.$and.push(txLocFilter);
+            } else {
+                Object.assign(txFilter, txLocFilter);
+            }
         }
 
         const allTransactions = await TransactionModel.find(txFilter).lean();
@@ -641,15 +673,15 @@ const Customer = {
     },
     getAll: async (locationId = null, role = 'user', includePendingDeposit = false) => {
         let filter = {};
-        // If not global admin and a locationId is provided, filter by location
-        if (role !== 'admin' && locationId) {
-            filter.locationId = locationId;
+        const locFilter = getLocationFilter(locationId, 'locationId');
+        if (locFilter) {
+            Object.assign(filter, locFilter);
         }
         const customers = await CustomerModel.find(filter).lean();
         const mapped = customers.map(mapDoc);
 
         if (includePendingDeposit) {
-            const pendingMap = await Customer.getPendingDepositsMap();
+            const pendingMap = await Customer.getPendingDepositsMap(null, locationId);
             mapped.forEach(c => {
                 const p = pendingMap[String(c.id || c._id)];
                 c.pendingDeposit = (p && p > 0) ? p : 0;
@@ -785,11 +817,25 @@ const Customer = {
             await customer.save();
         }
     },
-    getAlerts: async () => {
+    getAlerts: async (locationId = null) => {
         const thresholdDays = 7; // 1 week
         const thresholdQty = 50; // 50 trays
 
-        const customers = await CustomerModel.find({ currentBalance: { $gt: 0 } });
+        let query = { currentBalance: { $gt: 0 } };
+        const locFilter = getLocationFilter(locationId, 'locationId');
+        if (locFilter) {
+            if (locFilter.$or) {
+                query.$and = [
+                    { currentBalance: { $gt: 0 } },
+                    locFilter
+                ];
+                delete query.currentBalance;
+            } else {
+                Object.assign(query, locFilter);
+            }
+        }
+
+        const customers = await CustomerModel.find(query);
         const alerts = [];
         const now = new Date();
 
@@ -832,8 +878,18 @@ const Customer = {
         const startTimestamp = startDateStr ? new Date(startDateStr + 'T00:00:00').getTime() : 0;
         const endTimestamp = endDateStr ? new Date(endDateStr + 'T23:59:59').getTime() : Date.now() + 100 * 365 * 24 * 60 * 60 * 1000;
 
+        let txMatch = { isDeleted: { $ne: true } };
+        const txLocFilter = getLocationFilter(locationId, 'locationId');
+        if (txLocFilter) {
+            if (txLocFilter.$or) {
+                txMatch.$and = [txLocFilter];
+            } else {
+                Object.assign(txMatch, txLocFilter);
+            }
+        }
+
         const agg = await TransactionModel.aggregate([
-            { $match: { isDeleted: { $ne: true } } },
+            { $match: txMatch },
             {
                 $addFields: {
                     txDate: { $toDate: "$date" }
@@ -859,11 +915,12 @@ const Customer = {
             txStatsMap[stat._id] = stat;
         });
 
-        const pendingMap = await Customer.getPendingDepositsMap(endDateStr);
+        const pendingMap = await Customer.getPendingDepositsMap(endDateStr, locationId);
 
         let filter = {};
-        if (role !== 'admin' && locationId) {
-            filter.locationId = locationId;
+        const custLocFilter = getLocationFilter(locationId, 'locationId');
+        if (custLocFilter) {
+            Object.assign(filter, custLocFilter);
         }
         const customers = await CustomerModel.find(filter).lean();
         const customerBalances = customers.map(c => {
@@ -900,8 +957,14 @@ const Customer = {
 const Transaction = {
     getAll: async (locationId = null, role = 'user') => {
         let filter = { isDeleted: { $ne: true } };
-        if (role !== 'admin' && locationId) {
-            filter.locationId = locationId;
+        const locFilter = getLocationFilter(locationId, 'locationId');
+        if (locFilter) {
+            if (locFilter.$or) {
+                filter.$and = filter.$and || [];
+                filter.$and.push(locFilter);
+            } else {
+                Object.assign(filter, locFilter);
+            }
         }
         const transactions = await TransactionModel.find(filter).lean();
         return transactions.map(mapDoc);
@@ -916,8 +979,18 @@ const Transaction = {
                 { user: { $regex: search, $options: 'i' } }
             ];
         }
-        if (role !== 'admin' && locationId) {
-            query.locationId = locationId;
+        const locFilter = getLocationFilter(locationId, 'locationId');
+        if (locFilter) {
+            if (query.$or) {
+                const searchOr = query.$or;
+                delete query.$or;
+                query.$and = [
+                    { $or: searchOr },
+                    locFilter
+                ];
+            } else {
+                Object.assign(query, locFilter);
+            }
         }
         const total = await TransactionModel.countDocuments(query);
         const skip = (page - 1) * limit;
@@ -1371,7 +1444,11 @@ const Role = {
 
 const DamageLog = {
     getAll: async (locationId = null) => {
-        const query = (locationId && locationId !== 'main') ? { locationId } : {};
+        let query = {};
+        const locFilter = getLocationFilter(locationId, 'locationId');
+        if (locFilter) {
+            Object.assign(query, locFilter);
+        }
         const logs = await DamageLogModel.find(query).sort({ date: -1 });
         return logs.map(mapDoc);
     },
@@ -1644,8 +1721,14 @@ const ApprovalRequest = {
 const LorryTrip = {
     getAll: async (locationId = null, role = 'user', queryParams = {}) => {
         let filter = { isDeleted: false };
-        if (role !== 'admin' && locationId) {
-            filter.locationId = locationId;
+        const locFilter = getLocationFilter(locationId, 'locationId');
+        if (locFilter) {
+            if (locFilter.$or) {
+                filter.$and = filter.$and || [];
+                filter.$and.push(locFilter);
+            } else {
+                Object.assign(filter, locFilter);
+            }
         }
 
         if (queryParams.startDate || queryParams.endDate) {
@@ -1658,11 +1741,19 @@ const LorryTrip = {
             }
 
             if (queryParams.page === 'unloading') {
-                filter.$or = [
+                const unloadingOr = [
                     { status: 'ON_ROUTE' },
                     { status: { $in: ['COMPLETED', 'CANCELLED'] }, returnedDate: dateCondition },
                     { status: { $in: ['COMPLETED', 'CANCELLED'] }, returnedDate: { $exists: false }, dispatchedDate: dateCondition }
                 ];
+                if (filter.$and) {
+                    filter.$and.push({ $or: unloadingOr });
+                } else if (filter.$or) {
+                    filter.$and = [{ $or: filter.$or }, { $or: unloadingOr }];
+                    delete filter.$or;
+                } else {
+                    filter.$or = unloadingOr;
+                }
             } else {
                 filter.dispatchedDate = dateCondition;
             }
