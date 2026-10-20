@@ -3,7 +3,7 @@
     --primary-green-light: #2c6e49;
     --primary-green-dark: #0f3025;
     --accent-yellow: #ffc300;
-    --accent-yellow-light: #ffea79;
+    --accent-yellow-light: #f6d365;
     --bg-light: #f4f7f6;
     --white: #ffffff;
     --text-dark: #2b2d42;
@@ -15,7 +15,7 @@
     --brand-green: #174e3e;
     --brand-green-dark: #0f3025;
     --brand-yellow: #ffc300;
-    --brand-yellow-light: #ffea79;
+    --brand-yellow-light: #f6d365;
 
     accent-color: var(--brand-green);
 
@@ -794,13 +794,20 @@ body {
     letter-spacing: 0.5px;
     margin: 0;
     white-space: nowrap;
+    font-weight: 800;
 }
 
-.brand-text p {
-    font-size: 12px;
-    color: var(--brand-yellow-light);
+.brand-text p,
+.brand-text .brand-subtitle {
+    font-size: 11.5px;
+    color: var(--brand-yellow-light, #f6d365);
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin: 2px 0 0 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    opacity: 1;
 }
 
 .sidebar-menu {
@@ -1935,8 +1942,10 @@ footer strong {
         font-size: 15px;
     }
 
-    .brand-text p {
-        font-size: 9px;
+    .brand-text p,
+    .brand-text .brand-subtitle {
+        font-size: 10px;
+        letter-spacing: 0.4px;
     }
 
     nav ul {
@@ -1971,8 +1980,10 @@ footer strong {
         font-size: 14px;
     }
 
-    .top-header .brand-text p {
-        font-size: 9px;
+    .top-header .brand-text p,
+    .top-header .brand-text .brand-subtitle {
+        font-size: 9.5px;
+        letter-spacing: 0.3px;
     }
 
     .mobile-topbar {
