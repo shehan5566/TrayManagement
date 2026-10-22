@@ -12,7 +12,7 @@
 <% } %>
 
 <!-- 1. Dispatch Lorry (Load Trays) -->
-<% if (typeof hasPerm !== 'function' || hasPerm('transactions_create')) { %>
+<% if (typeof hasPerm !== 'function' || hasPerm('loading_create') || hasPerm('transactions_create')) { %>
 <div class="content-box" style="border-top: 4px solid var(--primary-green);">
     <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <span class="box-title"><i class="fa-solid fa-truck-loading"></i> Loading</span>
@@ -165,15 +165,17 @@
                             </td>
                             <td style="text-align: center; white-space: nowrap;">
                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content; white-space: nowrap;">
+                                    <% if (typeof hasPerm !== 'function' || hasPerm('loading_print')) { %>
                                     <a href="/loading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Loading Note">
                                         <i class="fa-solid fa-print"></i> Print
                                     </a>
-                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('transactions_edit')))) { %>
+                                    <% } %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('loading_edit') || hasPerm('transactions_edit'))))) { %>
                                         <button onclick='openEditModal(<%- JSON.stringify(t).replace(/'/g, "\\'") %>)' class="btn btn-action-edit" title="Edit Loading Record" type="button">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
                                     <% } %>
-                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('transactions_delete') || hasPerm('delete_records'))))) { %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('loading_delete') || hasPerm('transactions_delete') || hasPerm('delete_records'))))) { %>
                                         <form action="/loading/<%= t.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'loading record')" style="display: inline-flex; margin: 0; padding: 0;">
                                             <button type="submit" class="btn btn-action-delete" title="Delete Record">
                                                 <i class="fa-solid fa-trash"></i>

@@ -65,7 +65,7 @@
 
 <!-- Create/Edit Role Modal -->
 <div id="roleModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-    <div class="modal-content" style="background-color: #fefefe; margin: 40px auto; padding: 25px; border-radius: 8px; width: 95%; max-width: 900px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+    <div class="modal-content" style="background-color: #fefefe; margin: 40px auto; padding: 25px; border-radius: 8px; width: 95%; max-width: 960px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
             <h3 id="roleModalTitle" style="margin: 0; color: var(--primary-green-dark);"><i class="fa-solid fa-layer-group"></i> Create User Role</h3>
             <span onclick="closeRoleModal()" style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
@@ -161,93 +161,146 @@
                 </div>
                 <div class="permissions-grid">
                         
-                        <!-- 1. Transactions (In/Out) -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">1. Transactions (In/Out)</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_view"> View</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_edit"> Edit</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_create"> Create</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_delete"> Delete</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_backdate"> Backdate</label>
-                            </div>
+                    <!-- 1. Transactions (In/Out) -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-right-left"></i> 1. Transactions (In/Out)</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_view"> View</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_create"> Create</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_edit"> Edit</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_delete"> Delete</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="transactions_backdate"> Backdate</label>
                         </div>
-
-                        <!-- 2. Stock Transfers -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">2. Stock Transfers</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_view"> View</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_edit"> Edit</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_create"> Create</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_delete"> Delete</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_backdate"> Backdate</label>
-                            </div>
-                        </div>
-
-                        <!-- 3. Receive stock -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">3. Receive stock</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_view"> View</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_edit"> Edit</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_approve"> Approve</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_delete"> Delete</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_backdate"> Backdate</label>
-                            </div>
-                        </div>
-
-                        <!-- 4. Administration -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">4. Administration</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="admin_view_logs"> View Logs</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="admin_branches_users"> Branches & Users</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="admin_roles"> Roles</label>
-                            </div>
-                        </div>
-
-                        <!-- 5. Dashboards & Reports -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">5. Dashboards & Reports</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="reports_view"> View Reports</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="reports_send_manually"> Send Report Manually</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="dashboard_main"> Main Dashboard</label>
-                            </div>
-                        </div>
-
-                        <!-- 6. Opening Balance (Warehouse) -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">6. Opening Balance (Warehouse)</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="opening_balance_edit"> Edit</label>
-                            </div>
-                        </div>
-
-                        <!-- 7. Action Required -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">7. Action Required</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="action_sms"> SMS</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="action_view_history"> View History</label>
-                            </div>
-                        </div>
-
-                        <!-- 8. Customer Management -->
-                        <div class="perm-category">
-                            <div class="perm-category-title">8. Customer Management</div>
-                            <div class="perm-tags-container">
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_view"> View</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_edit"> Edit</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_create"> Create</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_delete"> Delete</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_sms"> SMS</label>
-                                <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_history"> History</label>
-                            </div>
-                        </div>
-
                     </div>
+
+                    <!-- 2. Stock Transfers -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-truck-fast"></i> 2. Stock Transfers</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_view"> View</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_create"> Create</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_edit"> Edit</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_delete"> Delete</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="stock_transfers_backdate"> Backdate</label>
+                        </div>
+                    </div>
+
+                    <!-- 3. Receive stock (GRN) -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-boxes-packing"></i> 3. Receive stock (GRN)</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_view"> View</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_approve"> Approve / Receive</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_edit"> Edit</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_delete"> Delete</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="receive_stock_backdate"> Backdate</label>
+                        </div>
+                    </div>
+
+                    <!-- 4. Lorry Loading (Dispatch) -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-truck-loading"></i> 4. Lorry Loading (Dispatch)</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="loading_view"> View</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="loading_create"> Create / Dispatch</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="loading_edit"> Edit</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="loading_delete"> Delete</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="loading_print"> Print Gate Pass</label>
+                        </div>
+                    </div>
+
+                    <!-- 5. Lorry Unloading (Collection) -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-truck-ramp-box"></i> 5. Lorry Unloading (Reconcile)</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="unloading_view"> View</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="unloading_create"> Unload / Settle</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="unloading_edit"> Edit</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="unloading_delete"> Delete</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="unloading_print"> Print Note</label>
+                        </div>
+                    </div>
+
+                    <!-- 6. Damage & Audit Adjustments -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-boxes-stacked"></i> 6. Damage & Audit Logs</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="damages_view"> View</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="damages_create"> Log Damage / Loss</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="damages_edit"> Edit</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="damages_delete"> Delete</label>
+                        </div>
+                    </div>
+
+                    <!-- 7. Customer Management -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-users"></i> 7. Customer Management</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_view"> View</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_create"> Create</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_edit"> Edit</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_delete"> Delete</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_sms"> SMS Alert</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="customer_history"> History Log</label>
+                        </div>
+                    </div>
+
+                    <!-- 8. Dashboards & Analytics -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-chart-line"></i> 8. Dashboards & Analytics</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="dashboard_main"> Main Dashboard</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="analytics_view"> Analytics & Trends</label>
+                        </div>
+                    </div>
+
+                    <!-- 9. Reports & Exports -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-file-invoice"></i> 9. Reports & Exports</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="reports_view"> View Reports</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="reports_send_manually"> Send Report Manually</label>
+                        </div>
+                    </div>
+
+                    <!-- 10. Special Approvals & Overdraft -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-shield-halved"></i> 10. Special Approvals</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="approvals_request"> Request Overdraft</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="approvals_manage"> Approve / Reject</label>
+                        </div>
+                    </div>
+
+                    <!-- 11. Opening Balance (Warehouse) -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-scale-balanced"></i> 11. Opening Balance</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="opening_balance_edit"> Edit Monthly Balance</label>
+                        </div>
+                    </div>
+
+                    <!-- 12. Administration & System Settings -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-cogs"></i> 12. Administration</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="admin_view_logs"> View Audit Logs</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="admin_branches_users"> Branches & Users</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="admin_roles"> Roles Management</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="admin_settings"> System Settings</label>
+                        </div>
+                    </div>
+
+                    <!-- 13. Action Required -->
+                    <div class="perm-category">
+                        <div class="perm-category-title"><i class="fa-solid fa-bell"></i> 13. Action Required</div>
+                        <div class="perm-tags-container">
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="action_sms"> SMS Alert</label>
+                            <label class="perm-tag-label"><input type="checkbox" name="permissions" value="action_view_history"> View History</label>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
             <div style="display: flex; gap: 10px; margin-top: 25px; justify-content: flex-end;">

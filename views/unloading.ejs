@@ -64,11 +64,15 @@
                                 <%= (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0) %>
                             </td>
                             <td style="text-align: center;">
+                                <% if (typeof hasPerm !== 'function' || hasPerm('unloading_create') || hasPerm('transactions_create')) { %>
                                 <button onclick="openSettleModal('<%= t.id %>', '<%= t.tripNo %>', '<%= t.vehicleNo %>', '<%= t.driverName %>', <%= t.loadedQty %>, <%= t.totalDeliveredQty || 0 %>, <%= t.totalCollectedQty || 0 %>)" 
                                         class="btn btn-primary" 
                                         style="padding: 6px 14px; font-size: 12px; background: #144d37; color: #ffffff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; border-radius: 6px;">
                                     <i class="fa-solid fa-truck-ramp-box"></i> Unload
                                 </button>
+                                <% } else { %>
+                                    <span style="color: var(--text-light); font-size: 12px;">View only</span>
+                                <% } %>
                             </td>
                         </tr>
                     <% }) %>
@@ -175,15 +179,17 @@
                             </td>
                             <td style="text-align: center; white-space: nowrap;">
                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content; white-space: nowrap;">
-                                    <a href="/unloading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Unloading Note">
-                                        <i class="fa-solid fa-print"></i> Print
-                                    </a>
-                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('transactions_edit')))) { %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('unloading_print') || hasPerm('transactions_view'))))) { %>
+                                        <a href="/unloading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Unloading Note">
+                                            <i class="fa-solid fa-print"></i> Print
+                                        </a>
+                                    <% } %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('unloading_edit') || hasPerm('transactions_edit'))))) { %>
                                         <button onclick='openEditUnloadModal(<%- JSON.stringify(t).replace(/'/g, "\\'") %>)' class="btn btn-action-edit" title="Edit Unloading Record" type="button">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
                                     <% } %>
-                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('transactions_delete') || hasPerm('delete_records'))))) { %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('unloading_delete') || hasPerm('transactions_delete') || hasPerm('delete_records'))))) { %>
                                         <form action="/unloading/<%= t.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'unloading record')" style="display: inline-flex; margin: 0; padding: 0;">
                                             <button type="submit" class="btn btn-action-delete" title="Delete Record">
                                                 <i class="fa-solid fa-trash"></i>

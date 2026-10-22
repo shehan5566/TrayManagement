@@ -181,24 +181,32 @@ const permissionAliases = {
     'receive_stock_delete': ['receive_stock_delete', 'delete_records', 'stock_transfers_delete'],
     'receive_stock_backdate': ['receive_stock_backdate', 'backdate_records', 'stock_transfers_backdate'],
 
-    // 4. Administration
-    'admin_view_logs': ['admin_view_logs', 'view_logs'],
-    'view_logs': ['view_logs', 'admin_view_logs'],
-    'admin_branches_users': ['admin_branches_users', 'admin'],
-    'admin_roles': ['admin_roles', 'admin'],
+    // 4. Lorry Loading (Dispatch)
+    'loading_view': ['loading_view', 'manage_stock', 'stock_transfers_view'],
+    'loading_create': ['loading_create', 'transactions_create', 'manage_stock'],
+    'loading_edit': ['loading_edit', 'transactions_edit', 'manage_stock'],
+    'loading_delete': ['loading_delete', 'delete_records'],
+    'loading_print': ['loading_print', 'loading_view'],
 
-    // 5. Dashboards & Reports
+    // 5. Lorry Unloading (Collection)
+    'unloading_view': ['unloading_view', 'manage_stock', 'stock_transfers_view'],
+    'unloading_create': ['unloading_create', 'transactions_create', 'receive_stock_approve', 'manage_stock'],
+    'unloading_edit': ['unloading_edit', 'transactions_edit', 'manage_stock'],
+    'unloading_delete': ['unloading_delete', 'delete_records'],
+    'unloading_print': ['unloading_print', 'unloading_view'],
+
+    // 6. Damages & Audit Logs
+    'damages_view': ['damages_view', 'manage_stock', 'dashboard_main'],
+    'damages_create': ['damages_create', 'manage_stock'],
+    'damages_edit': ['damages_edit', 'manage_stock'],
+    'damages_delete': ['damages_delete', 'delete_records'],
+
+    // 7. Dashboards & Analytics
     'dashboard_main': ['dashboard_main'],
+    'analytics_view': ['analytics_view', 'dashboard_main', 'reports_view'],
     'view_reports': ['view_reports', 'reports_view'],
     'reports_view': ['reports_view', 'view_reports'],
     'reports_send_manually': ['reports_send_manually', 'reports_view'],
-
-    // 6. Opening Balance
-    'opening_balance_edit': ['opening_balance_edit'],
-
-    // 7. Action Required
-    'action_sms': ['action_sms', 'customer_sms'],
-    'action_view_history': ['action_view_history', 'customer_history'],
 
     // 8. Customer Management
     'customer_view': ['customer_view'],
@@ -208,8 +216,26 @@ const permissionAliases = {
     'customer_sms': ['customer_sms', 'action_sms'],
     'customer_history': ['customer_history', 'action_view_history'],
 
+    // 9. Special Approvals & Overdraft
+    'approvals_request': ['approvals_request', 'transactions_create'],
+    'approvals_manage': ['approvals_manage', 'admin'],
+
+    // 10. Opening Balance
+    'opening_balance_edit': ['opening_balance_edit'],
+
+    // 11. Administration & Settings
+    'admin_view_logs': ['admin_view_logs', 'view_logs'],
+    'view_logs': ['view_logs', 'admin_view_logs'],
+    'admin_branches_users': ['admin_branches_users', 'admin'],
+    'admin_roles': ['admin_roles', 'admin'],
+    'admin_settings': ['admin_settings', 'admin'],
+
+    // 12. Action Required
+    'action_sms': ['action_sms', 'customer_sms'],
+    'action_view_history': ['action_view_history', 'customer_history'],
+
     // Legacy General Permissions
-    'delete_records': ['delete_records', 'transactions_delete', 'stock_transfers_delete', 'customer_delete', 'receive_stock_delete'],
+    'delete_records': ['delete_records', 'transactions_delete', 'stock_transfers_delete', 'customer_delete', 'receive_stock_delete', 'loading_delete', 'unloading_delete', 'damages_delete'],
     'backdate_records': ['backdate_records', 'transactions_backdate', 'stock_transfers_backdate', 'receive_stock_backdate']
 };
 
@@ -1964,7 +1990,7 @@ app.post('/approval/:token/revoke', async (req, res) => {
 // ==========================================
 
 // Warehouse Lorry Loading View
-app.get('/loading', requireAuth, async (req, res) => {
+app.get('/loading', requireAuth, requirePermission('loading_view'), async (req, res) => {
     try {
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
         const userRole = (req.session.user && req.session.user.role) || 'user';
@@ -1998,7 +2024,7 @@ app.get('/loading', requireAuth, async (req, res) => {
 });
 
 // Warehouse Lorry Unloading & Reconciliation View
-app.get('/unloading', requireAuth, async (req, res) => {
+app.get('/unloading', requireAuth, requirePermission('unloading_view'), async (req, res) => {
     try {
         const userLoc = (req.session.user && req.session.user.locationId) || 'main';
         const userRole = (req.session.user && req.session.user.role) || 'user';
@@ -2032,7 +2058,7 @@ app.get('/lorry-trips', requireAuth, (req, res) => {
 });
 
 // Dispatch Lorry with Trays (Warehouse Loading)
-app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, requirePermission('loading_create'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const { vehicleNo, driverName, loadedQty, dispatchedDate, notes } = req.body;
@@ -2088,7 +2114,7 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, async (req, re
 });
 
 // Settle & Reconcile Returned Lorry (Warehouse Unloading)
-app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, requirePermission('unloading_create'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const { actualUnloadedQty, damagedQty, returnedDate, notes } = req.body;
@@ -2160,7 +2186,7 @@ app.post('/lorry-trips/:id/cancel', requireAuth, requireEditAccess, async (req, 
 });
 
 // Print Loading Note & Gate Pass
-app.get('/loading/:id/print', requireAuth, async (req, res) => {
+app.get('/loading/:id/print', requireAuth, requirePermission('loading_print'), async (req, res) => {
     try {
         const trip = await LorryTrip.getById(req.params.id);
         if (!trip) return res.status(404).send('Loading record not found');
@@ -2183,7 +2209,7 @@ app.get('/lorry-trips/:id/print', requireAuth, (req, res) => {
 });
 
 // Edit Loading Record
-app.post('/loading/:id/edit', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/loading/:id/edit', requireAuth, requireEditAccess, requirePermission('loading_edit'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const { vehicleNo, driverName, loadedQty, dispatchedDate, notes } = req.body;
@@ -2242,7 +2268,7 @@ app.post('/loading/:id/edit', requireAuth, requireEditAccess, async (req, res) =
 });
 
 // Delete Loading Record
-app.post('/loading/:id/delete', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/loading/:id/delete', requireAuth, requireEditAccess, requirePermission('loading_delete'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const trip = await LorryTripModel.findById(req.params.id);
@@ -2282,7 +2308,7 @@ app.post('/loading/:id/delete', requireAuth, requireEditAccess, async (req, res)
 });
 
 // Print Unloading Note & Gate Pass
-app.get('/unloading/:id/print', requireAuth, async (req, res) => {
+app.get('/unloading/:id/print', requireAuth, requirePermission('unloading_print'), async (req, res) => {
     try {
         const trip = await LorryTrip.getById(req.params.id);
         if (!trip) return res.status(404).send('Unloading record not found');
@@ -2301,7 +2327,7 @@ app.get('/unloading/:id/print', requireAuth, async (req, res) => {
 });
 
 // Edit Unloading Record
-app.post('/unloading/:id/edit', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/unloading/:id/edit', requireAuth, requireEditAccess, requirePermission('unloading_edit'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const { actualUnloadedQty, returnedDate, notes } = req.body;
@@ -2354,7 +2380,7 @@ app.post('/unloading/:id/edit', requireAuth, requireEditAccess, async (req, res)
 });
 
 // Delete Unloading Record
-app.post('/unloading/:id/delete', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/unloading/:id/delete', requireAuth, requireEditAccess, requirePermission('unloading_delete'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const trip = await LorryTripModel.findById(req.params.id);
@@ -4093,7 +4119,7 @@ Examples:
 // ----------------------------------------------------
 // TRAY DAMAGE, LOSS & AUDIT LOG ROUTES
 // ----------------------------------------------------
-app.get('/damages', requireAuth, async (req, res) => {
+app.get('/damages', requireAuth, requirePermission('damages_view'), async (req, res) => {
     try {
         const currentUser = req.session.user;
         const userLocId = currentUser.locationId;
@@ -4110,7 +4136,7 @@ app.get('/damages', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/damages/add', requireAuth, async (req, res) => {
+app.post('/damages/add', requireAuth, requirePermission('damages_create'), async (req, res) => {
     try {
         const currentUser = req.session.user;
         const { locationId, type, qty, reason } = req.body;
@@ -4146,13 +4172,9 @@ app.post('/damages/add', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/damages/:id/edit', requireAuth, async (req, res) => {
+app.post('/damages/:id/edit', requireAuth, requirePermission('damages_edit'), async (req, res) => {
     try {
         const currentUser = req.session.user;
-        if (currentUser.username !== 'admin' && currentUser.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Permission denied. Admin access required to edit records.' });
-        }
-
         const { id } = req.params;
         const { locationId, type, qty, reason } = req.body;
         
@@ -4175,7 +4197,7 @@ app.post('/damages/:id/edit', requireAuth, async (req, res) => {
             user: currentUser.username,
             action: 'UPDATE',
             target: 'DamageLog',
-            details: `Admin updated damage log ${updatedLog.damageNo} (${qty} ${type} trays)`
+            details: `Updated damage log ${updatedLog.damageNo} (${qty} ${type} trays) by ${currentUser.username}`
         });
 
         res.json({ success: true, message: 'Damage record updated successfully', data: updatedLog });
@@ -4185,13 +4207,9 @@ app.post('/damages/:id/edit', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/damages/:id/delete', requireAuth, async (req, res) => {
+app.post('/damages/:id/delete', requireAuth, requirePermission('damages_delete'), async (req, res) => {
     try {
         const currentUser = req.session.user;
-        if (currentUser.username !== 'admin' && currentUser.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Permission denied. Admin access required to delete records.' });
-        }
-
         const { id } = req.params;
         const log = await DamageLog.getById(id);
         if (!log) {
@@ -4204,7 +4222,7 @@ app.post('/damages/:id/delete', requireAuth, async (req, res) => {
             user: currentUser.username,
             action: 'DELETE',
             target: 'DamageLog',
-            details: `Admin deleted damage log ${log.damageNo} (${log.qty} ${log.type} trays restored to stock)`
+            details: `Deleted damage log ${log.damageNo} (${log.qty} ${log.type} trays restored to stock) by ${currentUser.username}`
         });
 
         res.json({ success: true, message: 'Damage record deleted and stock restored successfully' });
@@ -4217,7 +4235,7 @@ app.post('/damages/:id/delete', requireAuth, async (req, res) => {
 // ----------------------------------------------------
 // SYSTEM SETTINGS & CONFIGURATION ROUTES
 // ----------------------------------------------------
-app.get('/settings', requireAuth, async (req, res) => {
+app.get('/settings', requireAuth, requirePermission('admin_settings'), async (req, res) => {
     try {
         const currentUser = req.session.user;
         const settings = await SystemSetting.get();
@@ -4231,13 +4249,9 @@ app.get('/settings', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/settings/update', requireAuth, async (req, res) => {
+app.post('/settings/update', requireAuth, requirePermission('admin_settings'), async (req, res) => {
     try {
         const currentUser = req.session.user;
-        if (currentUser.username !== 'admin' && currentUser.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Permission denied. Admin only.' });
-        }
-
         const updateData = {
             ...req.body,
             updatedBy: currentUser.username || 'admin'
@@ -4295,7 +4309,7 @@ app.post('/api/whatsapp/logout', requireAuth, async (req, res) => {
 // ----------------------------------------------------
 // AI ANALYTICS & ADVANCED FORECASTING ROUTES
 // ----------------------------------------------------
-app.get('/analytics', requireAuth, async (req, res) => {
+app.get('/analytics', requireAuth, requirePermission('analytics_view'), async (req, res) => {
     try {
         const currentUser = req.session.user;
         const customers = await Customer.getAll();

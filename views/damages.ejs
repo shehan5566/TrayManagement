@@ -14,9 +14,11 @@
                 Track broken, lost, or written-off trays across all branches and reconcile physical stock counts.
             </p>
         </div>
+        <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_create') || hasPerm('transactions_create'))))) { %>
         <button class="btn btn-primary" onclick="openAddDamageModal()" style="display: inline-flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-plus"></i> Record Damage / Audit Loss
         </button>
+        <% } %>
     </div>
 </div>
 
@@ -84,7 +86,8 @@
                     <th>Qty</th>
                     <th>Reason / Details</th>
                     <th>Reported By</th>
-                    <% if (user.username === 'admin' || user.role === 'admin') { %>
+                    <% const canManageDamages = (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_edit') || hasPerm('damages_delete') || hasPerm('transactions_edit') || hasPerm('delete_records'))))); %>
+                    <% if (canManageDamages) { %>
                         <th style="text-align: right;">Action</th>
                     <% } %>
                 </tr>
@@ -108,15 +111,19 @@
                             <td style="font-weight: 800; font-size: 15px;"><%= log.qty %> Trays</td>
                             <td style="color: var(--text-light);"><%= log.reason || 'N/A' %></td>
                             <td><i class="fa-solid fa-user-gear" style="margin-right: 4px; opacity: 0.7;"></i> <%= log.reportedBy %></td>
-                            <% if (user.username === 'admin' || user.role === 'admin') { %>
+                            <% if (canManageDamages) { %>
                                 <td style="text-align: right;">
                                     <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_edit') || hasPerm('transactions_edit')))) { %>
                                         <button class="btn btn-secondary btn-sm" onclick="openEditDamageModal('<%= log.id %>', '<%= log.locationId %>', '<%= log.type %>', <%= log.qty %>, `<%= log.reason %>`)" title="Edit Record">
                                             <i class="fa-solid fa-pen"></i> Edit
                                         </button>
+                                        <% } %>
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_delete') || hasPerm('delete_records')))) { %>
                                         <button class="btn btn-danger btn-sm" onclick="deleteDamageRecord('<%= log.id %>', '<%= log.damageNo %>')" style="background: #ef4444; border: none;" title="Delete Record">
                                             <i class="fa-solid fa-trash"></i> Delete
                                         </button>
+                                        <% } %>
                                     </div>
                                 </td>
                             <% } %>
@@ -124,7 +131,7 @@
                     <% }); %>
                 <% } else { %>
                     <tr>
-                        <td colspan="<%= (user.username === 'admin' || user.role === 'admin') ? 8 : 7 %>" style="text-align: center; padding: 40px; color: var(--text-light);">
+                        <td colspan="<%= canManageDamages ? 8 : 7 %>" style="text-align: center; padding: 40px; color: var(--text-light);">
                             <i class="fa-solid fa-box-archive" style="font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.5;"></i>
                             No damage or audit loss records found.
                         </td>
