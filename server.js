@@ -1073,7 +1073,7 @@ app.get('/customers/:id/history', requireAuth, async (req, res) => {
 
 app.get('/customers', requireAuth, async (req, res) => {
     try {
-        const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
+        const customers = await Customer.getAll(null, 'admin');
         res.render('customers', { customers, editCustomer: null, error: null });
     } catch (err) {
         res.status(500).send('Error retrieving customers');
