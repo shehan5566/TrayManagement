@@ -48,7 +48,16 @@
             <tbody>
                 <!-- Initial Balance Row -->
                 <tr style="background-color: var(--tr-hover-bg);">
-                    <td><em>Initial Setup</em></td>
+                    <td style="font-size: 13px;">
+                        <% 
+                            const idNum = Number(customer.id || customer._id);
+                            const openDate = customer.createdAt ? new Date(customer.createdAt) : (idNum > 1000000000000 ? new Date(idNum) : null);
+                        %>
+                        <% if (openDate && !isNaN(openDate.getTime())) { %>
+                            <%= openDate.toLocaleDateString('en-GB') %> <span style="color: var(--text-light);"><%= openDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></span><br>
+                        <% } %>
+                        <em style="font-size: 12px;">Initial Setup</em>
+                    </td>
                     <td>-</td>
                     <td>-</td>
                     <td>-</td>
