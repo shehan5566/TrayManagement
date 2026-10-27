@@ -927,7 +927,7 @@ const Customer = {
             const stats = txStatsMap[c._id] || { pastOut: 0, pastIn: 0, pastDepositCollected: 0, pastDepositRefunded: 0, periodOut: 0, periodIn: 0, depositCollected: 0, depositRefunded: 0 };
 
             const openingBalance = c.initialBalance + stats.pastOut - stats.pastIn;
-            const openingDepositOutstanding = stats.pastDepositCollected - stats.pastDepositRefunded;
+            const openingDepositOutstanding = (Number(c.initialDeposit) || 0) + stats.pastDepositCollected - stats.pastDepositRefunded;
 
             const closingBalance = openingBalance + stats.periodOut - stats.periodIn;
             const depositOutstanding = openingDepositOutstanding + stats.depositCollected - stats.depositRefunded;
