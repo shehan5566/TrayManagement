@@ -483,6 +483,12 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-truck-fast"></i> Detailed Stock Transfer Log</span>
                 <div>
+                    <button
+                        onclick="printReportToPDF(`Detailed Stock Transfer Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'stockTransferTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
                     <a href="/reports/export/transfers-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
                         class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
@@ -554,6 +560,12 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-boxes-packing"></i> Detailed Receive Stock Log</span>
                 <div>
+                    <button
+                        onclick="printReportToPDF(`Detailed Receive Stock Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'receiveStockTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
                     <a href="/reports/export/received-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
                         class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
@@ -626,6 +638,12 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <span class="box-title"><i class="fa-solid fa-truck-loading" style="color: var(--primary-green);"></i> Detailed Lorry Loading Log</span>
                 <div>
+                    <button
+                        onclick="printReportToPDF(`Detailed Lorry Loading Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportLoadingTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
                     <button onclick="exportTableToExcel('reportLoadingTable', 'Lorry_Loading_Report')" class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
@@ -723,6 +741,12 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <span class="box-title"><i class="fa-solid fa-truck-ramp-box" style="color: var(--primary-green);"></i> Detailed Lorry Unloading & Settle Log</span>
                 <div>
+                    <button
+                        onclick="printReportToPDF(`Detailed Lorry Unloading & Settle Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportUnloadingTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
                     <button onclick="exportTableToExcel('reportUnloadingTable', 'Lorry_Unloading_Report')" class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
@@ -848,6 +872,12 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-warehouse" style="color: var(--primary-green);"></i> Warehouse Tray Balance Audit Report</span>
                 <div>
+                    <button
+                        onclick="printReportToPDF(`Warehouse Tray Balance Audit Report (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'warehouseBalanceTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
                     <button onclick="exportTableToExcel('warehouseBalanceTable', 'Warehouse_Tray_Balance_Report')" class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
@@ -910,6 +940,12 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-boxes-stacked" style="color: var(--primary-green);"></i> Tray Damage & Loss Log</span>
                 <div>
+                    <button
+                        onclick="printReportToPDF(`Tray Damage & Loss Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'damagesReportTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
                     <button onclick="exportTableToExcel('damagesReportTable', 'Tray_Damages_Report')" class="btn btn-sm"
                         style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
@@ -1033,13 +1069,293 @@
     <!-- SheetJS Library for Client-side Excel (.xlsx) Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+    <style>
+        /* ========================================================
+           MODERN DATATABLES STYLING (MATCHING SCREENSHOT)
+           ======================================================== */
+        .tab-content .dataTables_wrapper {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #334155;
+            font-size: 13px;
+            padding: 4px 0;
+            width: 100%;
+        }
+
+        /* 1. Top Controls: Length Menu & Search */
+        .tab-content .dataTables_wrapper .dataTables_length {
+            float: left;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #475569;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_length select {
+            padding: 4px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            background-color: #ffffff;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_length select:focus {
+            border-color: #1b5e20;
+            box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.15);
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_filter {
+            float: right;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_filter label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_filter input {
+            padding: 4px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            background-color: #ffffff;
+            color: #1e293b;
+            font-size: 13px;
+            outline: none;
+            min-width: 180px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: #1b5e20;
+            box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.15);
+        }
+
+        /* 2. Table Container & Outer Borders */
+        .tab-content .table-responsive {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #ffffff;
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            margin-bottom: 12px;
+        }
+
+        .tab-content table.dataTable {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            margin: 0 !important;
+            font-size: 12.5px;
+            border: none !important;
+        }
+
+        /* 3. Table Header (thead th) - Crisp Light Slate matching screenshot */
+        .tab-content table.dataTable thead th,
+        .tab-content table thead th {
+            background-color: #f8fafc !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
+            font-size: 12.5px !important;
+            padding: 10px 14px !important;
+            border-top: none !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            border-right: 1px solid #e2e8f0 !important;
+            border-left: none !important;
+            white-space: nowrap;
+            vertical-align: middle;
+            text-align: left;
+        }
+
+        .tab-content table.dataTable thead th:last-child,
+        .tab-content table thead th:last-child {
+            border-right: none !important;
+        }
+
+        /* DataTables Sorting Icon adjustments */
+        .tab-content table.dataTable thead .sorting,
+        .tab-content table.dataTable thead .sorting_asc,
+        .tab-content table.dataTable thead .sorting_desc {
+            background-position: right 6px center !important;
+            padding-right: 22px !important;
+        }
+
+        /* 4. Table Body (tbody td) */
+        .tab-content table.dataTable tbody td,
+        .tab-content table tbody td {
+            padding: 9px 14px !important;
+            border-top: none !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            border-right: 1px solid #f1f5f9 !important;
+            border-left: none !important;
+            color: #334155;
+            vertical-align: middle;
+            font-size: 12.5px;
+            background-color: #ffffff;
+        }
+
+        .tab-content table.dataTable tbody td:last-child,
+        .tab-content table tbody td:last-child {
+            border-right: none !important;
+        }
+
+        .tab-content table.dataTable tbody tr:last-child td,
+        .tab-content table tbody tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        .tab-content table.dataTable tbody tr:hover td,
+        .tab-content table tbody tr:hover td {
+            background-color: #f8fafc !important;
+        }
+
+        /* 5. Footer Summary Row (tfoot td / tfoot th) */
+        .tab-content table tfoot th,
+        .tab-content table tfoot td {
+            background-color: #f8fafc !important;
+            color: #1e293b !important;
+            font-weight: 700 !important;
+            border-top: 2px solid #cbd5e1 !important;
+            border-right: 1px solid #e2e8f0 !important;
+            padding: 9px 14px !important;
+            font-size: 12.5px !important;
+        }
+
+        .tab-content table tfoot th:last-child,
+        .tab-content table tfoot td:last-child {
+            border-right: none !important;
+        }
+
+        /* 6. Bottom Controls: Info & Pagination */
+        .tab-content .dataTables_wrapper .dataTables_info {
+            float: left;
+            padding-top: 10px;
+            color: #64748b !important;
+            font-size: 12.5px;
+            font-weight: 400;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_paginate {
+            float: right;
+            padding-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 28px;
+            padding: 0 10px !important;
+            margin: 0 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 4px !important;
+            background: #ffffff !important;
+            color: #64748b !important;
+            font-size: 12px !important;
+            font-weight: 500;
+            cursor: pointer !important;
+            transition: all 0.15s ease-in-out;
+            box-shadow: none !important;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+            background: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #1e293b !important;
+        }
+
+        /* Active Page Button (Dark Green matching screenshot) */
+        .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: #14532d !important;
+            color: #ffffff !important;
+            border-color: #14532d !important;
+            font-weight: 700;
+            cursor: default;
+        }
+
+        .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+        .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+        .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:active {
+            background: #ffffff !important;
+            border-color: #e2e8f0 !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed !important;
+            opacity: 0.85;
+        }
+
+        /* 7. Action Button Styling (matching soft green action icon in screenshot) */
+        .tab-content .btn-view-customer {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            padding: 4px 8px !important;
+            background-color: #f0fdf4 !important;
+            color: #16a34a !important;
+            border: 1px solid #86efac !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease;
+        }
+
+        .tab-content .btn-view-customer:hover {
+            background-color: #dcfce7 !important;
+            border-color: #4ade80 !important;
+            color: #15803d !important;
+        }
+
+        /* Clearfix for dataTables_wrapper */
+        .tab-content .dataTables_wrapper:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+
     <script>
         $(document).ready(function () {
             const tableConfig = {
-                pageLength: 25,
+                pageLength: 10,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
                 language: {
-                    search: "Search:"
+                    lengthMenu: "Display _MENU_ records",
+                    search: "Search:",
+                    searchPlaceholder: "",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "Showing 0 to 0 of 0 entries",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    paginate: {
+                        previous: "Previous",
+                        next: "Next"
+                    }
                 }
             };
             $('#balanceTable').DataTable(tableConfig);
@@ -1256,89 +1572,229 @@
             XLSX.writeFile(wb, `${currentBreakupCustomer.name.replace(/[^a-zA-Z0-9]/g, '_')}_Date_Breakup_${new Date().toISOString().slice(0, 10)}.xlsx`);
         }
 
-        function printReportToPDF(title, tableId) {
+        function getFullReportTableHtml(tableId) {
             const tableElement = document.getElementById(tableId);
-            if (!tableElement) return;
-            const content = tableElement.outerHTML;
+            if (!tableElement) return '';
+
+            let clonedTable;
+
+            if (window.jQuery && $.fn && $.fn.dataTable && $.fn.dataTable.isDataTable('#' + tableId)) {
+                const dt = $('#' + tableId).DataTable();
+                clonedTable = tableElement.cloneNode(false);
+
+                // Clone thead
+                const origThead = tableElement.querySelector('thead');
+                if (origThead) {
+                    clonedTable.appendChild(origThead.cloneNode(true));
+                }
+
+                // Clone full tbody containing ALL rows across all pages (respecting active search filter if any)
+                const fullTbody = document.createElement('tbody');
+                const rowNodes = dt.rows({ search: 'applied' }).nodes();
+                if (rowNodes && rowNodes.length > 0) {
+                    for (let i = 0; i < rowNodes.length; i++) {
+                        fullTbody.appendChild(rowNodes[i].cloneNode(true));
+                    }
+                } else {
+                    fullTbody.innerHTML = '<tr><td colspan="15" style="text-align:center; padding: 20px;">No matching records found</td></tr>';
+                }
+                clonedTable.appendChild(fullTbody);
+
+                // Clone tfoot if exists
+                const origTfoot = tableElement.querySelector('tfoot');
+                if (origTfoot) {
+                    clonedTable.appendChild(origTfoot.cloneNode(true));
+                }
+            } else {
+                clonedTable = tableElement.cloneNode(true);
+            }
+
+            // Remove action/view columns from the print/PDF copy for maximum cleanliness
+            const thElements = clonedTable.querySelectorAll('thead th');
+            let actionColIndex = -1;
+            thElements.forEach((th, idx) => {
+                const text = th.textContent.trim().toLowerCase();
+                if (text === 'view' || text === 'action' || text === 'actions') {
+                    actionColIndex = idx;
+                }
+            });
+
+            if (actionColIndex !== -1) {
+                clonedTable.querySelectorAll('tr').forEach(r => {
+                    if (r.cells.length > actionColIndex) {
+                        r.deleteCell(actionColIndex);
+                    }
+                });
+            }
+
+            return clonedTable.outerHTML;
+        }
+
+        function printReportToPDF(title, tableId) {
+            const content = getFullReportTableHtml(tableId);
+            if (!content) return;
             triggerPrintWindow(title, content);
         }
 
         function triggerPrintWindow(title, content) {
-            const win = window.open('', '', 'height=800,width=1000');
+            const win = window.open('', '_blank', 'height=850,width=1100');
+            if (!win) {
+                alert('Pop-up blocked! Please allow pop-ups for this website to print or download PDF.');
+                return;
+            }
             const today = new Date().toLocaleDateString('en-CA');
-            win.document.write(`
+            win.document.write(`<!DOCTYPE html>
                 <html>
                     <head>
+                        <meta charset="UTF-8">
                         <title>${title} - ${today}</title>
                         <style>
-                            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-                            body { 
-                                font-family: 'Inter', sans-serif; 
-                                padding: 40px; 
-                                color: #333;
-                                background: #fff;
+                            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                            
+                            @page {
+                                size: auto;
+                                margin: 12mm 10mm;
                             }
+
+                            * {
+                                box-sizing: border-box;
+                            }
+
+                            body { 
+                                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                                margin: 0;
+                                padding: 15px 20px; 
+                                color: #1e293b;
+                                background: #fff;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+
                             .letterhead {
                                 display: flex;
                                 align-items: center;
-                                border-bottom: 3px solid #1b5e20;
-                                padding-bottom: 20px;
-                                margin-bottom: 30px;
+                                border-bottom: 2.5px solid #1b5e20;
+                                padding-bottom: 12px;
+                                margin-bottom: 18px;
+                                page-break-after: avoid;
                             }
+
                             .letterhead-img {
-                                width: 80px;
-                                height: 80px;
+                                width: 70px;
+                                height: 70px;
                                 object-fit: contain;
-                                margin-right: 20px;
+                                margin-right: 18px;
                             }
+
                             .letterhead-text h1 {
                                 margin: 0;
                                 color: #1b5e20;
-                                font-size: 26px;
+                                font-size: 20px;
                                 text-transform: uppercase;
                                 font-weight: 700;
+                                letter-spacing: 0.5px;
                             }
+
                             .letterhead-text p {
-                                margin: 5px 0 0 0;
-                                font-size: 14px;
-                                color: #555;
+                                margin: 3px 0 0 0;
+                                font-size: 11.5px;
+                                color: #475569;
                             }
+
                             .report-title {
-                                font-size: 20px;
-                                font-weight: 600;
-                                margin-bottom: 5px;
-                                color: #222;
+                                font-size: 16px;
+                                font-weight: 700;
+                                margin: 0 0 4px 0;
+                                color: #0f172a;
+                                page-break-after: avoid;
                             }
+
                             .report-meta {
-                                font-size: 13px;
-                                color: #666;
-                                margin-bottom: 25px;
+                                font-size: 11.5px;
+                                color: #64748b;
+                                margin-bottom: 16px;
+                                page-break-after: avoid;
                             }
+
                             table { 
-                                width: 100%; 
-                                border-collapse: collapse; 
-                                font-size: 12px; 
+                                width: 100% !important; 
+                                border-collapse: collapse !important; 
+                                font-size: 10.5px !important; 
+                                margin-top: 8px;
+                                page-break-inside: auto;
                             }
+
+                            thead {
+                                display: table-header-group !important; /* Repeats table header on every printed page */
+                            }
+
+                            tfoot {
+                                display: table-footer-group !important;
+                            }
+
+                            tr { 
+                                page-break-inside: avoid !important; /* Prevents rows from breaking across pages */
+                                break-inside: avoid !important;
+                            }
+
                             th, td { 
-                                border: 1px solid #ddd; 
-                                padding: 10px; 
+                                border: 1px solid #cbd5e1 !important; 
+                                padding: 6px 8px !important; 
                                 text-align: left; 
+                                vertical-align: middle;
                             }
+
                             th { 
-                                background-color: #1b5e20 !important; /* Force print color */
-                                color: white !important;
-                                -webkit-print-color-adjust: exact; 
-                                print-color-adjust: exact;
+                                background-color: #1b5e20 !important; 
+                                color: #ffffff !important;
+                                font-weight: 700 !important;
+                                -webkit-print-color-adjust: exact !important; 
+                                print-color-adjust: exact !important;
                             }
-                            tr:nth-child(even) { background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; }
-                            
+
+                            tbody tr:nth-child(even) { 
+                                background-color: #f8fafc !important; 
+                                -webkit-print-color-adjust: exact !important; 
+                                print-color-adjust: exact !important;
+                            }
+
+                            .badge {
+                                display: inline-block;
+                                padding: 2px 6px;
+                                border-radius: 4px;
+                                font-size: 9.5px;
+                                font-weight: 700;
+                                border: 1px solid #94a3b8;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+
+                            .badge-out {
+                                background-color: #fef2f2 !important;
+                                color: #b91c1c !important;
+                                border-color: #fca5a5 !important;
+                            }
+
+                            .badge-in {
+                                background-color: #f0fdf4 !important;
+                                color: #15803d !important;
+                                border-color: #86efac !important;
+                            }
+
                             /* Clean up UI elements from tables during print */
-                            button, .btn, form { display: none !important; }
+                            button, .btn, form, .dataTables_filter, .dataTables_length, .dataTables_info, .dataTables_paginate { 
+                                display: none !important; 
+                            }
+
+                            @media print {
+                                body {
+                                    padding: 0 !important;
+                                }
+                            }
                         </style>
                     </head>
                     <body>
                         <div class="letterhead">
-                            <!-- Try relative path for print window context -->
                             <img src="${window.location.origin}/images/logo.png" class="letterhead-img" alt="Nelna Logo" onerror="this.style.display='none'">
                             <div class="letterhead-text">
                                 <h1>Nelna Agri Development (Pvt) Ltd</h1>
@@ -1347,19 +1803,25 @@
                             </div>
                         </div>
                         <h2 class="report-title">${title}</h2>
-                        <div class="report-meta">Printed on: ${new Date().toLocaleString()}</div>
+                        <div class="report-meta">Generated on: ${new Date().toLocaleString()}</div>
                         ${content}
+                        <script>
+                            window.addEventListener('load', () => {
+                                setTimeout(() => {
+                                    window.focus();
+                                    window.print();
+                                }, 350);
+                            });
+                            window.addEventListener('afterprint', () => {
+                                setTimeout(() => {
+                                    window.close();
+                                }, 200);
+                            });
+                        <\/script>
                     </body>
                 </html>
             `);
             win.document.close();
-            win.focus();
-            // Wait for image to load before printing
-            setTimeout(() => {
-                win.print();
-                // Close after a brief delay so user can interact with print dialog
-                setTimeout(() => { win.close(); }, 1000);
-            }, 800);
         }
 
         function printCustomerBreakup() {
@@ -1526,56 +1988,46 @@
         }
 
         function exportTableToExcel(tableID, filename) {
-            const table = document.getElementById(tableID);
+            const tableHtml = getFullReportTableHtml(tableID);
+            if (!tableHtml) return;
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = tableHtml;
+            const table = tempDiv.querySelector('table');
             if (!table) return;
-            const wb = XLSX.utils.table_to_book(table, { sheet: filename });
+            const wb = XLSX.utils.table_to_book(table, { sheet: filename.slice(0, 31) });
             XLSX.writeFile(wb, `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`);
         }
 
         function exportAllReportsToExcel() {
             const wb = XLSX.utils.book_new();
 
-            const balanceTable = document.getElementById('balanceTable');
-            if (balanceTable) {
-                const ws1 = XLSX.utils.table_to_sheet(balanceTable);
-                XLSX.utils.book_append_sheet(wb, ws1, "Customer Balances");
-            }
+            const reportDefs = [
+                { id: 'balanceTable', name: 'Customer Balances' },
+                { id: 'reportOutTable', name: 'Tray Issues (OUT)' },
+                { id: 'reportInTable', name: 'Tray Returns (IN)' },
+                { id: 'stockTransferTable', name: 'Stock Transfers' },
+                { id: 'receiveStockTable', name: 'Stock Received (GRN)' },
+                { id: 'reportLoadingTable', name: 'Lorry Loading' },
+                { id: 'reportUnloadingTable', name: 'Lorry Unloading' },
+                { id: 'warehouseBalanceTable', name: 'Warehouse Tray Balance' },
+                { id: 'damagesReportTable', name: 'Tray Damages & Loss' }
+            ];
 
-            const outTable = document.getElementById('reportOutTable');
-            if (outTable) {
-                const ws2 = XLSX.utils.table_to_sheet(outTable);
-                XLSX.utils.book_append_sheet(wb, ws2, "Tray Issues (OUT)");
-            }
-
-            const inTable = document.getElementById('reportInTable');
-            if (inTable) {
-                const ws3 = XLSX.utils.table_to_sheet(inTable);
-                XLSX.utils.book_append_sheet(wb, ws3, "Tray Returns (IN)");
-            }
-
-            const damagesTable = document.getElementById('damagesReportTable');
-            if (damagesTable) {
-                const ws4 = XLSX.utils.table_to_sheet(damagesTable);
-                XLSX.utils.book_append_sheet(wb, ws4, "Tray Damages & Loss");
-            }
-
-            const loadingTable = document.getElementById('reportLoadingTable');
-            if (loadingTable) {
-                const wsLoading = XLSX.utils.table_to_sheet(loadingTable);
-                XLSX.utils.book_append_sheet(wb, wsLoading, "Lorry Loading");
-            }
-
-            const unloadingTable = document.getElementById('reportUnloadingTable');
-            if (unloadingTable) {
-                const wsUnload = XLSX.utils.table_to_sheet(unloadingTable);
-                XLSX.utils.book_append_sheet(wb, wsUnload, "Lorry Unloading");
-            }
-
-            const whTable = document.getElementById('warehouseBalanceTable');
-            if (whTable) {
-                const ws5 = XLSX.utils.table_to_sheet(whTable);
-                XLSX.utils.book_append_sheet(wb, ws5, "Warehouse Tray Balance");
-            }
+            reportDefs.forEach(r => {
+                const el = document.getElementById(r.id);
+                if (el) {
+                    const tableHtml = getFullReportTableHtml(r.id);
+                    if (tableHtml) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = tableHtml;
+                        const table = tempDiv.querySelector('table');
+                        if (table) {
+                            const ws = XLSX.utils.table_to_sheet(table);
+                            XLSX.utils.book_append_sheet(wb, ws, r.name.slice(0, 31));
+                        }
+                    }
+                }
+            });
 
             XLSX.writeFile(wb, `Nelna_Agri_Tray_Reports_${new Date().toISOString().slice(0, 10)}.xlsx`);
         }
