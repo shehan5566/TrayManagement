@@ -620,7 +620,7 @@ const Customer = {
             const initBal = Number(c.initialBalance) || 0;
             const initDep = Number(c.initialDeposit) || 0;
             const expectedInit = initBal * defaultRate;
-            pendingDepositMap[String(c._id)] = Math.max(0, expectedInit - initDep);
+            pendingDepositMap[String(c._id)] = expectedInit - initDep;
         });
 
         let txFilter = { isDeleted: { $ne: true } };
@@ -705,7 +705,7 @@ const Customer = {
 
         const initBal = Number(cust.initialBalance) || 0;
         const initDep = Number(cust.initialDeposit) || 0;
-        let pending = Math.max(0, (initBal * defaultRate) - initDep);
+        let pending = (initBal * defaultRate) - initDep;
 
         const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
         custTxs.forEach(t => {

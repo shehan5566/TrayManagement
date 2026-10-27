@@ -2708,34 +2708,9 @@ app.get('/driver/receipt/:id/print', async (req, res) => {
             return res.send('<script>alert("Customer record not found"); window.location.href="/driver";</script>');
         }
 
-        let totalCustomerPendingDeposit = 0;
-        if (customer && (customer.id || customer._id)) {
-            const TransactionModel = require('mongoose').model('Transaction');
-            const custId = customer.id || customer._id;
-            const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
-            custTxs.forEach(t => {
-                const rate = Number(t.depositPerTray) || 2000;
-                const countQty = Number(t.count) || 0;
-                const expected = Number(t.expectedDeposit) || (countQty * rate);
-                let paid = 0;
-                if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
-                    paid = Number(t.totalDeposit);
-                } else if (t.depositOption === 'ZERO') {
-                    paid = 0;
-                } else if (t.depositOption === 'HALF') {
-                    paid = expected / 2;
-                } else {
-                    paid = expected;
-                }
-
-                if (t.type === 'OUT') {
-                    totalCustomerPendingDeposit += (expected - paid);
-                } else if (t.type === 'IN') {
-                    totalCustomerPendingDeposit -= (expected - paid);
-                }
-            });
-        }
-        if (totalCustomerPendingDeposit < 0) totalCustomerPendingDeposit = 0;
+        const totalCustomerPendingDeposit = (customer && (customer.id || customer._id))
+            ? await Customer.getPendingDeposit(customer.id || customer._id)
+            : 0;
 
         const settings = await SystemSetting.get();
 
@@ -2781,34 +2756,9 @@ app.get('/transactions/:id/receipt', async (req, res) => {
         }
         const customer = await Customer.getById(tx.customerId);
 
-        let totalCustomerPendingDeposit = 0;
-        if (customer && (customer.id || customer._id)) {
-            const TransactionModel = require('mongoose').model('Transaction');
-            const custId = customer.id || customer._id;
-            const custTxs = await TransactionModel.find({ customerId: custId, isDeleted: { $ne: true } }).lean();
-            custTxs.forEach(t => {
-                const rate = Number(t.depositPerTray) || 2000;
-                const countQty = Number(t.count) || 0;
-                const expected = Number(t.expectedDeposit) || (countQty * rate);
-                let paid = 0;
-                if (t.totalDeposit !== undefined && t.totalDeposit !== null && t.totalDeposit !== '') {
-                    paid = Number(t.totalDeposit);
-                } else if (t.depositOption === 'ZERO') {
-                    paid = 0;
-                } else if (t.depositOption === 'HALF') {
-                    paid = expected / 2;
-                } else {
-                    paid = expected;
-                }
-
-                if (t.type === 'OUT') {
-                    totalCustomerPendingDeposit += (expected - paid);
-                } else if (t.type === 'IN') {
-                    totalCustomerPendingDeposit -= (expected - paid);
-                }
-            });
-        }
-        if (totalCustomerPendingDeposit < 0) totalCustomerPendingDeposit = 0;
+        const totalCustomerPendingDeposit = (customer && (customer.id || customer._id))
+            ? await Customer.getPendingDeposit(customer.id || customer._id)
+            : 0;
 
         const isDriver = !!req.session.driver || req.query.from === 'driver';
         const backUrl = isDriver ? '/driver' : '/transactions';
