@@ -65,7 +65,7 @@
 
                             <div class="form-group">
                                 <label for="count">Tray Quantity</label>
-                                <input type="number" id="count" name="count" min="1" placeholder="Enter tray count..."
+                                <input type="number" id="count" name="count" min="0" placeholder="Enter tray count..."
                                     required>
                             </div>
 
@@ -346,7 +346,7 @@
 
                                     <div class="form-group">
                                         <label>Tray Quantity</label>
-                                        <input type="number" id="editCount" name="count" min="1" required>
+                                        <input type="number" id="editCount" name="count" min="0" required>
                                     </div>
 
                                     <div class="form-group">
@@ -781,7 +781,13 @@
                 async function handleTransactionFormSubmit(event, form) {
                     event.preventDefault();
                     const type = document.getElementById('type').value;
-                    const count = parseInt(document.getElementById('count').value, 10) || 0;
+                    const countInput = document.getElementById('count');
+                    const countVal = (countInput && countInput.value !== '') ? parseInt(countInput.value, 10) : NaN;
+                    if (isNaN(countVal) || countVal < 0) {
+                        Swal.fire({ icon: 'warning', title: 'Invalid Quantity', text: 'Please enter a valid tray quantity (0 or more)!' });
+                        return false;
+                    }
+                    const count = countVal;
                     const customerId = document.getElementById('customerId').value;
                     const depositRateInput = document.getElementById('depositPerTray');
                     const defaultRate = <%= (typeof settings !== 'undefined' && settings && settings.depositPerTray) ? settings.depositPerTray : 2000 %>;
@@ -795,7 +801,7 @@
                     const cust = selectedCustomerObj || (typeof customersData !== 'undefined' ? customersData.find(c => c.id === customerId) : null);
                     const pendingDeposit = Number(cust ? (cust.pendingDeposit || 0) : 0);
                     const isUnderpaid = (count > 0 && actualDepositVal < expectedTotal);
-                    const isBlocked = isBlockEnabled && type === 'OUT' && (pendingDeposit > 0 || isUnderpaid);
+                    const isBlocked = isBlockEnabled && type === 'OUT' && count > 0 && (pendingDeposit > 0 || isUnderpaid);
 
                     if (isBlocked && cust) {
                         const mgrPhone = "<%= (settings && settings.salesManagerPhone) ? settings.salesManagerPhone : '0770000000' %>";

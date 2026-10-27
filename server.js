@@ -1278,7 +1278,7 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
 
     const countVal = count !== undefined && count !== null && count !== '' ? parseInt(count, 10) : NaN;
-    if (!customerId || !type || isNaN(countVal) || countVal <= 0) {
+    if (!customerId || !type || isNaN(countVal) || countVal < 0) {
         if (isAjax) return res.status(400).json({ success: false, error: 'Please select a customer, transaction type and enter a valid tray count!' });
         return res.redirect('/transactions?error=invalid_data');
     }
@@ -1287,7 +1287,7 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
         const txData = {
             customerId,
             type,
-            count: parseInt(count),
+            count: countVal,
             depositPerTray,
             depositOption,
             actualDeposit,
@@ -1300,7 +1300,7 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
         // Check for customer block on OUT transactions:
         // Blocked if customer has pending deposit balance > 0 OR if actual deposit paid < expected deposit
         const settings = await SystemSetting.get();
-        if (settings.enableOutstandingBlock !== false && type === 'OUT') {
+        if (settings.enableOutstandingBlock !== false && type === 'OUT' && countVal > 0) {
             const customer = await Customer.getById(customerId);
             const custPendingDeposit = await Customer.getPendingDeposit(customerId);
             
@@ -1473,7 +1473,7 @@ app.post('/transactions/import', requireEditAccess, requirePermission('transacti
 
             // 1. Validate Quantity
             const count = parseInt(qtyRaw, 10);
-            if (isNaN(count) || count <= 0) {
+            if (isNaN(count) || count < 0) {
                 skipCount++;
                 skipReasons.push(`Row ${rowNum}: Invalid quantity (${qtyRaw || 'empty'})`);
                 continue;
@@ -1625,9 +1625,9 @@ app.get('/transactions/receiptByRef/:refNo', requireAuth, async (req, res) => {
 app.post('/api/approvals/request', requireUserOrDriver, async (req, res) => {
     try {
         const txData = req.body;
-        const countVal = txData.count ? parseInt(txData.count, 10) : 0;
-        if (!txData.customerId || countVal <= 0) {
-            return res.status(400).json({ success: false, error: 'Customer and tray count are required' });
+        const countVal = txData.count !== undefined && txData.count !== null && txData.count !== '' ? parseInt(txData.count, 10) : NaN;
+        if (!txData.customerId || isNaN(countVal) || countVal < 0) {
+            return res.status(400).json({ success: false, error: 'Customer and valid tray count are required' });
         }
 
         const customer = await Customer.getById(txData.customerId);
@@ -2529,8 +2529,8 @@ app.post('/driver/transaction', async (req, res) => {
         }
 
         const { tripId, vehicleNo, type, customerId, count, depositOption, actualDeposit, remarks } = req.body;
-        const countVal = parseInt(count, 10);
-        if (!customerId || !type || isNaN(countVal) || countVal <= 0) {
+        const countVal = count !== undefined && count !== null && count !== '' ? parseInt(count, 10) : NaN;
+        if (!customerId || !type || isNaN(countVal) || countVal < 0) {
             return res.status(400).json({ success: false, error: 'කරුණාකර පාරිභෝගිකයා සහ වලංගු ට්‍රේ ගණනක් ඇතුළත් කරන්න!' });
         }
 
@@ -2578,7 +2578,7 @@ app.post('/driver/transaction', async (req, res) => {
         const username = driverName || `Driver (${req.session.driver.vehicleNo})`;
 
         // Check for customer block on OUT transactions for Driver
-        if (settings.enableOutstandingBlock !== false && type === 'OUT') {
+        if (settings.enableOutstandingBlock !== false && type === 'OUT' && countVal > 0) {
             const customer = await Customer.getById(customerId);
             const custPendingDeposit = await Customer.getPendingDeposit(customerId);
             
