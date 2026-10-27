@@ -213,18 +213,18 @@
                 <table id="balanceTable">
                     <thead>
                         <tr>
-                            <th>Customer Name</th>
+                            <th style="min-width: 120px;">Customer Name</th>
                             <th>Phone</th>
-                            <th style="text-align: right;">Opening Balance</th>
-                            <th style="text-align: right;">Total Issued (Out)</th>
-                            <th style="text-align: right;">Total Returned (In)</th>
-                            <th style="text-align: right;">Closing Balance</th>
-                            <th style="text-align: right; color: var(--primary-green-dark);">Initial Deposit (Rs.)</th>
-                            <th style="text-align: right; color: var(--danger);">Deposit Collected (Rs.)</th>
-                            <th style="text-align: right; color: var(--success);">Deposit Refunded (Rs.)</th>
-                            <th style="text-align: right;">Refundable Outstanding (Rs.)</th>
-                            <th style="text-align: right; color: var(--danger);">Pending Deposit (Rs.)</th>
-                            <th style="text-align: center;">View</th>
+                            <th style="text-align: right;">Opening<br>Balance</th>
+                            <th style="text-align: right;">Total Issued<br>(Out)</th>
+                            <th style="text-align: right;">Total Returned<br>(In)</th>
+                            <th style="text-align: right;">Closing<br>Balance</th>
+                            <th style="text-align: right; color: var(--primary-green-dark);">Initial Deposit<br>(Rs.)</th>
+                            <th style="text-align: right; color: var(--danger);">Deposit Coll.<br>(Rs.)</th>
+                            <th style="text-align: right; color: var(--success);">Deposit Ref.<br>(Rs.)</th>
+                            <th style="text-align: right;">Refundable<br>Outst. (Rs.)</th>
+                            <th style="text-align: right; color: var(--danger);">Pending Dep.<br>(Rs.)</th>
+                            <th style="text-align: center; width: 38px;">View</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -267,9 +267,8 @@
                                     <%= (cb.pendingDeposit || 0).toLocaleString() %>
                                 </td>
                                 <td style="text-align: center;">
-                                    <button type="button" onclick="viewCustomerBreakup('<%= cb.id %>', this)" data-customer-id="<%= cb.id %>" class="btn btn-sm btn-view-customer"
-                                        style="background-color: var(--primary-green); color: white; border: none; padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;">
-                                        <i class="fa-solid fa-eye" style="pointer-events: none;"></i> <span style="pointer-events: none;">View</span>
+                                    <button type="button" onclick="viewCustomerBreakup('<%= cb.id %>', this)" data-customer-id="<%= cb.id %>" class="btn btn-sm btn-view-customer" title="View Breakup">
+                                        <i class="fa-solid fa-eye" style="pointer-events: none;"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -686,13 +685,13 @@
                 <table id="reportLoadingTable" class="display" style="width:100%">
                     <thead>
                         <tr>
-                            <th style="white-space: nowrap;">Date & Time</th>
-                            <th style="white-space: nowrap;">Loading No</th>
-                            <th style="white-space: nowrap;">Vehicle & Driver</th>
-                            <th style="white-space: nowrap;">Warehouse</th>
-                            <th style="white-space: nowrap;">Created By</th>
-                            <th style="text-align: center; white-space: nowrap;">Status</th>
-                            <th style="text-align: right; white-space: nowrap;">Loaded Qty</th>
+                            <th>Date & Time</th>
+                            <th>Loading No</th>
+                            <th>Vehicle & Driver</th>
+                            <th>Warehouse</th>
+                            <th>Created By</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: right;">Loaded Qty</th>
                             <th>Remarks</th>
                         </tr>
                     </thead>
@@ -805,18 +804,18 @@
                 <table id="reportUnloadingTable" class="display" style="width:100%">
                     <thead>
                         <tr>
-                            <th style="white-space: nowrap;">Date & Time</th>
-                            <th style="white-space: nowrap;">Unloading No</th>
-                            <th style="white-space: nowrap;">Loading No</th>
-                            <th style="white-space: nowrap;">Vehicle & Driver</th>
-                            <th style="white-space: nowrap;">Warehouse</th>
-                            <th style="text-align: right; white-space: nowrap;">Loaded</th>
-                            <th style="text-align: right; white-space: nowrap;">OUT</th>
-                            <th style="text-align: right; white-space: nowrap;">IN</th>
-                            <th style="text-align: right; white-space: nowrap;">Expected</th>
-                            <th style="text-align: right; white-space: nowrap;">Unloaded</th>
-                            <th style="text-align: right; white-space: nowrap;">Variance</th>
-                            <th style="white-space: nowrap;">Received By</th>
+                            <th>Date & Time</th>
+                            <th>Unloading No</th>
+                            <th>Loading No</th>
+                            <th>Vehicle & Driver</th>
+                            <th>Warehouse</th>
+                            <th style="text-align: right;">Loaded</th>
+                            <th style="text-align: right;">OUT</th>
+                            <th style="text-align: right;">IN</th>
+                            <th style="text-align: right;">Expected</th>
+                            <th style="text-align: right;">Unloaded</th>
+                            <th style="text-align: right;">Variance</th>
+                            <th>Received By</th>
                             <th>Remarks</th>
                         </tr>
                     </thead>
@@ -1152,6 +1151,11 @@
             box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.15);
         }
 
+        /* 1.5. Content Box Padding Optimization for Reports */
+        .tab-content .content-box {
+            padding: 16px 14px !important;
+        }
+
         /* 2. Table Container & Outer Borders */
         .tab-content .table-responsive {
             border: 1px solid #e2e8f0;
@@ -1160,6 +1164,7 @@
             overflow-x: auto;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
             margin-bottom: 12px;
+            width: 100%;
         }
 
         .tab-content table.dataTable {
@@ -1167,25 +1172,27 @@
             border-collapse: collapse !important;
             border-spacing: 0 !important;
             margin: 0 !important;
-            font-size: 12.5px;
+            font-size: 11.5px !important;
             border: none !important;
+            table-layout: auto !important;
         }
 
-        /* 3. Table Header (thead th) - Crisp Light Slate matching screenshot */
+        /* 3. Table Header (thead th) - Crisp Light Slate, Multi-line Wrapping & Compact */
         .tab-content table.dataTable thead th,
         .tab-content table thead th {
             background-color: #f8fafc !important;
             color: #334155 !important;
             font-weight: 600 !important;
-            font-size: 12.5px !important;
-            padding: 10px 14px !important;
+            font-size: 11px !important;
+            padding: 7px 5px !important;
             border-top: none !important;
             border-bottom: 1px solid #e2e8f0 !important;
             border-right: 1px solid #e2e8f0 !important;
             border-left: none !important;
-            white-space: nowrap;
+            white-space: normal !important;
             vertical-align: middle;
             text-align: left;
+            line-height: 1.2 !important;
         }
 
         .tab-content table.dataTable thead th:last-child,
@@ -1197,22 +1204,23 @@
         .tab-content table.dataTable thead .sorting,
         .tab-content table.dataTable thead .sorting_asc,
         .tab-content table.dataTable thead .sorting_desc {
-            background-position: right 6px center !important;
-            padding-right: 22px !important;
+            background-position: right 2px center !important;
+            padding-right: 14px !important;
         }
 
-        /* 4. Table Body (tbody td) */
+        /* 4. Table Body (tbody td) - Compact & Clean without overflow */
         .tab-content table.dataTable tbody td,
         .tab-content table tbody td {
-            padding: 9px 14px !important;
+            padding: 6px 5px !important;
             border-top: none !important;
             border-bottom: 1px solid #f1f5f9 !important;
             border-right: 1px solid #f1f5f9 !important;
             border-left: none !important;
             color: #334155;
             vertical-align: middle;
-            font-size: 12.5px;
+            font-size: 11.5px !important;
             background-color: #ffffff;
+            white-space: nowrap;
         }
 
         .tab-content table.dataTable tbody td:last-child,
@@ -1238,8 +1246,9 @@
             font-weight: 700 !important;
             border-top: 2px solid #cbd5e1 !important;
             border-right: 1px solid #e2e8f0 !important;
-            padding: 9px 14px !important;
-            font-size: 12.5px !important;
+            padding: 7px 5px !important;
+            font-size: 11.5px !important;
+            white-space: nowrap;
         }
 
         .tab-content table tfoot th:last-child,
