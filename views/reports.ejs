@@ -1081,74 +1081,109 @@
         }
 
         /* 1. Top Controls: Length Menu & Search */
+        .tab-content .dt-top-toolbar {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+            margin-bottom: 12px !important;
+            padding: 2px 0 !important;
+            width: 100% !important;
+        }
+
         .tab-content .dataTables_wrapper .dataTables_length {
-            float: left;
-            margin-bottom: 12px;
-            font-size: 13px;
-            color: #475569;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
+            float: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 13px !important;
+            color: #475569 !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
         }
 
         .tab-content .dataTables_wrapper .dataTables_length label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin: 0;
-            cursor: pointer;
+            display: inline-flex !important;
+            align-items: center !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            white-space: nowrap !important;
+            gap: 6px !important;
+            margin: 0 !important;
+            cursor: pointer !important;
+            color: #475569 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
         }
 
         .tab-content .dataTables_wrapper .dataTables_length select {
-            padding: 4px 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            background-color: #ffffff;
-            color: #334155;
-            font-size: 13px;
-            font-weight: 500;
-            outline: none;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            display: inline-block !important;
+            width: auto !important;
+            height: 32px !important;
+            padding: 3px 8px !important;
+            margin: 0 4px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 4px !important;
+            background-color: #ffffff !important;
+            color: #334155 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            outline: none !important;
+            cursor: pointer !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .tab-content .dataTables_wrapper .dataTables_length select:focus {
-            border-color: #1b5e20;
-            box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.15);
+            border-color: #1b5e20 !important;
+            box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.15) !important;
         }
 
         .tab-content .dataTables_wrapper .dataTables_filter {
-            float: right;
-            margin-bottom: 12px;
-            font-size: 13px;
-            color: #475569;
-            font-weight: 500;
+            float: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 13px !important;
+            color: #475569 !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
         }
 
         .tab-content .dataTables_wrapper .dataTables_filter label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin: 0;
+            display: inline-flex !important;
+            align-items: center !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            white-space: nowrap !important;
+            gap: 6px !important;
+            margin: 0 !important;
+            color: #475569 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
         }
 
         .tab-content .dataTables_wrapper .dataTables_filter input {
-            padding: 4px 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 4px;
-            background-color: #ffffff;
-            color: #1e293b;
-            font-size: 13px;
-            outline: none;
-            min-width: 180px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            display: inline-block !important;
+            height: 32px !important;
+            padding: 4px 10px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 4px !important;
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            font-size: 13px !important;
+            outline: none !important;
+            min-width: 180px !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .tab-content .dataTables_wrapper .dataTables_filter input:focus {
-            border-color: #1b5e20;
-            box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.15);
+            border-color: #1b5e20 !important;
+            box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.15) !important;
         }
 
         /* 1.5. Content Box Padding Optimization for Reports */
@@ -1158,23 +1193,27 @@
 
         /* 2. Table Container & Outer Borders */
         .tab-content .table-responsive {
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background: #ffffff;
-            overflow-x: auto;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            margin-bottom: 12px;
-            width: 100%;
+            border: none !important;
+            background: transparent !important;
+            overflow-x: auto !important;
+            box-shadow: none !important;
+            margin-bottom: 12px !important;
+            width: 100% !important;
         }
 
         .tab-content table.dataTable {
             width: 100% !important;
-            border-collapse: collapse !important;
+            border-collapse: separate !important;
             border-spacing: 0 !important;
             margin: 0 !important;
             font-size: 11.5px !important;
-            border: none !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+            overflow: hidden !important;
+            background: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
             table-layout: auto !important;
+            clear: both !important;
         }
 
         /* 3. Table Header (thead th) - Crisp Light Slate, Multi-line Wrapping & Compact */
@@ -1256,21 +1295,34 @@
             border-right: none !important;
         }
 
-        /* 6. Bottom Controls: Info & Pagination */
+        /* 6. Bottom Controls: Info & Pagination (Flexbox row) */
+        .tab-content .dt-bottom-toolbar {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+            margin-top: 10px !important;
+            padding: 4px 0 !important;
+            width: 100% !important;
+        }
+
         .tab-content .dataTables_wrapper .dataTables_info {
-            float: left;
-            padding-top: 10px;
+            float: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
             color: #64748b !important;
-            font-size: 12.5px;
-            font-weight: 400;
+            font-size: 12.5px !important;
+            font-weight: 400 !important;
         }
 
         .tab-content .dataTables_wrapper .dataTables_paginate {
-            float: right;
-            padding-top: 6px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+            float: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
         }
 
         .tab-content .dataTables_wrapper .dataTables_paginate .paginate_button {
@@ -1354,6 +1406,7 @@
             const tableConfig = {
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                dom: '<"dt-top-toolbar"lf>rt<"dt-bottom-toolbar"ip>',
                 language: {
                     lengthMenu: "Display _MENU_ records",
                     search: "Search:",
