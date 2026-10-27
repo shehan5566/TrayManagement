@@ -306,7 +306,7 @@
         } else { 
             paidAmt = totalTrayDeposit; 
         } 
-        var pendingAmt = totalTrayDeposit - paidAmt; 
+        var pendingAmt = Math.max(0, totalTrayDeposit - paidAmt); 
 
         var modeText = 'Full Deposit (100%)';
         if (tx.depositOption === 'CUSTOM' || (paidAmt > 0 && paidAmt !== totalTrayDeposit && paidAmt !== totalTrayDeposit / 2)) {
@@ -429,7 +429,7 @@
                 Total Value: <%= countQty %> Trays × Rs. <%= rate.toLocaleString() %> = <strong>Rs. <%= totalTrayDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></strong>
             </div>
             <div style="font-size: 10.5px; margin-top: 2px; color: <%= pendingAmt > 0 ? '#dc2626' : '#15803d' %>; font-weight: bold;">
-                <%= isOut ? 'Pending Unpaid Deposit' : 'Pending Unrefunded Balance' %>: Rs. <%= Math.abs(pendingAmt).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                <%= isOut ? 'Pending Unpaid Deposit' : 'Pending Unrefunded Balance' %>: Rs. <%= pendingAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 4px; border-top: 1px dashed <%= isOut ? '#f59e0b' : '#22c55e' %>;">
                 <span style="font-size: 9.5px; font-weight: bold; text-transform: uppercase; color: #6b7280;"><%= isOut ? 'Paid Amount:' : 'Refunded Amount:' %></span>
@@ -589,7 +589,7 @@
             } else {
                 paid = expected;
             }
-            const pending = expected - paid;
+            const pending = Math.max(0, expected - paid);
 
             text(formatLine("Rate:", "Rs. " + rate.toLocaleString() + "/Tray"));
             const totLabel = txData.type === 'OUT' ? "Total Payable:" : "Total Refund:";
@@ -597,7 +597,7 @@
             const depLabel = txData.type === 'OUT' ? "Deposit Paid:" : "Refund Paid:";
             text(formatLine(depLabel, "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             const pendLabel = txData.type === 'OUT' ? "Pending Dep:" : "Pending Ref:";
-            text(formatLine(pendLabel, "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            text(formatLine(pendLabel, "Rs. " + pending.toLocaleString('en-US', { minimumFractionDigits: 2 })));
             text(formatLine("Payment Mode:", txData.depositOption || 'FULL'));
 
             const hasApproval = !!(txData.approvedBy || txData.specialApprovalId || (txData.remarks && /approved by/i.test(txData.remarks)));

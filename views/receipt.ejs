@@ -47,7 +47,7 @@
             } else { 
                 paidAmt = totalTrayDeposit; 
             } 
-            var pendingAmt = totalTrayDeposit - paidAmt; 
+            var pendingAmt = Math.max(0, totalTrayDeposit - paidAmt); 
         %>
 
             <table class="receipt-details-table">
@@ -105,7 +105,7 @@
                     </td>
                     <td class="value">
                         <strong style="color: <%= pendingAmt > 0 ? '#d32f2f' : '#2e7d32' %>; font-size: 15px;">
-                            Rs. <%= Math.abs(pendingAmt).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                            Rs. <%= pendingAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                                 <% if (pendingAmt===0) { %>
                                     <span style="font-size: 11px; font-weight: normal; color: #666;">(Fully <%= isOut
                                             ? 'Paid' : 'Refunded' %>)</span>
