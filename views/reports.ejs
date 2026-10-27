@@ -219,11 +219,11 @@
                             <th style="text-align: right;">Total Issued<br>(Out)</th>
                             <th style="text-align: right;">Total Returned<br>(In)</th>
                             <th style="text-align: right;">Closing<br>Balance</th>
-                            <th style="text-align: right; color: var(--primary-green-dark);">Initial Deposit<br>(Rs.)</th>
-                            <th style="text-align: right; color: var(--danger);">Deposit Coll.<br>(Rs.)</th>
-                            <th style="text-align: right; color: var(--success);">Deposit Ref.<br>(Rs.)</th>
+                            <th style="text-align: right;">Initial Deposit<br>(Rs.)</th>
+                            <th style="text-align: right;">Deposit Coll.<br>(Rs.)</th>
+                            <th style="text-align: right;">Deposit Ref.<br>(Rs.)</th>
                             <th style="text-align: right;">Refundable<br>Outst. (Rs.)</th>
-                            <th style="text-align: right; color: var(--danger);">Pending Dep.<br>(Rs.)</th>
+                            <th style="text-align: right;">Pending Dep.<br>(Rs.)</th>
                             <th style="text-align: center; width: 38px;">View</th>
                         </tr>
                     </thead>
@@ -236,34 +236,34 @@
                                 <td>
                                     <%= cb.phone %>
                                 </td>
-                                <td style="text-align: right; font-family: monospace;">
+                                <td style="text-align: right; color: #000000; font-family: monospace;">
                                     <%= cb.initialBalance %>
                                 </td>
-                                <td style="text-align: right; color: var(--danger); font-family: monospace;">
+                                <td style="text-align: right; color: #000000; font-family: monospace;">
                                     <%= cb.totalOut %>
                                 </td>
-                                <td style="text-align: right; color: var(--success); font-family: monospace;">
+                                <td style="text-align: right; color: #000000; font-family: monospace;">
                                     <%= cb.totalIn %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; font-family: monospace; color: <%= cb.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    style="text-align: right; font-weight: bold; font-family: monospace; color: #000000;">
                                     <%= cb.currentBalance %>
                                 </td>
-                                <td style="text-align: right; font-family: monospace; color: var(--primary-green-dark);">
+                                <td style="text-align: right; font-family: monospace; color: #000000;">
                                     <%= (cb.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                                 </td>
-                                <td style="text-align: right; color: var(--danger); font-family: monospace;">
+                                <td style="text-align: right; color: #000000; font-family: monospace;">
                                     <%= (cb.depositCollected || 0).toLocaleString() %>
                                 </td>
-                                <td style="text-align: right; color: var(--success); font-family: monospace;">
+                                <td style="text-align: right; color: #000000; font-family: monospace;">
                                     <%= (cb.depositRefunded || 0).toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; font-family: monospace; color: <%= (cb.depositOutstanding || 0) > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    style="text-align: right; font-weight: bold; font-family: monospace; color: #000000;">
                                     <%= (cb.depositOutstanding || 0).toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; font-family: monospace; color: <%= (cb.pendingDeposit || 0) > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    style="text-align: right; font-weight: bold; font-family: monospace; color: #000000;">
                                     <%= (cb.pendingDeposit || 0).toLocaleString() %>
                                 </td>
                                 <td style="text-align: center;">
@@ -290,44 +290,44 @@
                         }
                         %>
                         <tfoot
-                            style="background-color: #e8f5e9; font-weight: bold; border-top: 2px solid var(--primary-green);">
+                            style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #cbd5e1;">
                             <tr>
                                 <td colspan="2"
-                                    style="text-align: right; color: var(--primary-green-dark); font-size: 13px;">
+                                    style="text-align: right; color: #000000; font-size: 13px;">
                                     OUTSTANDING TRAY BALANCE & GRAND TOTAL:</td>
-                                <td style="text-align: right; font-family: monospace; font-size: 14px;">
+                                <td style="text-align: right; font-family: monospace; font-size: 14px; color: #000000;">
                                     <%= totalInitial %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: var(--danger); font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
                                     <%= totalOut %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: var(--success); font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
                                     <%= totalIn %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 15px; color: <%= totalCurrent > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    style="text-align: right; font-family: monospace; font-size: 15px; color: #000000;">
                                     <%= totalCurrent %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 14px; color: var(--primary-green-dark);">
+                                    style="text-align: right; font-family: monospace; font-size: 14px; color: #000000;">
                                     <%= totalInitialDep.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: var(--danger); font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
                                     <%= totalDepColl.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: var(--success); font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
                                     <%= totalDepRef.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 15px; color: <%= totalDepOut > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    style="text-align: right; font-family: monospace; font-size: 15px; color: #000000;">
                                     <%= totalDepOut.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 15px; color: <%= totalPendingDep > 0 ? 'var(--danger)' : 'var(--success)' %>">
+                                    style="text-align: right; font-family: monospace; font-size: 15px; color: #000000;">
                                     <%= totalPendingDep.toLocaleString() %>
                                 </td>
                                 <td></td>
@@ -388,15 +388,15 @@
                                 <td>
                                     <%= t.user %>
                                 </td>
-                                <td><span style="font-size: 13px; color: var(--text-light);">
+                                <td><span style="font-size: 13px; color: #000000;">
                                         <%= t.remarks || '-' %>
                                     </span></td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: var(--danger); font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
                                     <%= t.count %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: var(--danger); font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
                                     <%= (t.totalDeposit || 0).toLocaleString() %>
                                 </td>
                             </tr>
@@ -457,15 +457,15 @@
                                 <td>
                                     <%= t.user %>
                                 </td>
-                                <td><span style="font-size: 13px; color: var(--text-light);">
+                                <td><span style="font-size: 13px; color: #000000;">
                                         <%= t.remarks || '-' %>
                                     </span></td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: var(--success); font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
                                     <%= t.count %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: var(--success); font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
                                     <%= (t.totalDeposit || 0).toLocaleString() %>
                                 </td>
                             </tr>
@@ -617,7 +617,7 @@
                                     <%= t.receivedQty || 0 %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: <%= (t.variance < 0) ? 'var(--danger)' : ((t.variance > 0) ? 'var(--warning)' : 'inherit') %>;">
+                                    style="text-align: right; color: #000000;">
                                     <%= t.variance || 0 %>
                                 </td>
                                 <td>
@@ -698,21 +698,21 @@
                     <tbody>
                         <% loadingList.forEach(t => { %>
                             <tr>
-                                <td data-order="<%= new Date(t.dispatchedDate).getTime() %>" style="white-space: nowrap;">
-                                    <%= new Date(t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
+                                <td data-order="<%= new Date(t.dispatchedDate).getTime() %>" style="white-space: nowrap; color: #000000;">
+                                    <%= new Date(t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: #000000; font-size: 11px;"><%= new Date(t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
                                 </td>
                                 <td style="white-space: nowrap;">
-                                    <strong style="color: #1e293b;"><%= t.tripNo %></strong>
+                                    <strong style="color: #000000;"><%= t.tripNo %></strong>
                                 </td>
                                 <td style="white-space: nowrap;">
-                                    <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                    <strong style="color: #000000;"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: #000000; font-weight: normal;">(<%= t.driverName %>)</span><% } %>
                                 </td>
                                 <td style="white-space: nowrap;">
-                                    <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
+                                    <span class="badge" style="background: #f1f5f9; color: #000000; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
                                         <%= t.locationName || 'Head Office' %>
                                     </span>
                                 </td>
-                                <td style="white-space: nowrap;"><%= t.dispatchedBy || 'System' %></td>
+                                <td style="white-space: nowrap; color: #000000;"><%= t.dispatchedBy || 'System' %></td>
                                 <td style="text-align: center; white-space: nowrap;">
                                     <% if (t.status === 'COMPLETED') { %>
                                         <span class="badge badge-in" style="font-size: 10px; padding: 2px 6px; background: #dcfce7; color: #166534; border: 1px solid #86efac; white-space: nowrap;">COMPLETED</span>
@@ -722,10 +722,10 @@
                                         <span class="badge" style="font-size: 10px; padding: 2px 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #93c5fd; white-space: nowrap;">ON ROUTE</span>
                                     <% } %>
                                 </td>
-                                <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 800; font-size: 14px; color: #107c41; white-space: nowrap;">
+                                <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 800; font-size: 14px; color: #000000; white-space: nowrap;">
                                     <%= (t.loadedQty || 0).toLocaleString() %>
                                 </td>
-                                <td><%= t.notes || '-' %></td>
+                                <td style="color: #000000;"><%= t.notes || '-' %></td>
                             </tr>
                         <% }) %>
                     </tbody>
@@ -822,24 +822,24 @@
                     <tbody>
                         <% unloadingList.forEach(t => { %>
                             <tr>
-                                <td data-order="<%= t.returnedDate ? new Date(t.returnedDate).getTime() : (t.dispatchedDate ? new Date(t.dispatchedDate).getTime() : 0) %>" style="white-space: nowrap;">
-                                    <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: var(--text-light); font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
+                                <td data-order="<%= t.returnedDate ? new Date(t.returnedDate).getTime() : (t.dispatchedDate ? new Date(t.dispatchedDate).getTime() : 0) %>" style="white-space: nowrap; color: #000000;">
+                                    <%= new Date(t.returnedDate || t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %> <span style="color: #000000; font-size: 11px;"><%= new Date(t.returnedDate || t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %></span>
                                 </td>
-                                <td style="white-space: nowrap;"><strong style="color: #1e293b;"><%= t.unloadingNo || '-' %></strong></td>
-                                <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
+                                <td style="white-space: nowrap;"><strong style="color: #000000;"><%= t.unloadingNo || '-' %></strong></td>
+                                <td style="white-space: nowrap; color: #000000;"><strong style="color: #000000;"><%= t.tripNo %></strong></td>
                                 <td style="white-space: nowrap;">
-                                    <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                    <strong style="color: #000000;"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: #000000; font-weight: normal;">(<%= t.driverName %>)</span><% } %>
                                 </td>
                                 <td style="white-space: nowrap;">
-                                    <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
+                                    <span class="badge" style="background: #f1f5f9; color: #000000; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
                                         <%= t.locationName || 'Head Office' %>
                                     </span>
                                 </td>
-                                <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 700; white-space: nowrap;"><%= t.loadedQty || 0 %></td>
-                                <td data-order="<%= t.totalDeliveredQty || 0 %>" style="text-align: right; color: #dc2626; font-weight: 700; white-space: nowrap;"><%= t.totalDeliveredQty || 0 %></td>
-                                <td data-order="<%= t.totalCollectedQty || 0 %>" style="text-align: right; color: #2563eb; font-weight: 700; white-space: nowrap;"><%= t.totalCollectedQty || 0 %></td>
-                                <td data-order="<%= t.expectedRemainingQty || 0 %>" style="text-align: right; font-weight: 800; white-space: nowrap;"><%= t.expectedRemainingQty || 0 %></td>
-                                <td data-order="<%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : -1 %>" style="text-align: right; font-weight: 800; color: #107c41; white-space: nowrap;">
+                                <td data-order="<%= t.loadedQty || 0 %>" style="text-align: right; font-weight: 700; white-space: nowrap; color: #000000;"><%= t.loadedQty || 0 %></td>
+                                <td data-order="<%= t.totalDeliveredQty || 0 %>" style="text-align: right; color: #000000; font-weight: 700; white-space: nowrap;"><%= t.totalDeliveredQty || 0 %></td>
+                                <td data-order="<%= t.totalCollectedQty || 0 %>" style="text-align: right; color: #000000; font-weight: 700; white-space: nowrap;"><%= t.totalCollectedQty || 0 %></td>
+                                <td data-order="<%= t.expectedRemainingQty || 0 %>" style="text-align: right; font-weight: 800; white-space: nowrap; color: #000000;"><%= t.expectedRemainingQty || 0 %></td>
+                                <td data-order="<%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : -1 %>" style="text-align: right; font-weight: 800; color: #000000; white-space: nowrap;">
                                     <%= t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : '-' %>
                                 </td>
                                 <td data-order="<%= t.variance || 0 %>" style="text-align: right; white-space: nowrap;">
@@ -852,11 +852,11 @@
                                             <span class="badge" style="background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; font-weight: 700; white-space: nowrap; padding: 3px 8px;">+<%= t.variance %></span>
                                         <% } %>
                                     <% } else { %>
-                                        <span style="color: #9ca3af;">-</span>
+                                        <span style="color: #000000;">-</span>
                                     <% } %>
                                 </td>
-                                <td style="white-space: nowrap;"><%= t.receivedBy || '-' %></td>
-                                <td><%= t.notes || '-' %></td>
+                                <td style="white-space: nowrap; color: #000000;"><%= t.receivedBy || '-' %></td>
+                                <td style="color: #000000;"><%= t.notes || '-' %></td>
                             </tr>
                         <% }) %>
                     </tbody>
@@ -891,10 +891,10 @@
                             <th>Date</th>
                             <th>Stock Transfer No</th>
                             <th>GRN No</th>
-                            <th style="text-align: right;">Opening Balance</th>
-                            <th style="text-align: right; color: #dc2626;">Dispatched Qty</th>
-                            <th style="text-align: right; color: #16a34a;">GRN Qty</th>
-                            <th style="text-align: right; font-weight: bold;">Closing Balance</th>
+                            <th style="text-align: right; color: #000000;">Opening Balance</th>
+                            <th style="text-align: right; color: #000000;">Dispatched Qty</th>
+                            <th style="text-align: right; color: #000000;">GRN Qty</th>
+                            <th style="text-align: right; font-weight: bold; color: #000000;">Closing Balance</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -917,14 +917,14 @@
                                 </td>
                                 <td><code><%= wb.transferDocNo || '-' %></code></td>
                                 <td><code><%= wb.grnNo || '-' %></code></td>
-                                <td style="text-align: right; font-weight: 600;"><%= wb.openingBalance %></td>
-                                <td style="text-align: right; font-weight: bold; color: <%= wb.dispatchedQty > 0 ? '#dc2626' : 'inherit' %>;">
+                                <td style="text-align: right; font-weight: 600; color: #000000;"><%= wb.openingBalance %></td>
+                                <td style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= wb.dispatchedQty > 0 ? wb.dispatchedQty : '-' %>
                                 </td>
-                                <td style="text-align: right; font-weight: bold; color: <%= wb.grnQty > 0 ? '#16a34a' : 'inherit' %>;">
+                                <td style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= wb.grnQty > 0 ? wb.grnQty : '-' %>
                                 </td>
-                                <td style="text-align: right; font-weight: bold; background-color: rgba(16, 185, 129, 0.08);"><%= wb.closingBalance %></td>
+                                <td style="text-align: right; font-weight: bold; color: #000000;"><%= wb.closingBalance %></td>
                             </tr>
                         <% }); %>
                     </tbody>
@@ -1018,36 +1018,36 @@
                 <table
                     style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
                     <tr>
-                        <td style="padding: 10px 15px;"><strong>Opening Tray Balance:</strong> <span
-                                id="breakupInitialBal" style="font-weight: 700; color: #333;">0</span> Trays</td>
-                        <td style="padding: 10px 15px;"><strong>Current Net Balance:</strong> <span
-                                id="breakupCurrentBal" style="font-weight: 700;">0</span> Trays</td>
-                        <td style="padding: 10px 15px;"><strong>Deposit Balance:</strong> <span
-                                id="breakupDepositBal" style="font-weight: 700; color: var(--primary-green-dark);">Rs. 0.00</span></td>
-                        <td style="padding: 10px 15px;"><strong>Refundable Outstanding (Rs.):</strong> <span
-                                id="breakupDepositOut" style="font-weight: 700;">Rs. 0.00</span></td>
-                        <td style="padding: 10px 15px;"><strong>Pending Deposit (Rs.):</strong> <span
-                                id="breakupPendingDeposit" style="font-weight: 700; color: var(--danger);">Rs. 0.00</span></td>
+                        <td style="padding: 10px 15px; color: #000000;"><strong>Opening Tray Balance:</strong> <span
+                                id="breakupInitialBal" style="font-weight: 700; color: #000000;">0</span> Trays</td>
+                        <td style="padding: 10px 15px; color: #000000;"><strong>Current Net Balance:</strong> <span
+                                id="breakupCurrentBal" style="font-weight: 700; color: #000000;">0</span> Trays</td>
+                        <td style="padding: 10px 15px; color: #000000;"><strong>Deposit Balance:</strong> <span
+                                id="breakupDepositBal" style="font-weight: 700; color: #000000;">Rs. 0.00</span></td>
+                        <td style="padding: 10px 15px; color: #000000;"><strong>Refundable Outstanding (Rs.):</strong> <span
+                                id="breakupDepositOut" style="font-weight: 700; color: #000000;">Rs. 0.00</span></td>
+                        <td style="padding: 10px 15px; color: #000000;"><strong>Pending Deposit (Rs.):</strong> <span
+                                id="breakupPendingDeposit" style="font-weight: 700; color: #000000;">Rs. 0.00</span></td>
                     </tr>
                 </table>
 
                 <table id="breakupTable" style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr style="background-color: var(--primary-green); color: white;">
-                            <th style="padding: 10px; text-align: left;">Date & Time</th>
-                            <th style="padding: 10px; text-align: left;">Receipt No</th>
-                            <th style="padding: 10px; text-align: center;">Type</th>
-                            <th style="padding: 10px; text-align: left;">Vehicle No</th>
-                            <th style="padding: 10px; text-align: right; background-color: #b71c1c; color: white;">
+                        <tr style="background-color: #f8fafc; color: #000000; border-bottom: 2px solid #cbd5e1;">
+                            <th style="padding: 10px; text-align: left; color: #000000;">Date & Time</th>
+                            <th style="padding: 10px; text-align: left; color: #000000;">Receipt No</th>
+                            <th style="padding: 10px; text-align: center; color: #000000;">Type</th>
+                            <th style="padding: 10px; text-align: left; color: #000000;">Vehicle No</th>
+                            <th style="padding: 10px; text-align: right; color: #000000;">
                                 Issued (Out)</th>
-                            <th style="padding: 10px; text-align: right; background-color: #1b5e20; color: white;">
+                            <th style="padding: 10px; text-align: right; color: #000000;">
                                 Returned (In)</th>
-                            <th style="padding: 10px; text-align: right;">Running Tray Balance</th>
-                            <th style="padding: 10px; text-align: right; background-color: #b71c1c; color: white;">
+                            <th style="padding: 10px; text-align: right; color: #000000;">Running Tray Balance</th>
+                            <th style="padding: 10px; text-align: right; color: #000000;">
                                 Deposit Collected (Rs.)</th>
-                            <th style="padding: 10px; text-align: right; background-color: #1b5e20; color: white;">
+                            <th style="padding: 10px; text-align: right; color: #000000;">
                                 Deposit Refunded (Rs.)</th>
-                            <th style="padding: 10px; text-align: left;">Created by</th>
+                            <th style="padding: 10px; text-align: left; color: #000000;">Created by</th>
                         </tr>
                     </thead>
                     <tbody id="breakupTableBody">
@@ -1218,9 +1218,11 @@
 
         /* 3. Table Header (thead th) - Crisp Light Slate, Multi-line Wrapping & Compact */
         .tab-content table.dataTable thead th,
-        .tab-content table thead th {
+        .tab-content table thead th,
+        .tab-content table.dataTable thead th *,
+        .tab-content table thead th * {
             background-color: #f8fafc !important;
-            color: #334155 !important;
+            color: #000000 !important;
             font-weight: 600 !important;
             font-size: 11px !important;
             padding: 7px 5px !important;
@@ -1247,19 +1249,28 @@
             padding-right: 14px !important;
         }
 
-        /* 4. Table Body (tbody td) - Compact & Clean without overflow */
+        /* 4. Table Body (tbody td) - Pure Black Color for All Data */
         .tab-content table.dataTable tbody td,
-        .tab-content table tbody td {
+        .tab-content table tbody td,
+        .tab-content table.dataTable tbody td *:not(.badge):not(.badge *):not(.btn):not(.btn *):not(.fa-solid):not(.fas),
+        .tab-content table tbody td *:not(.badge):not(.badge *):not(.btn):not(.btn *):not(.fa-solid):not(.fas) {
             padding: 6px 5px !important;
             border-top: none !important;
             border-bottom: 1px solid #f1f5f9 !important;
             border-right: 1px solid #f1f5f9 !important;
             border-left: none !important;
-            color: #334155;
+            color: #000000 !important;
             vertical-align: middle;
             font-size: 11.5px !important;
             background-color: #ffffff;
             white-space: nowrap;
+        }
+
+        .tab-content table.dataTable tbody td code,
+        .tab-content table tbody td code {
+            color: #000000 !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
         }
 
         .tab-content table.dataTable tbody td:last-child,
@@ -1279,9 +1290,15 @@
 
         /* 5. Footer Summary Row (tfoot td / tfoot th) */
         .tab-content table tfoot th,
-        .tab-content table tfoot td {
+        .tab-content table tfoot td,
+        .tab-content table.dataTable tfoot th,
+        .tab-content table.dataTable tfoot td,
+        .tab-content table tfoot th *,
+        .tab-content table tfoot td *,
+        .tab-content table.dataTable tfoot th *,
+        .tab-content table.dataTable tfoot td * {
             background-color: #f8fafc !important;
-            color: #1e293b !important;
+            color: #000000 !important;
             font-weight: 700 !important;
             border-top: 2px solid #cbd5e1 !important;
             border-right: 1px solid #e2e8f0 !important;
@@ -1293,6 +1310,14 @@
         .tab-content table tfoot th:last-child,
         .tab-content table tfoot td:last-child {
             border-right: none !important;
+        }
+
+        /* 5.5 Breakup Modal Table styling */
+        #breakupModal table th,
+        #breakupModal table td,
+        #breakupModal table th *,
+        #breakupModal table td *:not(.badge):not(.badge *):not(.btn):not(.btn *):not(.fa-solid):not(.fas) {
+            color: #000000 !important;
         }
 
         /* 6. Bottom Controls: Info & Pagination (Flexbox row) */
@@ -1527,20 +1552,21 @@
             document.getElementById('breakupCustomerMeta').textContent = 'Phone: ' + (cust.phone || 'N/A') + ' | Customer ID: #' + cust.id;
             document.getElementById('breakupInitialBal').textContent = cust.initialBalance || 0;
             document.getElementById('breakupCurrentBal').textContent = (cust.currentBalance || 0) + ' Trays';
-            document.getElementById('breakupCurrentBal').style.color = (cust.currentBalance || 0) > 0 ? 'var(--danger)' : 'var(--success)';
+            document.getElementById('breakupCurrentBal').style.color = '#000000';
             
             const depositBalEl = document.getElementById('breakupDepositBal');
             if (depositBalEl) {
                 depositBalEl.textContent = 'Rs. ' + Number(cust.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
+                depositBalEl.style.color = '#000000';
             }
 
             document.getElementById('breakupDepositOut').textContent = 'Rs. ' + (cust.depositOutstanding || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
-            document.getElementById('breakupDepositOut').style.color = (cust.depositOutstanding || 0) > 0 ? 'var(--danger)' : 'var(--success)';
+            document.getElementById('breakupDepositOut').style.color = '#000000';
 
             const pendingDepositEl = document.getElementById('breakupPendingDeposit');
             if (pendingDepositEl) {
                 pendingDepositEl.textContent = 'Rs. ' + (cust.pendingDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
-                pendingDepositEl.style.color = (cust.pendingDeposit || 0) > 0 ? 'var(--danger)' : 'var(--success)';
+                pendingDepositEl.style.color = '#000000';
             }
 
             const tbody = document.getElementById('breakupTableBody');
@@ -1583,23 +1609,23 @@
                             const receiptNo = 'RE-' + String(t.receiptNo || 0).padStart(6, '0');
                             const tr = document.createElement('tr');
                             tr.style.borderBottom = '1px solid #eee';
-                            tr.style.backgroundColor = isOut ? '#fffcf5' : '#f6fff8';
+                            tr.style.backgroundColor = '#ffffff';
 
                             tr.innerHTML = `
-                                <td style="padding: 10px; font-size: 13px;">${new Date(t.date).toLocaleString()}</td>
-                                <td style="padding: 10px;"><code>${receiptNo}</code></td>
+                                <td style="padding: 10px; font-size: 13px; color: #000000;">${new Date(t.date).toLocaleString()}</td>
+                                <td style="padding: 10px;"><code style="color: #000000;">${receiptNo}</code></td>
                                 <td style="padding: 10px; text-align: center;">
                                     <span class="badge badge-${isOut ? 'out' : 'in'}" style="font-size: 11px; padding: 4px 8px; font-weight: 700;">
                                         ${isOut ? 'TRAY ISSUE (OUT)' : 'TRAY RETURN (IN)'}
                                     </span>
                                 </td>
-                                <td style="padding: 10px;"><code>${t.vehicleNo || '-'}</code></td>
-                                <td style="padding: 10px; text-align: right; color: #c62828; font-weight: bold; background-color: ${isOut ? '#ffebee' : 'transparent'};">${isOut ? t.count : '-'}</td>
-                                <td style="padding: 10px; text-align: right; color: #2e7d32; font-weight: bold; background-color: ${!isOut ? '#e8f5e9' : 'transparent'};">${!isOut ? t.count : '-'}</td>
-                                <td style="padding: 10px; text-align: right; font-weight: bold; color: ${runningTrayBal > 0 ? '#c62828' : '#2e7d32'};">${runningTrayBal}</td>
-                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #c62828; background-color: ${isOut && t.totalDeposit ? '#ffebee' : 'transparent'};">${isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
-                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #2e7d32; background-color: ${!isOut && t.totalDeposit ? '#e8f5e9' : 'transparent'};">${!isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
-                                <td style="padding: 10px; font-size: 13px;"><strong>${t.user || 'admin'}</strong> ${t.remarks ? '<br><small style="color:#666;">' + t.remarks + '</small>' : ''}</td>
+                                <td style="padding: 10px;"><code style="color: #000000;">${t.vehicleNo || '-'}</code></td>
+                                <td style="padding: 10px; text-align: right; color: #000000; font-weight: bold;">${isOut ? t.count : '-'}</td>
+                                <td style="padding: 10px; text-align: right; color: #000000; font-weight: bold;">${!isOut ? t.count : '-'}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #000000;">${runningTrayBal}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #000000;">${isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: bold; color: #000000;">${!isOut ? (t.totalDeposit || 0).toLocaleString() : '-'}</td>
+                                <td style="padding: 10px; font-size: 13px; color: #000000;"><strong style="color: #000000;">${t.user || 'admin'}</strong> ${t.remarks ? '<br><small style="color:#000000;">' + t.remarks + '</small>' : ''}</td>
                             `;
                             tbody.appendChild(tr);
                         });
