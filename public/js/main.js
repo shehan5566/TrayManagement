@@ -80,41 +80,8 @@ function setupDropdownSearch(inputId, selectId) {
     });
 }
 
-// Theme Toggle Functionality
-function setupThemeToggle() {
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    if (!themeToggle || !themeIcon) return;
-
-    // Set initial icon based on active theme
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    if (currentTheme === 'dark') {
-        themeIcon.className = 'fa-solid fa-sun';
-    } else {
-        themeIcon.className = 'fa-solid fa-moon';
-    }
-
-    themeToggle.addEventListener('click', () => {
-        const activeTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        const newTheme = activeTheme === 'light' ? 'dark' : 'light';
-
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-
-        // Update icon class
-        if (newTheme === 'dark') {
-            themeIcon.className = 'fa-solid fa-sun';
-        } else {
-            themeIcon.className = 'fa-solid fa-moon';
-        }
-    });
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // Setup theme toggle
-    setupThemeToggle();
-
     // Setup tabs if they exist on the page
     setupTabs();
 

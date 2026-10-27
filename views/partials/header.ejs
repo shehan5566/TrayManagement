@@ -48,9 +48,8 @@
         }
     </style>
     <script>
-        // Apply theme immediately to prevent screen flashing
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
+        try { localStorage.removeItem('theme'); } catch (e) {}
+        document.documentElement.removeAttribute('data-theme');
     </script>
 </head>
 
@@ -138,10 +137,6 @@
                         <button class="header-icon-btn" onclick="toggleCommandPalette()"
                             title="Search & Quick Actions (Ctrl + K)">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                        </button>
-                        <!-- Theme Toggle -->
-                        <button id="theme-toggle" class="header-icon-btn" title="Toggle Theme">
-                            <i id="theme-icon" class="fa-solid fa-moon"></i>
                         </button>
                         <!-- Notifications Dropdown -->
                         <div class="notification-dropdown-wrapper">
