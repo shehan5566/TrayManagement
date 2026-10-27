@@ -1,14 +1,8 @@
 <%- include('partials/header') %>
 
-<div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-    <div>
-        <h2 style="color: var(--primary-green-dark); margin: 0;"><i class="fa-solid fa-users"></i> Customer Management</h2>
-        <p style="color: var(--text-light); font-size: 14px; margin: 4px 0 0 0;">Manage Nelna Agri customer profiles for your assigned branch location.</p>
-    </div>
-    <div style="background: #f8fafc; padding: 7px 15px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-location-dot" style="color: var(--primary-green-dark);"></i>
-        <span style="font-size: 13px; font-weight: 600; color: var(--text-dark);"><%= user.locationName || 'Current Location' %></span>
-    </div>
+<div style="margin-bottom: 25px;">
+    <h2 style="color: var(--primary-green-dark); margin: 0;"><i class="fa-solid fa-users"></i> Customer Management</h2>
+    <p style="color: var(--text-light); font-size: 14px; margin: 4px 0 0 0;">Manage Nelna Agri customer profiles.</p>
 </div>
 
 <% if (error) { %>
