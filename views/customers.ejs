@@ -141,13 +141,6 @@
                                     <a href="/customers/<%= c.id %>/history" style="color: var(--primary-green-dark); text-decoration: none;" title="View History">
                                         <strong><%= c.name %></strong> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 5px; color: var(--text-light);"></i>
                                     </a>
-                                    <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation) { %>
-                                    <div>
-                                        <span style="font-size: 10.5px; background: #e2e8f0; color: #334155; padding: 1px 7px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: 500;">
-                                            <i class="fa-solid fa-location-dot" style="font-size: 9px; margin-right: 3px; color: #64748b;"></i><%= c.locationName || 'Head Office' %>
-                                        </span>
-                                    </div>
-                                    <% } %>
                                 </td>
                                 <td><%= c.address || '-' %></td>
                                 <td><%= c.phone %></td>
