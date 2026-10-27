@@ -680,6 +680,14 @@ const Customer = {
         const customers = await CustomerModel.find(filter).lean();
         const mapped = customers.map(mapDoc);
 
+        const locations = await LocationModel.find({}).lean();
+        const locMap = {};
+        locations.forEach(l => { locMap[l._id] = l.name; });
+        mapped.forEach(c => {
+            const lid = c.locationId || 'main';
+            c.locationName = locMap[lid] || (lid === 'main' ? 'Head Office' : lid);
+        });
+
         if (includePendingDeposit) {
             const pendingMap = await Customer.getPendingDepositsMap(null, locationId);
             mapped.forEach(c => {
@@ -753,6 +761,9 @@ const Customer = {
             customer.name = customerData.name;
             customer.address = customerData.address;
             customer.phone = customerData.phone;
+            if (customerData.locationId) {
+                customer.locationId = customerData.locationId;
+            }
             if (customerData.initialDeposit !== undefined && customerData.initialDeposit !== null) {
                 customer.initialDeposit = parseFloat(customerData.initialDeposit) || 0;
             }

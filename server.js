@@ -1048,6 +1048,16 @@ app.get('/customers/:id/history', requireAuth, async (req, res) => {
         if (!customer) {
             return res.redirect('/customers');
         }
+
+        // Branch authorization check for location-restricted users
+        const userLoc = (req.session.user && req.session.user.locationId) ? req.session.user.locationId : 'main';
+        const isGlobal = (!userLoc || userLoc === 'all' || req.session.user.role === 'admin' || req.session.user.username === 'admin' || res.locals.canSwitchLocation);
+        if (!isGlobal) {
+            const custLoc = customer.locationId || 'main';
+            if (custLoc !== userLoc) {
+                return res.redirect('/customers');
+            }
+        }
         
         // Fetch transactions for this customer and sort by date ascending
         const TransactionModel = require('mongoose').model('Transaction');
@@ -1073,7 +1083,8 @@ app.get('/customers/:id/history', requireAuth, async (req, res) => {
 
 app.get('/customers', requireAuth, async (req, res) => {
     try {
-        const customers = await Customer.getAll(null, 'admin');
+        const userLoc = (req.session.user && req.session.user.locationId) ? req.session.user.locationId : null;
+        const customers = await Customer.getAll(userLoc, req.session.user.role);
         res.render('customers', { customers, editCustomer: null, error: null });
     } catch (err) {
         res.status(500).send('Error retrieving customers');
@@ -1082,11 +1093,22 @@ app.get('/customers', requireAuth, async (req, res) => {
 
 app.get('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), async (req, res) => {
     try {
-        const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
+        const userLoc = (req.session.user && req.session.user.locationId) ? req.session.user.locationId : null;
         const editCustomer = await Customer.getById(req.params.id);
         if (!editCustomer) {
             return res.redirect('/customers');
         }
+
+        // Branch authorization check for location-restricted users
+        const isGlobal = (!userLoc || userLoc === 'all' || req.session.user.role === 'admin' || req.session.user.username === 'admin' || res.locals.canSwitchLocation);
+        if (!isGlobal) {
+            const custLoc = editCustomer.locationId || 'main';
+            if (custLoc !== userLoc) {
+                return res.redirect('/customers');
+            }
+        }
+
+        const customers = await Customer.getAll(userLoc, req.session.user.role);
         res.render('customers', { customers, editCustomer, error: null });
     } catch (err) {
         res.status(500).send('Error retrieving customer for edit');
@@ -1094,7 +1116,7 @@ app.get('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), 
 });
 
 app.post('/customers', requireEditAccess, async (req, res) => {
-    const { name, address, phone, initialBalance, initialDeposit, depositAmount } = req.body;
+    const { name, address, phone, initialBalance, initialDeposit, depositAmount, locationId } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
@@ -1110,9 +1132,12 @@ app.post('/customers', requireEditAccess, async (req, res) => {
         return res.render('customers', { customers, editCustomer: null, error: 'Phone number must be exactly 10 digits!' });
     }
     try {
-        const customerLoc = (req.session.user && req.session.user.locationId && req.session.user.locationId !== 'all') ? req.session.user.locationId : 'main';
+        let customerLoc = (req.session.user && req.session.user.locationId && req.session.user.locationId !== 'all') ? req.session.user.locationId : 'main';
+        if (locationId && (req.session.user.role === 'admin' || req.session.user.username === 'admin' || res.locals.canSwitchLocation)) {
+            customerLoc = locationId;
+        }
         const newCustomer = await Customer.create({ name, address, phone, initialBalance, initialDeposit: initialDeposit || depositAmount, locationId: customerLoc });
-        await ActivityLog.log(req.session.user.username, 'CREATE', 'Customer', `Added customer: ${newCustomer.name}`);
+        await ActivityLog.log(req.session.user.username, 'CREATE', 'Customer', `Added customer: ${newCustomer.name} (${customerLoc})`);
         if (isAjax) return res.json({ success: true, message: 'Customer created successfully', data: newCustomer });
         res.redirect('/customers');
     } catch (err) {
@@ -1193,28 +1218,47 @@ app.post('/customers/import', requireEditAccess, upload.single('excelFile'), asy
 });
 
 app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), async (req, res) => {
-    const { name, address, phone, initialBalance, currentBalance, initialDeposit, depositAmount } = req.body;
+    const { name, address, phone, initialBalance, currentBalance, initialDeposit, depositAmount, locationId } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
 
+    const existingCust = await Customer.getById(req.params.id);
+    if (!existingCust) {
+        if (isAjax) return res.status(404).json({ success: false, error: 'Customer not found' });
+        return res.redirect('/customers');
+    }
+
+    const userLoc = (req.session.user && req.session.user.locationId) ? req.session.user.locationId : 'main';
+    const isGlobal = (!userLoc || userLoc === 'all' || req.session.user.role === 'admin' || req.session.user.username === 'admin' || res.locals.canSwitchLocation);
+    if (!isGlobal) {
+        const custLoc = existingCust.locationId || 'main';
+        if (custLoc !== userLoc) {
+            if (isAjax) return res.status(403).json({ success: false, error: 'Unauthorized to edit customer from another location' });
+            return res.redirect('/customers');
+        }
+    }
+
     if (!name || !phone) {
         if (isAjax) return res.status(400).json({ success: false, error: 'Name and Phone are required fields!' });
         const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
-        const editCustomer = await Customer.getById(req.params.id);
-        return res.render('customers', { customers, editCustomer, error: 'Name and Phone are required fields!' });
+        return res.render('customers', { customers, editCustomer: existingCust, error: 'Name and Phone are required fields!' });
     }
     if (!phoneRegex.test(phone)) {
         if (isAjax) return res.status(400).json({ success: false, error: 'Phone number must be exactly 10 digits!' });
         const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
-        const editCustomer = await Customer.getById(req.params.id);
-        return res.render('customers', { customers, editCustomer, error: 'Phone number must be exactly 10 digits!' });
+        return res.render('customers', { customers, editCustomer: existingCust, error: 'Phone number must be exactly 10 digits!' });
     }
     try {
-        const updatedCustomer = await Customer.update(req.params.id, {
+        const updatePayload = {
             name, address, phone, initialBalance, currentBalance,
             initialDeposit: initialDeposit !== undefined ? initialDeposit : depositAmount
-        });
+        };
+        if (locationId && (req.session.user.role === 'admin' || req.session.user.username === 'admin' || res.locals.canSwitchLocation)) {
+            updatePayload.locationId = locationId;
+        }
+
+        const updatedCustomer = await Customer.update(req.params.id, updatePayload);
         if (updatedCustomer) {
             await ActivityLog.log(req.session.user.username, 'UPDATE', 'Customer', `Updated customer: ${updatedCustomer.name} (Current Balance: ${updatedCustomer.currentBalance})`);
         }
@@ -1223,8 +1267,7 @@ app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'),
     } catch (err) {
         if (isAjax) return res.status(500).json({ success: false, error: 'Error updating customer: ' + err.message });
         const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
-        const editCustomer = await Customer.getById(req.params.id);
-        res.render('customers', { customers, editCustomer, error: 'Error updating customer: ' + err.message });
+        res.render('customers', { customers, editCustomer: existingCust, error: 'Error updating customer: ' + err.message });
     }
 });
 

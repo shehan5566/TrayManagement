@@ -1,8 +1,14 @@
 <%- include('partials/header') %>
 
-<div style="margin-bottom: 25px;">
-    <h2 style="color: var(--primary-green-dark);"><i class="fa-solid fa-users"></i> Customer Management</h2>
-    <p style="color: var(--text-light); font-size: 14px;">Manage Nelna Agri customer profiles.</p>
+<div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div>
+        <h2 style="color: var(--primary-green-dark); margin: 0;"><i class="fa-solid fa-users"></i> Customer Management</h2>
+        <p style="color: var(--text-light); font-size: 14px; margin: 4px 0 0 0;">Manage Nelna Agri customer profiles for your assigned branch location.</p>
+    </div>
+    <div style="background: #f8fafc; padding: 7px 15px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-location-dot" style="color: var(--primary-green-dark);"></i>
+        <span style="font-size: 13px; font-weight: 600; color: var(--text-dark);"><%= user.locationName || 'Current Location' %></span>
+    </div>
 </div>
 
 <% if (error) { %>
@@ -39,6 +45,19 @@
                     <label for="phone">Phone Number</label>
                     <input type="tel" id="phone" name="phone" value="<%= editCustomer ? editCustomer.phone : '' %>" placeholder="e.g. 0771234567" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" maxlength="10" required>
                 </div>
+
+                <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation && typeof availableLocations !== 'undefined' && availableLocations.length > 0) { %>
+                <div class="form-group">
+                    <label for="locationId">Assigned Branch / Location</label>
+                    <select id="locationId" name="locationId" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                        <% availableLocations.forEach(loc => { %>
+                            <option value="<%= loc.id %>" <%= (editCustomer && (editCustomer.locationId || 'main') === loc.id) ? 'selected' : (!editCustomer && user.locationId === loc.id ? 'selected' : '') %>>
+                                <%= loc.name %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <% } %>
 
                 <div class="form-group">
                     <label for="initialBalance">Opening Tray Balance (Issued)</label>
@@ -122,6 +141,13 @@
                                     <a href="/customers/<%= c.id %>/history" style="color: var(--primary-green-dark); text-decoration: none;" title="View History">
                                         <strong><%= c.name %></strong> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 5px; color: var(--text-light);"></i>
                                     </a>
+                                    <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation) { %>
+                                    <div>
+                                        <span style="font-size: 10.5px; background: #e2e8f0; color: #334155; padding: 1px 7px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: 500;">
+                                            <i class="fa-solid fa-location-dot" style="font-size: 9px; margin-right: 3px; color: #64748b;"></i><%= c.locationName || 'Head Office' %>
+                                        </span>
+                                    </div>
+                                    <% } %>
                                 </td>
                                 <td><%= c.address || '-' %></td>
                                 <td><%= c.phone %></td>
@@ -154,6 +180,7 @@
                                             data-initial-balance="<%= c.initialBalance || 0 %>"
                                             data-initial-deposit="<%= c.initialDeposit || 0 %>"
                                             data-current-balance="<%= c.currentBalance || 0 %>"
+                                            data-location-id="<%= c.locationId || 'main' %>"
                                             onclick="handleEditCustomerClick(this)"
                                             class="btn btn-secondary" 
                                             style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark); cursor: pointer;" 
@@ -211,6 +238,19 @@
                     <input type="tel" id="modalCustomerPhone" name="phone" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" required style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
                 </div>
 
+                <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation && typeof availableLocations !== 'undefined' && availableLocations.length > 0) { %>
+                <div class="form-group">
+                    <label for="modalCustomerLocationId" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Assigned Branch / Location</label>
+                    <select id="modalCustomerLocationId" name="locationId" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                        <% availableLocations.forEach(loc => { %>
+                            <option value="<%= loc.id %>">
+                                <%= loc.name %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <% } %>
+
                 <div class="form-group">
                     <label for="modalCustomerInitialBalance" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Opening Tray Balance (Issued)</label>
                     <input type="number" id="modalCustomerInitialBalance" name="initialBalance" min="0" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
@@ -245,7 +285,7 @@
 </div>
 
 <script>
-function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit) {
+function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit, locationId) {
     const form = document.getElementById('editCustomerForm');
     if (form) form.action = '/customers/' + id + '/edit';
     const nameInput = document.getElementById('modalCustomerName');
@@ -254,6 +294,8 @@ function openEditCustomerModal(id, name, address, phone, initialBalance, current
     if (addrInput) addrInput.value = address || '';
     const phoneInput = document.getElementById('modalCustomerPhone');
     if (phoneInput) phoneInput.value = phone || '';
+    const locInput = document.getElementById('modalCustomerLocationId');
+    if (locInput) locInput.value = locationId || 'main';
     const initBalInput = document.getElementById('modalCustomerInitialBalance');
     if (initBalInput) initBalInput.value = (initialBalance !== undefined && initialBalance !== null) ? initialBalance : 0;
     const initDepInput = document.getElementById('modalCustomerInitialDeposit');
@@ -279,7 +321,8 @@ function handleEditCustomerClick(btn) {
     const initialBalance = btn.getAttribute('data-initial-balance');
     const initialDeposit = btn.getAttribute('data-initial-deposit');
     const currentBalance = btn.getAttribute('data-current-balance');
-    openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit);
+    const locationId = btn.getAttribute('data-location-id');
+    openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit, locationId);
 }
 
 window.addEventListener('click', function(event) {
@@ -298,7 +341,8 @@ document.addEventListener('DOMContentLoaded', function() {
         <%- JSON.stringify(editCustomer.phone || '') %>,
         <%= editCustomer.initialBalance || 0 %>,
         <%= editCustomer.currentBalance || 0 %>,
-        <%= editCustomer.initialDeposit || 0 %>
+        <%= editCustomer.initialDeposit || 0 %>,
+        <%- JSON.stringify(editCustomer.locationId || 'main') %>
     );
 });
 <% } %>
