@@ -2111,7 +2111,7 @@ app.get('/lorry-trips', requireAuth, (req, res) => {
 app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, requirePermission('loading_create'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
-        const { vehicleNo, driverName, loadedQty, dispatchedDate, notes } = req.body;
+        const { vehicleNo, driverName, helperName, loadedQty, dispatchedDate, notes } = req.body;
         const qty = parseInt(loadedQty, 10);
         if (!vehicleNo || isNaN(qty) || qty <= 0) {
             if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid vehicle and tray quantity!' });
@@ -2140,6 +2140,7 @@ app.post('/lorry-trips/dispatch', requireAuth, requireEditAccess, requirePermiss
         const newTrip = await LorryTrip.create({
             vehicleNo,
             driverName: driverName ? driverName.trim() : 'Driver',
+            helperName: helperName ? helperName.trim() : '',
             pin: autoPin,
             loadedQty: qty,
             locationId: userLoc,
@@ -2262,7 +2263,7 @@ app.get('/lorry-trips/:id/print', requireAuth, (req, res) => {
 app.post('/loading/:id/edit', requireAuth, requireEditAccess, requirePermission('loading_edit'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
-        const { vehicleNo, driverName, loadedQty, dispatchedDate, notes } = req.body;
+        const { vehicleNo, driverName, helperName, loadedQty, dispatchedDate, notes } = req.body;
         const newQty = parseInt(loadedQty, 10);
         if (isNaN(newQty) || newQty <= 0) {
             if (isAjax) return res.status(400).json({ success: false, error: 'Please enter a valid loaded quantity!' });
@@ -2296,6 +2297,7 @@ app.post('/loading/:id/edit', requireAuth, requireEditAccess, requirePermission(
 
         trip.vehicleNo = vehicleNo || trip.vehicleNo;
         trip.driverName = driverName !== undefined ? driverName.trim() : trip.driverName;
+        if (helperName !== undefined) trip.helperName = helperName.trim();
         if (dispatchedDate) trip.dispatchedDate = parseLocalDatetime(dispatchedDate);
         if (notes !== undefined) trip.notes = notes.trim();
 
@@ -3682,11 +3684,11 @@ app.get('/reports/export/loading-csv', requireAuth, async (req, res) => {
         locations.forEach(l => { locMap[l._id] = l.name; });
 
         let csvContent = '\uFEFF';
-        csvContent += 'Date & Time,Loading No,Vehicle No,Driver Name,Warehouse,Created By,Status,Loaded Qty,Remarks\n';
+        csvContent += 'Date & Time,Loading No,Vehicle No,Driver,Helper,Warehouse,Created By,Status,Loaded Qty,Remarks\n';
         
         trips.forEach(t => {
             const locName = locMap[t.locationId] || 'Head Office';
-            csvContent += `"${new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' })}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${locName}","${t.dispatchedBy || ''}","${t.status || ''}",${t.loadedQty || 0},"${(t.notes || '').replace(/"/g, '""')}"\n`;
+            csvContent += `"${new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' })}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${(t.helperName || '').replace(/"/g, '""')}","${locName}","${t.dispatchedBy || ''}","${t.status || ''}",${t.loadedQty || 0},"${(t.notes || '').replace(/"/g, '""')}"\n`;
         });
         
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');

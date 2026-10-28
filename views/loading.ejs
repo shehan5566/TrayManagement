@@ -40,8 +40,13 @@
             </div>
 
             <div class="form-group">
-                <label for="driverName">Driver Name</label>
+                <label for="driverName">Driver</label>
                 <input type="text" id="driverName" name="driverName" placeholder="e.g. Nuwan Kumara" required>
+            </div>
+
+            <div class="form-group">
+                <label for="helperName">Helper</label>
+                <input type="text" id="helperName" name="helperName" placeholder="e.g. Kasun Perera">
             </div>
 
             <div class="form-group">
@@ -152,7 +157,7 @@
                                 <% } %>
                             </td>
                             <td style="white-space: nowrap;">
-                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %><% if (t.helperName) { %> / <%= t.helperName %><% } %>)</span><% } else if (t.helperName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(Helper: <%= t.helperName %>)</span><% } %>
                             </td>
                             <td style="white-space: nowrap;">
                                 <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
@@ -214,8 +219,13 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
-                <label for="editDriverName" style="font-weight: 600;">Driver Name</label>
+                <label for="editDriverName" style="font-weight: 600;">Driver</label>
                 <input type="text" id="editDriverName" name="driverName" class="form-control" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="editHelperName" style="font-weight: 600;">Helper</label>
+                <input type="text" id="editHelperName" name="helperName" class="form-control" placeholder="e.g. Kasun Perera">
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
@@ -298,6 +308,7 @@
         document.getElementById('editTripNo').value = t.tripNo || '';
         document.getElementById('editVehicleNo').value = t.vehicleNo || '';
         document.getElementById('editDriverName').value = t.driverName || '';
+        document.getElementById('editHelperName').value = t.helperName || '';
         document.getElementById('editLoadedQty').value = t.loadedQty || '';
 
         editOriginalLoadedQty = parseInt(t.loadedQty, 10) || 0;
