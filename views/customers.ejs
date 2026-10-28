@@ -12,7 +12,7 @@
         <h2 style="color: var(--primary-green-dark); margin: 0;"><i class="fa-solid fa-users"></i> Customer Management</h2>
         <p style="color: var(--text-light); font-size: 14px; margin: 4px 0 0 0;">Manage Nelna Agri customer profiles and balances.</p>
     </div>
-    <% if (!user || user.role !== 'viewer') { %>
+    <% if (user && (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_create')))) { %>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <button type="button" onclick="openBulkImportModal()" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 16px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: #ffffff; color: #1e293b; cursor: pointer; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
             <i class="fa-solid fa-file-excel" style="color: #107c41; font-size: 16px;"></i> Bulk Import (Excel)
@@ -117,6 +117,7 @@
     <% } %>
 </div>
 
+<% if (user && (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_create')))) { %>
 <!-- Register New Customer Modal -->
 <div id="newCustomerModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px;">
     <div style="position: relative; background: #ffffff; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; border-radius: 20px; border-top: 5px solid #14532d; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22); padding: 26px 28px 24px 28px; box-sizing: border-box; animation: customerModalFadeIn 0.2s ease-out;">
@@ -220,6 +221,7 @@
         </form>
     </div>
 </div>
+<% } %>
 
 <!-- Edit Customer Modal Window -->
 <div id="editCustomerModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px;">

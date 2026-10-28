@@ -1122,7 +1122,7 @@ app.get('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), 
     }
 });
 
-app.post('/customers', requireEditAccess, async (req, res) => {
+app.post('/customers', requireAuth, requirePermission('customer_create'), async (req, res) => {
     const { name, address, phone, initialBalance, initialDeposit, depositAmount, locationId } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
@@ -1154,7 +1154,7 @@ app.post('/customers', requireEditAccess, async (req, res) => {
     }
 });
 
-app.post('/customers/import', requireEditAccess, upload.single('excelFile'), async (req, res) => {
+app.post('/customers/import', requireAuth, requirePermission('customer_create'), upload.single('excelFile'), async (req, res) => {
     try {
         if (!req.file) {
             return res.json({ success: false, error: 'No file uploaded.' });
