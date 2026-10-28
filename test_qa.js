@@ -9,7 +9,7 @@
  *  - Receipt data sanitization & clean remarks filter
  */
 
-const { SystemSetting, ApprovalRequest, Transaction, Customer, connectDB } = require('./db');
+const { SystemSetting, ApprovalRequest, Transaction, Customer, connectDB, CustomerModel, TransactionModel, ApprovalRequestModel, ActivityLogModel } = require('./db');
 const smsService = require('./smsService');
 const mongoose = require('mongoose');
 
@@ -214,13 +214,22 @@ async function runQA() {
         await Customer.delete(testCust3.id || testCust3._id);
 
         // ----------------------------------------------------
-        // CLEANUP (Remove temporary QA test data)
+        // CLEANUP (Remove temporary QA test data completely)
         // ----------------------------------------------------
         console.log('\n▶ Cleaning up QA test records...');
         if (createdTx && createdTx._id) {
             await Transaction.delete(createdTx._id);
+            await TransactionModel.deleteOne({ _id: createdTx._id });
         }
-        await ApprovalRequest.reject(newApproval.token, 'Cleanup QA test request');
+        if (customer && (customer.id || customer._id)) {
+            await CustomerModel.deleteOne({ _id: customer.id || customer._id });
+        }
+        if (newApproval && newApproval.token) {
+            await ApprovalRequestModel.deleteOne({ token: newApproval.token });
+        }
+        await ActivityLogModel.deleteMany({
+            $or: [{ username: /qa/i }, { details: /qa/i }]
+        });
         // Restore initial settings
         await SystemSetting.update({ approvers: initialSettings.approvers });
         console.log('  🧹 Cleanup completed. Database returned to pristine state.');
