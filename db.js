@@ -379,12 +379,7 @@ const StockTransfer = {
             if (queryParams.page === 'receive') {
                 conditions.push({ toLocationId: locationId });
             } else {
-                conditions.push({
-                    $or: [
-                        { fromLocationId: locationId },
-                        { toLocationId: locationId }
-                    ]
-                });
+                conditions.push({ fromLocationId: locationId });
             }
         }
 
