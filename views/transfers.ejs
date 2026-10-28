@@ -165,7 +165,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <% const history=transfers.filter(t=> t.fromLocationId === user.locationId); %>
+                                <% const history = (user && user.locationId && user.locationId !== 'all') ? transfers.filter(t => t.fromLocationId === user.locationId || t.toLocationId === user.locationId) : transfers; %>
                                     <% history.forEach(t=> { %>
                                         <tr>
                                             <td>
@@ -173,6 +173,13 @@
                                             </td>
                                             <td>
                                                 <%= t.transferDocNo || '-' %>
+                                                <% if (user && user.locationId && user.locationId !== 'all') { %>
+                                                    <% if (t.toLocationId === user.locationId) { %>
+                                                        <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:10px; padding:2px 5px; margin-left:4px; font-weight:700;">IN</span>
+                                                    <% } else if (t.fromLocationId === user.locationId) { %>
+                                                        <span class="badge" style="background:#fef3c7; color:#92400e; font-size:10px; padding:2px 5px; margin-left:4px; font-weight:700;">OUT</span>
+                                                    <% } %>
+                                                <% } %>
                                             </td>
                                             <td>
                                                 <%= t.fromLocationName %>

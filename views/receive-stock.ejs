@@ -33,8 +33,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% const incoming=transfers.filter(t=> t.toLocationId === user.locationId && t.status
-                                === 'PENDING'); %>
+                            <% const incoming = transfers.filter(t => (user && user.locationId && user.locationId !== 'all' ? t.toLocationId === user.locationId : true) && t.status === 'PENDING'); %>
                                         <% incoming.forEach(t=> { %>
                                             <tr>
                                                 <td>
@@ -120,8 +119,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% const history=transfers.filter(t=> t.status !== 'PENDING' && t.toLocationId ===
-                                user.locationId); %>
+                            <% const history = transfers.filter(t => t.status !== 'PENDING' && (user && user.locationId && user.locationId !== 'all' ? t.toLocationId === user.locationId : true)); %>
                                 <% history.forEach(t=> { %>
                                             <tr>
                                                  <td>

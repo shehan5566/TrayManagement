@@ -373,15 +373,18 @@ const Location = {
 const StockTransfer = {
     getAll: async (locationId = null, role = 'user', queryParams = {}) => {
         let filter = { isDeleted: { $ne: true } };
+        const conditions = [];
 
         if (locationId && locationId !== 'all') {
             if (queryParams.page === 'receive') {
-                filter.toLocationId = locationId;
+                conditions.push({ toLocationId: locationId });
             } else {
-                filter.$or = [
-                    { fromLocationId: locationId },
-                    { toLocationId: locationId }
-                ];
+                conditions.push({
+                    $or: [
+                        { fromLocationId: locationId },
+                        { toLocationId: locationId }
+                    ]
+                });
             }
         }
 
@@ -397,17 +400,28 @@ const StockTransfer = {
             }
 
             if (queryParams.page === 'receive') {
-                filter.$and = filter.$and || [];
-                filter.$and.push({
+                // Pending incoming transfers are always visible in the incoming queue regardless of dispatched date
+                // Historical processed transfers are filtered by the selected date range
+                conditions.push({
                     $or: [
-                        { status: 'PENDING', dispatchedDate: dateCondition },
+                        { status: 'PENDING' },
                         { status: { $ne: 'PENDING' }, receivedDate: dateCondition },
                         { status: { $ne: 'PENDING' }, receivedDate: { $exists: false }, dispatchedDate: dateCondition }
                     ]
                 });
             } else {
-                filter.dispatchedDate = dateCondition;
+                // On stock transfers page, also ensure PENDING transfers remain visible so in-transit stock is not hidden
+                conditions.push({
+                    $or: [
+                        { status: 'PENDING' },
+                        { dispatchedDate: dateCondition }
+                    ]
+                });
             }
+        }
+
+        if (conditions.length > 0) {
+            filter.$and = conditions;
         }
 
         if (queryParams.srcLocation && queryParams.srcLocation !== 'All') {
