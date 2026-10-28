@@ -1,8 +1,27 @@
 <%- include('partials/header') %>
 
-<div style="margin-bottom: 25px;">
-    <h2 style="color: var(--primary-green-dark); margin: 0;"><i class="fa-solid fa-users"></i> Customer Management</h2>
-    <p style="color: var(--text-light); font-size: 14px; margin: 4px 0 0 0;">Manage Nelna Agri customer profiles.</p>
+<style>
+    @keyframes customerModalFadeIn {
+        from { opacity: 0; transform: scale(0.96); }
+        to { opacity: 1; transform: scale(1); }
+    }
+</style>
+
+<div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+    <div>
+        <h2 style="color: var(--primary-green-dark); margin: 0;"><i class="fa-solid fa-users"></i> Customer Management</h2>
+        <p style="color: var(--text-light); font-size: 14px; margin: 4px 0 0 0;">Manage Nelna Agri customer profiles and balances.</p>
+    </div>
+    <% if (typeof hasPerm !== 'function' || hasPerm('customer_create')) { %>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button type="button" onclick="openBulkImportModal()" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 16px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: #ffffff; color: #1e293b; cursor: pointer; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+            <i class="fa-solid fa-file-excel" style="color: #107c41; font-size: 16px;"></i> Bulk Import (Excel)
+        </button>
+        <button type="button" onclick="openNewCustomerModal()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 18px; border-radius: 8px; background: var(--primary-green-dark); color: #fff; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 14px;">
+            <i class="fa-solid fa-user-plus"></i> New Customer
+        </button>
+    </div>
+    <% } %>
 </div>
 
 <% if (error) { %>
@@ -11,41 +30,133 @@
     </div>
 <% } %>
 
-<% const showCustomerForm = (typeof hasPerm !== 'function' || hasPerm('customer_create') || hasPerm('customer_edit')); %>
-<div class="customers-layout" style="display: grid; grid-template-columns: <%= (user.role === 'viewer' || !showCustomerForm) ? '1fr' : '350px 1fr' %>; gap: 30px; align-items: start;">
-    
-    <% if (typeof hasPerm !== 'function' || hasPerm('customer_create') || hasPerm('customer_edit')) { %>
-    <!-- Customer Form (Add / Edit) -->
-    <div class="content-box" style="border-top: 4px solid <%= editCustomer ? 'var(--accent-yellow)' : 'var(--primary-green)' %>;">
-        <div class="box-header">
-            <span class="box-title">
-                <%= editCustomer ? 'Edit Customer' : 'Add New Customer' %>
-            </span>
+<!-- Customer List (100% Full-Page Width) -->
+<div class="content-box" style="width: 100%;">
+    <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="box-title"><i class="fa-solid fa-list-ul"></i> Customers Registry</span>
+        <span style="font-size: 13px; color: var(--text-light); font-weight: 600;"><%= customers.length %> Customers Registered</span>
+    </div>
+
+    <div class="search-container" style="margin-bottom: 15px;">
+        <input type="text" id="customerSearch" class="search-input" placeholder="Search customer by name or phone...">
+    </div>
+
+    <% if (customers.length === 0) { %>
+        <p style="text-align: center; color: var(--text-light); padding: 30px 0;">No customers found. Create a customer to start tracking.</p>
+    <% } else { %>
+        <div class="table-responsive">
+            <table id="customersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Phone</th>
+                        <th>Initial Balance</th>
+                        <th>Initial Deposit</th>
+                        <th>Current Balance</th>
+                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
+                        <th style="text-align: center; width: 150px;">Actions</th>
+                        <% } %>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% customers.forEach(c => { %>
+                        <tr>
+                            <td>
+                                <a href="/customers/<%= c.id %>/history" style="color: var(--primary-green-dark); text-decoration: none;" title="View History">
+                                    <strong><%= c.name %></strong> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 5px; color: var(--text-light);"></i>
+                                </a>
+                            </td>
+                            <td><%= c.address || '-' %></td>
+                            <td><%= c.phone %></td>
+                            <td><%= c.initialBalance %></td>
+                            <td><%= Number(c.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></td>
+                            <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <span><%= c.currentBalance %></span>
+                                    <% if (typeof hasPerm !== 'function' || hasPerm('customer_sms')) { %>
+                                    <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
+                                        <i class="fa-solid fa-comment-sms"></i>
+                                    </button>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
+                            <td>
+                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_history'))) { %>
+                                    <a href="/customers/<%= c.id %>/history" class="btn btn-action-view" title="View History">
+                                        <i class="fa-solid fa-clock-rotate-left"></i>
+                                    </a>
+                                    <% } %>
+                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_edit'))) { %>
+                                    <button type="button" 
+                                        data-id="<%= c.id %>"
+                                        data-name="<%= c.name || '' %>"
+                                        data-address="<%= c.address || '' %>"
+                                        data-phone="<%= c.phone || '' %>"
+                                        data-initial-balance="<%= c.initialBalance || 0 %>"
+                                        data-initial-deposit="<%= c.initialDeposit || 0 %>"
+                                        data-current-balance="<%= c.currentBalance || 0 %>"
+                                        data-location-id="<%= c.locationId || 'main' %>"
+                                        onclick="handleEditCustomerClick(this)"
+                                        class="btn btn-action-edit" 
+                                        title="Edit Customer">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <% } %>
+                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_delete'))) { %>
+                                    <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')" style="display: inline-flex; margin: 0; padding: 0;">
+                                        <button type="submit" class="btn btn-action-delete" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <% } %>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </div>
-        
-        <form action="<%= editCustomer ? '/customers/' + editCustomer.id + '/edit' : '/customers' %>" method="POST" onsubmit="submitAjaxForm(event, this, '<%= editCustomer ? 'Customer updated successfully' : 'Customer added successfully' %>')">
-            <div style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="form-group">
-                    <label for="name">Customer/Farm Name</label>
-                    <input type="text" id="name" name="name" value="<%= editCustomer ? editCustomer.name : '' %>" placeholder="e.g. Ruwan Agri Farm" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="address">Address</label>
-                    <input type="text" id="address" name="address" value="<%= editCustomer ? editCustomer.address : '' %>" placeholder="Address...">
+    <% } %>
+</div>
+
+<!-- Register New Customer Modal -->
+<div id="newCustomerModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px;">
+    <div style="position: relative; background: #ffffff; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; border-radius: 20px; border-top: 5px solid #14532d; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22); padding: 26px 28px 24px 28px; box-sizing: border-box; animation: customerModalFadeIn 0.2s ease-out;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="margin: 0; font-size: 21px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-user-plus" style="color: #14532d; font-size: 19px;"></i> Register New Customer
+            </h3>
+            <button type="button" onclick="closeNewCustomerModal()" style="background: none; border: none; font-size: 26px; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0 4px; transition: color 0.15s;" title="Close" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
+        </div>
+        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0 0 18px 0;">
+
+        <form action="/customers" method="POST" id="newCustomerForm" onsubmit="submitAjaxForm(event, this, 'Customer added successfully')">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Customer/Farm Name <span style="color: #dc2626;">*</span></label>
+                    <input type="text" name="name" placeholder="e.g. Ruwan Agri Farm" required style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                 </div>
 
-                <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" value="<%= editCustomer ? editCustomer.phone : '' %>" placeholder="e.g. 0771234567" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" maxlength="10" required>
+                <div>
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Address</label>
+                    <input type="text" name="address" placeholder="Address..." style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Phone Number <span style="color: #dc2626;">*</span></label>
+                    <input type="tel" name="phone" placeholder="e.g. 0771234567" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" required style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                 </div>
 
                 <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation && typeof availableLocations !== 'undefined' && availableLocations.length > 0) { %>
-                <div class="form-group">
-                    <label for="locationId">Assigned Branch / Location</label>
-                    <select id="locationId" name="locationId" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <div>
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Assigned Branch / Location</label>
+                    <select name="locationId" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                         <% availableLocations.forEach(loc => { %>
-                            <option value="<%= loc.id %>" <%= (editCustomer && (editCustomer.locationId || 'main') === loc.id) ? 'selected' : (!editCustomer && user.locationId === loc.id ? 'selected' : '') %>>
+                            <option value="<%= loc.id %>" <%= user.locationId === loc.id ? 'selected' : '' %>>
                                 <%= loc.name %>
                             </option>
                         <% }); %>
@@ -53,181 +164,101 @@
                 </div>
                 <% } %>
 
-                <div class="form-group">
-                    <label for="initialBalance">Opening Tray Balance (Issued)</label>
-                    <input type="number" id="initialBalance" name="initialBalance" min="0" value="<%= editCustomer ? editCustomer.initialBalance : '0' %>" placeholder="0">
-                    <span style="font-size: 11px; color: var(--text-light);">Opening quantity of trays already with the customer.</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Opening Tray Balance</label>
+                        <input type="number" name="initialBalance" min="0" value="0" placeholder="0" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <span style="font-size: 11px; color: #64748b; margin-top: 3px; display: block;">Issued opening trays.</span>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Opening Deposit (Rs.)</label>
+                        <input type="number" name="initialDeposit" min="0" step="0.01" value="0" placeholder="0.00" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <span style="font-size: 11px; color: #64748b; margin-top: 3px; display: block;">Cash deposit held.</span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="initialDeposit">Opening Deposit Amount (Rs.)</label>
-                    <input type="number" id="initialDeposit" name="initialDeposit" min="0" step="0.01" value="<%= editCustomer ? (editCustomer.initialDeposit || 0) : '0' %>" placeholder="0.00">
-                    <span style="font-size: 11px; color: var(--text-light);">Opening cash deposit balance held for customer.</span>
-                </div>
-
-                <% if (editCustomer) { %>
-                <div class="form-group">
-                    <label for="currentBalance">Current Tray Balance</label>
-                    <input type="number" id="currentBalance" name="currentBalance" value="<%= editCustomer.currentBalance %>" style="font-weight: bold; color: var(--primary-green-dark);">
-                    <span style="font-size: 11px; color: var(--text-light);">Current trays pending with customer.</span>
-                </div>
-                <% } %>
-
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">
-                        <i class="fa-solid <%= editCustomer ? 'fa-pen' : 'fa-plus' %>"></i> <%= editCustomer ? 'Update Customer' : 'Save Customer' %>
+                <div style="margin-top: 8px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: #14532d; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(20,83,45,0.25);">
+                        <i class="fa-solid fa-plus"></i> Save Customer
                     </button>
-                    <% if (editCustomer) { %>
-                        <a href="/customers" class="btn btn-secondary">Cancel</a>
-                    <% } %>
                 </div>
             </div>
         </form>
-
-        <% if (typeof hasPerm !== 'function' || hasPerm('customer_create')) { %>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px dashed var(--border-color);">
-        <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; color: var(--text-dark);"><i class="fa-solid fa-file-excel" style="color: #107c41;"></i> Bulk Import (Excel)</div>
-        <form action="/customers/import" method="POST" enctype="multipart/form-data" onsubmit="submitAjaxForm(event, this, 'Customers imported successfully')">
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <input type="file" name="excelFile" accept=".xlsx, .xls, .csv" required style="font-size: 12px; padding: 8px; border: 1px dashed var(--border-color); border-radius: 4px; width: 100%; box-sizing: border-box;">
-                <div style="display: flex; gap: 8px;">
-                    <button type="submit" class="btn btn-primary" style="flex-grow: 1; background-color: var(--accent-yellow); color: var(--primary-green-dark); border: none; padding: 8px;"><i class="fa-solid fa-upload"></i> Import</button>
-                    <a href="/templates/Customer_Template.xlsx" class="btn btn-secondary" style="padding: 8px;" title="Download Template"><i class="fa-solid fa-download"></i> Template</a>
-                </div>
-            </div>
-        </form>
-        <% } %>
     </div>
-    <% } %>
+</div>
 
-    <!-- Customer List -->
-    <div class="content-box">
-        <div class="box-header">
-            <span class="box-title"><i class="fa-solid fa-list-ul"></i> Customers Registry</span>
+<!-- Bulk Import (Excel) Modal -->
+<div id="bulkImportModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px;">
+    <div style="position: relative; background: #ffffff; width: 100%; max-width: 450px; border-radius: 20px; border-top: 5px solid #107c41; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22); padding: 26px 28px 24px 28px; box-sizing: border-box; animation: customerModalFadeIn 0.2s ease-out;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="margin: 0; font-size: 21px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-file-excel" style="color: #107c41; font-size: 20px;"></i> Bulk Import Customers
+            </h3>
+            <button type="button" onclick="closeBulkImportModal()" style="background: none; border: none; font-size: 26px; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0 4px; transition: color 0.15s;" title="Close" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
         </div>
+        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0 0 16px 0;">
 
-        <div class="search-container">
-            <input type="text" id="customerSearch" class="search-input" placeholder="Search customer by name or phone...">
-        </div>
-
-        <% if (customers.length === 0) { %>
-            <p style="text-align: center; color: var(--text-light); padding: 30px 0;">No customers found. Create a customer to start tracking.</p>
-        <% } else { %>
-            <div class="table-responsive">
-                <table id="customersTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Address</th>
-                            <th>Phone</th>
-                            <th>Initial Balance</th>
-                            <th>Initial Deposit</th>
-                            <th>Current Balance</th>
-                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
-                            <th style="text-align: center; width: 150px;">Actions</th>
-                            <% } %>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% customers.forEach(c => { %>
-                            <tr>
-                                <td>
-                                    <a href="/customers/<%= c.id %>/history" style="color: var(--primary-green-dark); text-decoration: none;" title="View History">
-                                        <strong><%= c.name %></strong> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 5px; color: var(--text-light);"></i>
-                                    </a>
-                                </td>
-                                <td><%= c.address || '-' %></td>
-                                <td><%= c.phone %></td>
-                                <td><%= c.initialBalance %></td>
-                                <td><%= Number(c.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></td>
-                                <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
-                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                        <span><%= c.currentBalance %></span>
-                                        <% if (typeof hasPerm !== 'function' || hasPerm('customer_sms')) { %>
-                                        <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
-                                            <i class="fa-solid fa-comment-sms"></i>
-                                        </button>
-                                        <% } %>
-                                    </div>
-                                </td>
-                                <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
-                                <td>
-                                    <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
-                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_history'))) { %>
-                                        <a href="/customers/<%= c.id %>/history" class="btn btn-action-view" title="View History">
-                                            <i class="fa-solid fa-clock-rotate-left"></i>
-                                        </a>
-                                        <% } %>
-                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_edit'))) { %>
-                                        <button type="button" 
-                                            data-id="<%= c.id %>"
-                                            data-name="<%= c.name || '' %>"
-                                            data-address="<%= c.address || '' %>"
-                                            data-phone="<%= c.phone || '' %>"
-                                            data-initial-balance="<%= c.initialBalance || 0 %>"
-                                            data-initial-deposit="<%= c.initialDeposit || 0 %>"
-                                            data-current-balance="<%= c.currentBalance || 0 %>"
-                                            data-location-id="<%= c.locationId || 'main' %>"
-                                            onclick="handleEditCustomerClick(this)"
-                                            class="btn btn-action-edit" 
-                                            title="Edit Customer">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
-                                        <% } %>
-                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_delete'))) { %>
-                                        <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')" style="display: inline-flex; margin: 0; padding: 0;">
-                                            <button type="submit" class="btn btn-action-delete" title="Delete">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                        <% } %>
-                                    </div>
-                                </td>
-                                <% } %>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
+        <!-- Template Download Banner -->
+        <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <div>
+                <div style="font-size: 13px; font-weight: 600; color: #1e293b;">Standard Excel Template</div>
+                <div style="font-size: 11.5px; color: #64748b;">Download template before uploading.</div>
             </div>
-        <% } %>
+            <a href="/templates/Customer_Template.xlsx" class="btn btn-secondary" style="font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;" title="Download Template">
+                <i class="fa-solid fa-download"></i> Template
+            </a>
+        </div>
+
+        <form action="/customers/import" method="POST" enctype="multipart/form-data" id="bulkImportForm" onsubmit="submitAjaxForm(event, this, 'Customers imported successfully')">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Select Spreadsheet (.xlsx, .xls, .csv)</label>
+                    <input type="file" name="excelFile" accept=".xlsx, .xls, .csv" required style="font-size: 13px; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box; background: #ffffff;">
+                </div>
+
+                <div style="margin-top: 4px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: #107c41; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(16,124,65,0.25);">
+                        <i class="fa-solid fa-upload"></i> Upload & Import
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
 <!-- Edit Customer Modal Window -->
-<div id="editCustomerModal" class="modal"
-    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
-    <div class="modal-content"
-        style="background-color: #fefefe; margin: 60px auto; padding: 25px; border-radius: 8px; width: 92%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
-            <h3 style="margin: 0; color: var(--primary-green-dark);">
-                <i class="fa-solid fa-pen-to-square"></i> Edit Customer
+<div id="editCustomerModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px;">
+    <div style="position: relative; background: #ffffff; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; border-radius: 20px; border-top: 5px solid var(--accent-yellow); box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22); padding: 26px 28px 24px 28px; box-sizing: border-box; animation: customerModalFadeIn 0.2s ease-out;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="margin: 0; font-size: 21px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-pen-to-square" style="color: var(--primary-green-dark); font-size: 19px;"></i> Edit Customer
             </h3>
-            <span onclick="closeEditCustomerModal()"
-                style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1;">&times;</span>
+            <button type="button" onclick="closeEditCustomerModal()" style="background: none; border: none; font-size: 26px; line-height: 1; color: #94a3b8; cursor: pointer; padding: 0 4px; transition: color 0.15s;" title="Close" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#94a3b8'">&times;</button>
         </div>
+        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 0 0 18px 0;">
 
-        <form id="editCustomerForm" method="POST"
-            onsubmit="submitAjaxForm(event, this, 'Customer updated successfully')">
-            <div style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="form-group">
-                    <label for="modalCustomerName" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Customer/Farm Name</label>
-                    <input type="text" id="modalCustomerName" name="name" required style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+        <form id="editCustomerForm" method="POST" onsubmit="submitAjaxForm(event, this, 'Customer updated successfully')">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label for="modalCustomerName" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Customer/Farm Name</label>
+                    <input type="text" id="modalCustomerName" name="name" required style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                 </div>
 
-                <div class="form-group">
-                    <label for="modalCustomerAddress" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Address</label>
-                    <input type="text" id="modalCustomerAddress" name="address" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <div>
+                    <label for="modalCustomerAddress" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Address</label>
+                    <input type="text" id="modalCustomerAddress" name="address" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                 </div>
 
-                <div class="form-group">
-                    <label for="modalCustomerPhone" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Phone Number</label>
-                    <input type="tel" id="modalCustomerPhone" name="phone" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" required style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <div>
+                    <label for="modalCustomerPhone" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Phone Number</label>
+                    <input type="tel" id="modalCustomerPhone" name="phone" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" required style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                 </div>
 
                 <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation && typeof availableLocations !== 'undefined' && availableLocations.length > 0) { %>
-                <div class="form-group">
-                    <label for="modalCustomerLocationId" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Assigned Branch / Location</label>
-                    <select id="modalCustomerLocationId" name="locationId" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <div>
+                    <label for="modalCustomerLocationId" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Assigned Branch / Location</label>
+                    <select id="modalCustomerLocationId" name="locationId" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                         <% availableLocations.forEach(loc => { %>
                             <option value="<%= loc.id %>">
                                 <%= loc.name %>
@@ -237,31 +268,33 @@
                 </div>
                 <% } %>
 
-                <div class="form-group">
-                    <label for="modalCustomerInitialBalance" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Opening Tray Balance (Issued)</label>
-                    <input type="number" id="modalCustomerInitialBalance" name="initialBalance" min="0" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                    <span style="font-size: 11px; color: var(--text-light); margin-top: 3px; display: block;">Opening quantity of trays already with the customer.</span>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label for="modalCustomerInitialBalance" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Opening Tray Balance</label>
+                        <input type="number" id="modalCustomerInitialBalance" name="initialBalance" min="0" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <span style="font-size: 11px; color: #64748b; margin-top: 3px; display: block;">Issued opening trays.</span>
+                    </div>
+
+                    <div>
+                        <label for="modalCustomerInitialDeposit" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Opening Deposit (Rs.)</label>
+                        <input type="number" id="modalCustomerInitialDeposit" name="initialDeposit" min="0" step="0.01" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <span style="font-size: 11px; color: #64748b; margin-top: 3px; display: block;">Cash deposit balance.</span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="modalCustomerInitialDeposit" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">Opening Deposit Amount (Rs.)</label>
-                    <input type="number" id="modalCustomerInitialDeposit" name="initialDeposit" min="0" step="0.01" style="width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                    <span style="font-size: 11px; color: var(--text-light); margin-top: 3px; display: block;">Opening cash deposit balance held for customer.</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="modalCustomerCurrentBalance" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 4px; display: block;">
+                <div>
+                    <label for="modalCustomerCurrentBalance" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
                         Current Tray Balance
                     </label>
-                    <input type="number" id="modalCustomerCurrentBalance" name="currentBalance" style="width: 100%; padding: 8px 12px; border: 1px solid #107c41; border-radius: 4px; box-sizing: border-box; font-weight: bold; color: var(--primary-green-dark); background-color: #f0fdf4;">
-                    <span style="font-size: 11px; color: var(--text-light); margin-top: 3px; display: block;">Current active trays with customer. Modify this to adjust the customer's balance.</span>
+                    <input type="number" id="modalCustomerCurrentBalance" name="currentBalance" style="width: 100%; padding: 10px 14px; border: 1.5px solid #107c41; border-radius: 8px; font-size: 14px; color: var(--primary-green-dark); background-color: #f0fdf4; font-weight: bold; outline: none; box-sizing: border-box;">
+                    <span style="font-size: 11px; color: #64748b; margin-top: 3px; display: block;">Current active trays with customer. Modify this to adjust balance.</span>
                 </div>
 
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; background: #14532d; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(20,83,45,0.25);">
                         <i class="fa-solid fa-check"></i> Update Customer
                     </button>
-                    <button type="button" onclick="closeEditCustomerModal()" class="btn btn-secondary" style="height: 38px;">
+                    <button type="button" onclick="closeEditCustomerModal()" class="btn btn-secondary" style="padding: 12px 18px; border-radius: 8px; font-weight: 600; font-size: 14px;">
                         Cancel
                     </button>
                 </div>
@@ -271,6 +304,34 @@
 </div>
 
 <script>
+function openNewCustomerModal() {
+    const modal = document.getElementById('newCustomerModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        const form = document.getElementById('newCustomerForm');
+        if (form) form.reset();
+    }
+}
+
+function closeNewCustomerModal() {
+    const modal = document.getElementById('newCustomerModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function openBulkImportModal() {
+    const modal = document.getElementById('bulkImportModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        const form = document.getElementById('bulkImportForm');
+        if (form) form.reset();
+    }
+}
+
+function closeBulkImportModal() {
+    const modal = document.getElementById('bulkImportModal');
+    if (modal) modal.style.display = 'none';
+}
+
 function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit, locationId) {
     const form = document.getElementById('editCustomerForm');
     if (form) form.action = '/customers/' + id + '/edit';
@@ -290,7 +351,7 @@ function openEditCustomerModal(id, name, address, phone, initialBalance, current
     if (currBalInput) currBalInput.value = (currentBalance !== undefined && currentBalance !== null) ? currentBalance : 0;
     
     const modal = document.getElementById('editCustomerModal');
-    if (modal) modal.style.display = 'block';
+    if (modal) modal.style.display = 'flex';
 }
 
 function closeEditCustomerModal() {
@@ -312,10 +373,12 @@ function handleEditCustomerClick(btn) {
 }
 
 window.addEventListener('click', function(event) {
-    const modal = document.getElementById('editCustomerModal');
-    if (event.target === modal) {
-        closeEditCustomerModal();
-    }
+    const newModal = document.getElementById('newCustomerModal');
+    if (event.target === newModal) closeNewCustomerModal();
+    const bulkModal = document.getElementById('bulkImportModal');
+    if (event.target === bulkModal) closeBulkImportModal();
+    const editModal = document.getElementById('editCustomerModal');
+    if (event.target === editModal) closeEditCustomerModal();
 });
 
 <% if (editCustomer) { %>
