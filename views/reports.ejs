@@ -236,34 +236,34 @@
                                 <td>
                                     <%= cb.phone %>
                                 </td>
-                                <td style="text-align: right; color: #000000; font-family: monospace;">
+                                <td style="text-align: right; color: #000000;">
                                     <%= cb.initialBalance %>
                                 </td>
-                                <td style="text-align: right; color: #000000; font-family: monospace;">
+                                <td style="text-align: right; color: #000000;">
                                     <%= cb.totalOut %>
                                 </td>
-                                <td style="text-align: right; color: #000000; font-family: monospace;">
+                                <td style="text-align: right; color: #000000;">
                                     <%= cb.totalIn %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; font-family: monospace; color: #000000;">
+                                    style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= cb.currentBalance %>
                                 </td>
-                                <td style="text-align: right; font-family: monospace; color: #000000;">
+                                <td style="text-align: right; color: #000000;">
                                     <%= (cb.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                                 </td>
-                                <td style="text-align: right; color: #000000; font-family: monospace;">
+                                <td style="text-align: right; color: #000000;">
                                     <%= (cb.depositCollected || 0).toLocaleString() %>
                                 </td>
-                                <td style="text-align: right; color: #000000; font-family: monospace;">
+                                <td style="text-align: right; color: #000000;">
                                     <%= (cb.depositRefunded || 0).toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; font-family: monospace; color: #000000;">
+                                    style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= (cb.depositOutstanding || 0).toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; font-family: monospace; color: #000000;">
+                                    style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= (cb.pendingDeposit || 0).toLocaleString() %>
                                 </td>
                                 <td style="text-align: center;">
@@ -295,39 +295,39 @@
                                 <td colspan="2"
                                     style="text-align: right; color: #000000; font-size: 13px;">
                                     OUTSTANDING TRAY BALANCE & GRAND TOTAL:</td>
-                                <td style="text-align: right; font-family: monospace; font-size: 14px; color: #000000;">
+                                <td style="text-align: right; font-size: 14px; color: #000000;">
                                     <%= totalInitial %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-size: 14px;">
                                     <%= totalOut %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-size: 14px;">
                                     <%= totalIn %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 15px; color: #000000;">
+                                    style="text-align: right; font-size: 15px; color: #000000;">
                                     <%= totalCurrent %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 14px; color: #000000;">
+                                    style="text-align: right; font-size: 14px; color: #000000;">
                                     <%= totalInitialDep.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-size: 14px;">
                                     <%= totalDepColl.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-family: monospace; font-size: 14px;">
+                                    style="text-align: right; color: #000000; font-size: 14px;">
                                     <%= totalDepRef.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 15px; color: #000000;">
+                                    style="text-align: right; font-size: 15px; color: #000000;">
                                     <%= totalDepOut.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-family: monospace; font-size: 15px; color: #000000;">
+                                    style="text-align: right; font-size: 15px; color: #000000;">
                                     <%= totalPendingDep.toLocaleString() %>
                                 </td>
                                 <td></td>
@@ -392,11 +392,11 @@
                                         <%= t.remarks || '-' %>
                                     </span></td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= t.count %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= (t.totalDeposit || 0).toLocaleString() %>
                                 </td>
                             </tr>
@@ -461,11 +461,11 @@
                                         <%= t.remarks || '-' %>
                                     </span></td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= t.count %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-weight: bold; color: #000000; font-family: monospace;">
+                                    style="text-align: right; font-weight: bold; color: #000000;">
                                     <%= (t.totalDeposit || 0).toLocaleString() %>
                                 </td>
                             </tr>
@@ -1070,10 +1070,23 @@
 
     <style>
         /* ========================================================
-           MODERN DATATABLES STYLING (MATCHING SCREENSHOT)
+           MODERN DATATABLES STYLING (MATCHING SYSTEM FONT)
            ======================================================== */
+        .tab-content .dataTables_wrapper,
+        .tab-content table,
+        .tab-content table th,
+        .tab-content table td,
+        .tab-content table.dataTable thead th,
+        .tab-content table.dataTable tbody td,
+        .tab-content table.dataTable tfoot th,
+        .tab-content table.dataTable tfoot td,
+        #breakupModal table,
+        #breakupModal table th,
+        #breakupModal table td {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+        }
+
         .tab-content .dataTables_wrapper {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             color: #334155;
             font-size: 13px;
             padding: 4px 0;
@@ -1749,7 +1762,7 @@
                             }
 
                             body { 
-                                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                                 margin: 0;
                                 padding: 15px 20px; 
                                 color: #1e293b;
