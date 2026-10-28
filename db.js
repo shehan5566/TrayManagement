@@ -1150,26 +1150,32 @@ const Transaction = {
             if (tx.tripId) {
                 // Re-sum active trip transactions so delivered/collected counts are always exact
                 await LorryTrip.recalculateTripStock(tx.tripId);
-            } else if (tx.vehicleNo && tx.vehicleNo !== 'N/A') {
-                const activeTrip = await LorryTripModel.findOne({ 
-                    vehicleNo: tx.vehicleNo.trim(), 
-                    status: 'ON_ROUTE', 
-                    isDeleted: false 
-                });
-                if (activeTrip) {
-                    await LorryTrip.recalculateTripStock(activeTrip._id);
-                }
             } else {
-                // Reverse branch warehouse stock adjustment
-                const locId = tx.locationId || 'main';
-                const loc = await LocationModel.findById(locId);
-                if (loc) {
-                    if (tx.type === 'OUT') {
-                        loc.currentStock = (loc.currentStock || 0) + (tx.count || 0);
-                    } else if (tx.type === 'IN') {
-                        loc.currentStock = Math.max(0, (loc.currentStock || 0) - (tx.count || 0));
+                let handledByTrip = false;
+                if (tx.vehicleNo && tx.vehicleNo !== 'N/A') {
+                    const activeTrip = await LorryTripModel.findOne({ 
+                        vehicleNo: tx.vehicleNo.trim(), 
+                        status: 'ON_ROUTE', 
+                        isDeleted: false 
+                    });
+                    if (activeTrip) {
+                        await LorryTrip.recalculateTripStock(activeTrip._id);
+                        handledByTrip = true;
                     }
-                    await loc.save();
+                }
+                if (!handledByTrip) {
+                    // Reverse branch warehouse stock adjustment
+                    const locId = tx.locationId || 'main';
+                    const loc = await LocationModel.findById(locId);
+                    if (loc) {
+                        const count = tx.count || tx.quantity || 0;
+                        if (tx.type === 'OUT') {
+                            loc.currentStock = (loc.currentStock || 0) + count;
+                        } else if (tx.type === 'IN') {
+                            loc.currentStock = Math.max(0, (loc.currentStock || 0) - count);
+                        }
+                        await loc.save();
+                    }
                 }
             }
 
