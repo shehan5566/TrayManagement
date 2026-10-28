@@ -188,21 +188,24 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-clipboard-list"></i> Customer Tray Balance Summary</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Customer Tray Balance Summary (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'balanceTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="exportCustomerBalancesDetailedExcel()" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                     <a href="/api/reports/master-export?startDate=<%= startDate %>&endDate=<%= endDate %>"
                         class="btn btn-sm"
-                        style="background-color: #ffbd09; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-                        <i class="fa-solid fa-download"></i> Download Full Master Report
+                        style="background-color: #ffbd09; color: #000; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;"
+                        title="Download Full Master Report">
+                        <i class="fa-solid fa-file-lines"></i>
                     </a>
                 </div>
             </div>
@@ -344,16 +347,18 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-arrow-up-from-bracket"></i> Detailed Tray Issues (Out)
                     Log</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Detailed Tray Issues (Out) Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportOutTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="exportTableToExcel('reportOutTable', 'Tray_Issues_OUT')" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                 </div>
             </div>
@@ -413,16 +418,18 @@
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-arrow-down-to-bracket"></i> Detailed Tray Returns (In)
                     Log</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Detailed Tray Returns (In) Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportInTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="exportTableToExcel('reportInTable', 'Tray_Returns_IN')" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                 </div>
             </div>
@@ -481,17 +488,19 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-truck-fast"></i> Detailed Stock Transfer Log</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Detailed Stock Transfer Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'stockTransferTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <a href="/reports/export/transfers-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
                         class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </a>
                 </div>
             </div>
@@ -558,17 +567,19 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-boxes-packing"></i> Detailed Receive Stock Log</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Detailed Receive Stock Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'receiveStockTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <a href="/reports/export/received-csv?startDate=<%= startDate %>&endDate=<%= endDate %>"
                         class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </a>
                 </div>
             </div>
@@ -636,16 +647,18 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <span class="box-title"><i class="fa-solid fa-truck-loading" style="color: var(--primary-green);"></i> Detailed Lorry Loading Log</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Detailed Lorry Loading Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportLoadingTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="exportTableToExcel('reportLoadingTable', 'Lorry_Loading_Report')" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                 </div>
             </div>
@@ -739,16 +752,18 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <span class="box-title"><i class="fa-solid fa-truck-ramp-box" style="color: var(--primary-green);"></i> Detailed Lorry Unloading & Settle Log</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Detailed Lorry Unloading & Settle Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'reportUnloadingTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="exportTableToExcel('reportUnloadingTable', 'Lorry_Unloading_Report')" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                 </div>
             </div>
@@ -870,16 +885,18 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-warehouse" style="color: var(--primary-green);"></i> Warehouse Tray Balance Audit Report</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Warehouse Tray Balance Audit Report (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'warehouseBalanceTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="exportTableToExcel('warehouseBalanceTable', 'Warehouse_Tray_Balance_Report')" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                 </div>
             </div>
@@ -938,16 +955,18 @@
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <span class="box-title"><i class="fa-solid fa-boxes-stacked" style="color: var(--primary-green);"></i> Tray Damage & Loss Log</span>
-                <div>
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button
                         onclick="printReportToPDF(`Tray Damage & Loss Log (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'damagesReportTable')"
                         class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="exportTableToExcel('damagesReportTable', 'Tray_Damages_Report')" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Sheet to Excel">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                 </div>
             </div>
@@ -1000,17 +1019,20 @@
                     <p id="breakupCustomerMeta" style="color: var(--text-light); margin: 4px 0 0 0; font-size: 13px;">
                     </p>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="display: flex; gap: 6px; align-items: center;">
                     <button onclick="exportCustomerBreakupExcel()" class="btn btn-sm"
-                        style="background-color: #1b5e20; color: white; padding: 8px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-excel"></i> Export Statement (.xlsx)
+                        style="background-color: #1b5e20; color: white; padding: 6px 10px; font-size: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Export Statement (.xlsx)">
+                        <i class="fa-solid fa-file-excel"></i>
                     </button>
                     <button onclick="printCustomerBreakup()" class="btn btn-sm"
-                        style="background-color: #27ae60; color: #fff; padding: 8px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        style="background-color: #27ae60; color: #fff; padding: 6px 10px; font-size: 12px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                        title="Download PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
                     </button>
                     <button onclick="closeBreakupModal()"
-                        style="background: none; border: none; font-size: 24px; cursor: pointer; color: #888; margin-left: 10px;">&times;</button>
+                        style="background: none; border: none; font-size: 24px; cursor: pointer; color: #888; margin-left: 6px;"
+                        title="Close">&times;</button>
                 </div>
             </div>
 
@@ -1423,17 +1445,17 @@
             opacity: 0.85;
         }
 
-        /* 7. Action Button Styling (Black color as requested) */
+        /* 7. Action Button Styling (Black color as requested, matching customer page action button size) */
         .tab-content .btn-view-customer {
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 4px !important;
-            padding: 4px 8px !important;
+            padding: 6px 10px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
             border: 1px solid #cbd5e1 !important;
-            border-radius: 4px !important;
+            border-radius: 6px !important;
             font-size: 12px !important;
             font-weight: 600 !important;
             cursor: pointer !important;
