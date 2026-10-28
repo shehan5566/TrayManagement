@@ -113,15 +113,15 @@
                             <td><i class="fa-solid fa-user-gear" style="margin-right: 4px; opacity: 0.7;"></i> <%= log.reportedBy %></td>
                             <% if (canManageDamages) { %>
                                 <td style="text-align: right;">
-                                    <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                                    <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_edit') || hasPerm('transactions_edit')))) { %>
-                                        <button class="btn btn-secondary btn-sm" onclick="openEditDamageModal('<%= log.id %>', '<%= log.locationId %>', '<%= log.type %>', <%= log.qty %>, `<%= log.reason %>`)" title="Edit Record">
-                                            <i class="fa-solid fa-pen"></i> Edit
+                                        <button class="btn btn-action-edit" onclick="openEditDamageModal('<%= log.id %>', '<%= log.locationId %>', '<%= log.type %>', <%= log.qty %>, `<%= log.reason %>`)" title="Edit Record">
+                                            <i class="fa-solid fa-pen"></i>
                                         </button>
                                         <% } %>
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_delete') || hasPerm('delete_records')))) { %>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteDamageRecord('<%= log.id %>', '<%= log.damageNo %>')" style="background: #ef4444; border: none;" title="Delete Record">
-                                            <i class="fa-solid fa-trash"></i> Delete
+                                        <button class="btn btn-action-delete" onclick="deleteDamageRecord('<%= log.id %>', '<%= log.damageNo %>')" title="Delete Record">
+                                            <i class="fa-solid fa-trash"></i>
                                         </button>
                                         <% } %>
                                     </div>

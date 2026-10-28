@@ -1140,48 +1140,57 @@ textarea:focus,
 .btn-receipt-action {
     background-color: #eef2f6;
     color: #2c303e;
-    padding: 0 14px;
-    height: 32px;
-    font-size: 13px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    font-size: 11.5px;
     font-weight: 600;
-    border-radius: 10px;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
     text-decoration: none;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #cbd5e1;
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
     cursor: pointer;
+    box-sizing: border-box;
 }
 
 .btn-receipt-action i {
-    font-size: 14px;
+    font-size: 11.5px;
     color: #2c303e;
 }
 
 .btn-receipt-action:hover {
     background-color: #e2e8f0;
     color: #1a1d24;
-    border-color: #cbd5e1;
+    border-color: #94a3b8;
     text-decoration: none;
 }
 
 .btn-action-edit {
     background-color: #144d37;
     color: #ffffff !important;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     padding: 0;
-    font-size: 13px;
-    border-radius: 10px;
+    font-size: 11.5px;
+    border-radius: 6px;
     border: none;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn-action-edit i {
+    font-size: 11.5px;
+    color: #ffffff !important;
 }
 
 .btn-action-edit:hover {
@@ -1192,10 +1201,10 @@ textarea:focus,
 .btn-action-edit.is-loading,
 .btn-action-edit:has(.fa-spin) {
     width: auto !important;
-    min-width: 32px;
-    padding: 0 10px !important;
-    gap: 6px;
-    font-size: 12px;
+    min-width: 28px;
+    padding: 0 8px !important;
+    gap: 4px;
+    font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1203,20 +1212,23 @@ textarea:focus,
 .btn-action-delete {
     background-color: #ffc107;
     color: #000000 !important;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     padding: 0;
-    font-size: 13px;
-    border-radius: 10px;
-    border: none;
+    font-size: 11.5px;
+    border-radius: 6px;
+    border: 1px solid #e6b000;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     transition: background-color 0.2s ease, width 0.2s ease, padding 0.2s ease;
+    box-sizing: border-box;
 }
 
 .btn-action-delete i {
+    font-size: 11.5px;
     color: #000000 !important;
 }
 
@@ -1228,12 +1240,42 @@ textarea:focus,
 .btn-action-delete.is-loading,
 .btn-action-delete:has(.fa-spin) {
     width: auto !important;
-    min-width: 32px;
-    padding: 0 10px !important;
-    gap: 6px;
-    font-size: 12px;
+    min-width: 28px;
+    padding: 0 8px !important;
+    gap: 4px;
+    font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
+}
+
+.btn-action-view {
+    background-color: #1b5e20;
+    color: #ffffff !important;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    font-size: 11.5px;
+    border-radius: 6px;
+    border: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn-action-view i {
+    font-size: 11.5px;
+    color: #ffffff !important;
+}
+
+.btn-action-view:hover {
+    background-color: #144d37;
+    color: #ffffff !important;
+    text-decoration: none;
 }
 
 /* Tables */

@@ -119,16 +119,15 @@
                                             <span style="font-size: 13px; color: var(--text-dark);"><i class="fa-solid fa-location-dot" style="color: var(--primary-green); margin-right: 4px;"></i> <%= loc.name %></span>
                                         </td>
                                         <td>
-                                            <div style="display: flex; gap: 8px; justify-content: center;">
-                                                <button onclick="openUserEditModal(this.getAttribute('data-user'))" data-user="<%= JSON.stringify(u) %>" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark);" title="Edit Password/Role">
+                                            <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                                <button onclick="openUserEditModal(this.getAttribute('data-user'))" data-user="<%= JSON.stringify(u) %>" class="btn btn-action-edit" title="Edit Password/Role">
                                                     <i class="fa-solid fa-key"></i>
                                                 </button>
 
                                                 <% if (u.username !=='admin' ) { %>
                                                     <form action="/users/<%= u.id %>/delete" method="POST"
-                                                        onsubmit="confirmAjaxDelete(event, this, 'user account')">
-                                                        <button type="submit" class="btn btn-danger"
-                                                            style="padding: 6px 10px; font-size: 12px; background-color: #ffc300; border-color: #e6b000; color: #000000;"
+                                                        onsubmit="confirmAjaxDelete(event, this, 'user account')" style="display: inline-flex; margin: 0; padding: 0;">
+                                                        <button type="submit" class="btn btn-action-delete"
                                                             title="Delete User">
                                                             <i class="fa-solid fa-trash"></i>
                                                         </button>
@@ -207,13 +206,13 @@
                                         <td><%= loc.address || '-' %></td>
                                         <td><%= loc.currentStock %></td>
                                         <td>
-                                            <div style="display: flex; gap: 8px; justify-content: center;">
-                                                <button onclick="openLocationEditModal(this.getAttribute('data-loc'))" data-loc="<%= JSON.stringify(loc) %>" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark);" title="Edit Branch">
+                                            <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                                <button onclick="openLocationEditModal(this.getAttribute('data-loc'))" data-loc="<%= JSON.stringify(loc) %>" class="btn btn-action-edit" title="Edit Branch">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </button>
                                                 <% if (loc.id !== 'main') { %>
-                                                <form action="/locations/<%= loc.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'branch')">
-                                                    <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px; background-color: #ffc300; border-color: #e6b000; color: #000000;" title="Delete Branch">
+                                                <form action="/locations/<%= loc.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'branch')" style="display: inline-flex; margin: 0; padding: 0;">
+                                                    <button type="submit" class="btn btn-action-delete" title="Delete Branch">
                                                         <i class="fa-solid fa-trash"></i>
                                                     </button>
                                                 </form>

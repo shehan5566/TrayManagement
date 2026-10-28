@@ -204,7 +204,7 @@
                                             <td style="text-align: center;">
                                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
                                                      <a href="/transfers/<%= t._id || t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Transfer Note & Gate Pass">
-                                                         <i class="fa-solid fa-print"></i> Receipt
+                                                         <i class="fa-solid fa-print"></i>
                                                      </a>
 
                                                      <% const isAdminOrPermitted = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_edit') || hasPerm('stock_transfers_backdate') || hasPerm('manage_stock')))); %>

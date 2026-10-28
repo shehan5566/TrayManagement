@@ -166,9 +166,7 @@
                             <td style="text-align: center; white-space: nowrap;">
                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content; white-space: nowrap;">
                                     <% if (typeof hasPerm !== 'function' || hasPerm('loading_print')) { %>
-                                    <a href="/loading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Loading Note">
-                                        <i class="fa-solid fa-print"></i> Print
-                                    </a>
+                                    <a href="/loading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Loading Note"><i class="fa-solid fa-print"></i></a>
                                     <% } %>
                                     <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('loading_edit') || hasPerm('transactions_edit'))))) { %>
                                         <button onclick='openEditModal(<%- JSON.stringify(t).replace(/'/g, "\\'") %>)' class="btn btn-action-edit" title="Edit Loading Record" type="button">

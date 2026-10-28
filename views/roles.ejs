@@ -44,12 +44,12 @@
                                 <% } %>
                             </td>
                             <td>
-                                <div style="display: flex; gap: 8px; justify-content: center;">
-                                    <button onclick="openRoleModal(this.getAttribute('data-role'))" data-role="<%= JSON.stringify(r) %>" class="btn btn-secondary" style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark);" title="Edit Role">
+                                <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                    <button onclick="openRoleModal(this.getAttribute('data-role'))" data-role="<%= JSON.stringify(r) %>" class="btn btn-action-edit" title="Edit Role">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
-                                    <form action="/roles/<%= r.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'role')">
-                                        <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px; background-color: #ffc300; border-color: #e6b000; color: #000000;" title="Delete Role">
+                                    <form action="/roles/<%= r.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'role')" style="display: inline-flex; margin: 0; padding: 0;">
+                                        <button type="submit" class="btn btn-action-delete" title="Delete Role">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>

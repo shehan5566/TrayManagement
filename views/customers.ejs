@@ -152,9 +152,9 @@
                                 </td>
                                 <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
                                 <td>
-                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                    <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_history'))) { %>
-                                        <a href="/customers/<%= c.id %>/history" class="btn btn-primary" style="padding: 6px 10px; font-size: 12px;" title="View History">
+                                        <a href="/customers/<%= c.id %>/history" class="btn btn-action-view" title="View History">
                                             <i class="fa-solid fa-clock-rotate-left"></i>
                                         </a>
                                         <% } %>
@@ -169,15 +169,14 @@
                                             data-current-balance="<%= c.currentBalance || 0 %>"
                                             data-location-id="<%= c.locationId || 'main' %>"
                                             onclick="handleEditCustomerClick(this)"
-                                            class="btn btn-secondary" 
-                                            style="padding: 6px 10px; font-size: 12px; color: var(--primary-green-dark); cursor: pointer;" 
+                                            class="btn btn-action-edit" 
                                             title="Edit Customer">
-                                            <i class="fa-solid fa-pen-to-square"></i>
+                                            <i class="fa-solid fa-pen"></i>
                                         </button>
                                         <% } %>
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_delete'))) { %>
-                                        <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')">
-                                            <button type="submit" class="btn btn-danger" style="padding: 6px 10px; font-size: 12px; background-color: #ffc300; border-color: #e6b000; color: #000000;" title="Delete">
+                                        <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')" style="display: inline-flex; margin: 0; padding: 0;">
+                                            <button type="submit" class="btn btn-action-delete" title="Delete">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </form>
