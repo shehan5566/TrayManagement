@@ -57,7 +57,7 @@ The selected customer balance display beneath the customer search input is LOCKE
 
 ## 6. Locked Company Address & Official Contact Info
 The official company letterhead address and phone numbers in `views/reports.ejs` and all printed reports are LOCKED:
-- **Address & Telephone**: `No. 558, Avissawella Road, Ihala Bomiriya, Kaduwela | Tel: 0112054212 | 0771430103`
+- **Address & Telephone**: `No. 558, Avissawella Road, Ihala Bomiriya, Kaduwela | Tel: 0112054212 | 0761391535`
 - Must never revert to the old Ogodapola or temporary farm numbers.
 
 ## 7. Locked Reports Dashboard & PDF Export Rules (`views/reports.ejs`)
