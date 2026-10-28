@@ -2816,7 +2816,7 @@ app.get('/transactions/:id/receipt', async (req, res) => {
 // Stock Transfers Routes
 app.get('/transfers', requireAuth, requirePermission('manage_stock'), async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo' }).format(new Date());
         let startDate = req.query.startDate || today;
         let endDate = req.query.endDate || today;
         
@@ -2864,7 +2864,7 @@ app.get('/receive-stock/:id/print', requireAuth, async (req, res) => {
 
 app.get('/receive-stock', requireAuth, async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo' }).format(new Date());
         let startDate = req.query.startDate || today;
         let endDate = req.query.endDate || today;
         
@@ -2998,7 +2998,7 @@ app.delete('/transfers/:id', requireAuth, requirePermission('delete_records'), a
 // Reports Route
 app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo' }).format(new Date());
         let startDate = req.query.startDate || today;
         let endDate = req.query.endDate || today;
 
