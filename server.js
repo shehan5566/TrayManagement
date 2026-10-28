@@ -4,6 +4,7 @@ if (dns.setDefaultResultOrder) {
     dns.setDefaultResultOrder('ipv4first');
 }
 const express = require('express');
+const compression = require('compression');
 const session = require('express-session');
 const path = require('path');
 const multer = require('multer');
@@ -108,6 +109,7 @@ app.disable('view cache');
 // Security Middlewares
 app.use(helmet({ contentSecurityPolicy: false })); // Disabled CSP for inline scripts/styles in EJS
 app.use(cors());
+app.use(compression({ threshold: 1024 }));
 // express-mongo-sanitize and xss-clean are incompatible with Express v5 (req.query is read-only). Removed to fix TypeError.
 
 // Global Rate Limiting
@@ -126,7 +128,10 @@ const loginLimiter = rateLimit({
 });
 // app.use('/login', loginLimiter);
 
-// Prevent HTTP browser caching for all routes and static assets
+// Serve static assets with ETag caching so browsers do not re-download static CSS/JS/images on every request
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1d', etag: true }));
+
+// Prevent HTTP browser caching for all dynamic application routes
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.set('Pragma', 'no-cache');
@@ -137,7 +142,7 @@ app.use((req, res, next) => {
 // Body Parser Middleware
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0, etag: false }));
+
 app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'public', 'images', 'logo.png')));
 
 // Secure Session configuration with MongoDB Store
@@ -569,8 +574,10 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard', requireAuth, async (req, res) => {
     try {
-        const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
-        const transactions = await Transaction.getAll(req.session.user.locationId, req.session.user.role);
+        const [customers, transactions] = await Promise.all([
+            Customer.getAll(req.session.user.locationId, req.session.user.role),
+            Transaction.getAll(req.session.user.locationId, req.session.user.role)
+        ]);
 
         // Summary statistics
         const totalCustomers = customers.length;
@@ -659,9 +666,11 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             }
         });
 
-        const alerts = await Customer.getAlerts(req.session.user.locationId);
-        const allLocations = await Location.getAll();
-        const allCustomersForLocations = await CustomerModel.find({}).lean();
+        const [alerts, allLocations, allCustomersForLocations] = await Promise.all([
+            Customer.getAlerts(req.session.user.locationId),
+            Location.getAll(),
+            CustomerModel.find({}).lean()
+        ]);
 
         // Calculate total branch stock for each location (Warehouse stock + sum of customer balances for this location)
         let totalAllBranchStock = 0;
@@ -1299,14 +1308,15 @@ app.get('/transactions', requireAuth, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const search = req.query.search || '';
-        const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role, true);
-        const settings = await SystemSetting.get();
-        
         let errorMessage = null;
         if (req.query.error === 'invalid_data') errorMessage = 'Please select a customer, transaction type and enter a valid tray count!';
         else if (req.query.error) errorMessage = 'An error occurred processing your request.';
 
-        const paginationData = await Transaction.getPaginated(page, 50, search, req.session.user.locationId, req.session.user.role);
+        const [customers, settings, paginationData] = await Promise.all([
+            Customer.getAll(req.session.user.locationId, req.session.user.role, true),
+            SystemSetting.get(),
+            Transaction.getPaginated(page, 50, search, req.session.user.locationId, req.session.user.role)
+        ]);
         
         res.render('transactions', { 
             customers, 
@@ -2049,12 +2059,12 @@ app.get('/loading', requireAuth, requirePermission('loading_view'), async (req, 
         const endDate = req.query.endDate !== undefined ? req.query.endDate : today;
         const queryParams = { startDate, endDate, page: 'loading' };
 
-        const trips = await LorryTrip.getAll(userLoc, userRole, queryParams);
-        
-        const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc));
+        const [trips, loc, dbVehicles] = await Promise.all([
+            LorryTrip.getAll(userLoc, userRole, queryParams),
+            (userLoc && userLoc !== 'all') ? Location.getById(userLoc) : null,
+            TransactionModel.distinct('vehicleNo', { vehicleNo: { $nin: ['N/A', '', null] } })
+        ]);
         const currentStock = loc ? (loc.currentStock || 0) : 0;
-
-        const dbVehicles = await TransactionModel.distinct('vehicleNo', { vehicleNo: { $nin: ['N/A', '', null] } });
         const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'RENTED', 'OWNOUTLET'];
         const vehicles = Array.from(new Set([...STANDARD_VEHICLES, ...dbVehicles])).filter(v => v !== 'N/A');
 
@@ -2083,9 +2093,10 @@ app.get('/unloading', requireAuth, requirePermission('unloading_view'), async (r
         const endDate = req.query.endDate !== undefined ? req.query.endDate : today;
         const queryParams = { startDate, endDate, page: 'unloading' };
 
-        const trips = await LorryTrip.getAll(userLoc, userRole, queryParams);
-        
-        const loc = (await Location.getById(userLoc)) || (await LocationModel.findById(userLoc));
+        const [trips, loc] = await Promise.all([
+            LorryTrip.getAll(userLoc, userRole, queryParams),
+            (userLoc && userLoc !== 'all') ? Location.getById(userLoc) : null
+        ]);
         const currentStock = loc ? (loc.currentStock || 0) : 0;
 
         res.render('unloading', {
@@ -2831,8 +2842,10 @@ app.get('/transfers', requireAuth, requirePermission('stock_transfers_view'), as
         
         // Pass a new query object to getAll to avoid mutating req.query directly if not needed, or just add them
         const queryParams = { ...req.query, startDate, endDate };
-        const transfers = await StockTransfer.getAll(req.session.user.locationId, req.session.user.role, queryParams);
-        const locations = await Location.getAll();
+        const [transfers, locations] = await Promise.all([
+            StockTransfer.getAll(req.session.user.locationId, req.session.user.role, queryParams),
+            Location.getAll()
+        ]);
         res.render('transfers', { transfers, locations, error: null, query: queryParams, startDate, endDate });
     } catch (err) {
         res.status(500).send('Error retrieving transfers');
@@ -3026,12 +3039,12 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         applyBranchFilter(txQuery, userLoc, 'locationId');
         txQuery.isDeleted = { $ne: true };
         
-        // Use lean() for faster queries if we had raw mongoose, but we'll use find
-        const periodTransactionsRaw = await TransactionModel.find(txQuery).sort({ date: -1 }).limit(1000);
+        // Use lean() for maximum query and hydration speed
+        const periodTransactionsRaw = await TransactionModel.find(txQuery).sort({ date: -1 }).limit(1000).lean();
         
         // Map to normal objects using the mapDoc logic
         const periodTransactions = periodTransactionsRaw.map(doc => {
-            const obj = doc.toObject();
+            const obj = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
             obj.id = obj._id;
             return obj;
         });
@@ -3076,10 +3089,19 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             }
         }
 
-        // Fetch date filtered records
-        let dispatchedTransfersRaw = await StockTransferModel.find(dateFilteredTfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
-        let receivedTransfersRaw = await StockTransferModel.find(dateFilteredRecQuery).sort({ receivedDate: -1 }).limit(1000).lean().catch(() => []);
-        let damageLogsRaw = await DamageLogModel.find(dateFilteredDmgQuery).sort({ date: -1 }).limit(1000).lean().catch(() => []);
+        // Fetch date filtered records in parallel
+        const [
+            dispatchedTransfersRawRes,
+            receivedTransfersRawRes,
+            damageLogsRawRes
+        ] = await Promise.all([
+            StockTransferModel.find(dateFilteredTfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []),
+            StockTransferModel.find(dateFilteredRecQuery).sort({ receivedDate: -1 }).limit(1000).lean().catch(() => []),
+            DamageLogModel.find(dateFilteredDmgQuery).sort({ date: -1 }).limit(1000).lean().catch(() => [])
+        ]);
+        let dispatchedTransfersRaw = dispatchedTransfersRawRes;
+        let receivedTransfersRaw = receivedTransfersRawRes;
+        let damageLogsRaw = damageLogsRawRes;
 
         // Fallback: If date-filtered queries returned empty results (e.g. today has no transfers), fetch recent 1000 records
         if (dispatchedTransfersRaw.length === 0) {
@@ -3123,8 +3145,12 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             ];
         }
 
-        let loadingTripsRaw = await LorryTripModel.find(dateFilteredLoadingQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
-        let unloadingTripsRaw = await LorryTripModel.find(dateFilteredUnloadingQuery).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
+        const [loadingTripsRawRes, unloadingTripsRawRes] = await Promise.all([
+            LorryTripModel.find(dateFilteredLoadingQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []),
+            LorryTripModel.find(dateFilteredUnloadingQuery).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(1000).lean().catch(() => [])
+        ]);
+        let loadingTripsRaw = loadingTripsRawRes;
+        let unloadingTripsRaw = unloadingTripsRawRes;
 
         // Fallback: If date-filtered queries returned empty results (e.g. today has no trips yet), fetch recent 1000 records
         if (loadingTripsRaw.length === 0) {
@@ -3946,10 +3972,13 @@ app.get('/logs', requireAuth, requirePermission('view_logs'), async (req, res) =
 // Database Backup Route (Admin Only)
 app.get('/backup', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const users = await User.getAll();
-        const locations = await Location.getAll();
-        const customers = await Customer.getAll(req.session.user.locationId, req.session.user.role);
-        const transactions = await Transaction.getAll(req.session.user.locationId, req.session.user.role);
+        const [users, locations, customers, transactions] = await Promise.all([
+            User.getAll(),
+            Location.getAll(),
+            Customer.getAll(req.session.user.locationId, req.session.user.role),
+            Transaction.getAll(req.session.user.locationId, req.session.user.role)
+        ]);
+
 
         const backupData = {
             timestamp: new Date().toISOString(),

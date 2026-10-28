@@ -20,7 +20,9 @@ const connectDB = async () => {
         cachedPromise = mongoose.connect(uri, {
             serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
-            bufferCommands: false
+            bufferCommands: false,
+            maxPoolSize: 50,
+            minPoolSize: 5
         }).catch(err => {
             cachedPromise = null;
             console.error('MongoDB Connection Error:', err.message || err);
@@ -263,19 +265,29 @@ const LorryTripSchema = new mongoose.Schema({
 StockTransferSchema.index({ fromLocationId: 1, dispatchedDate: -1 });
 StockTransferSchema.index({ toLocationId: 1, receivedDate: -1 });
 StockTransferSchema.index({ isDeleted: 1, status: 1 });
+StockTransferSchema.index({ isDeleted: 1, fromLocationId: 1, dispatchedDate: -1 });
+StockTransferSchema.index({ isDeleted: 1, toLocationId: 1, status: 1, receivedDate: -1 });
 
 CustomerSchema.index({ locationId: 1, name: 1 });
 CustomerSchema.index({ currentBalance: 1 });
+CustomerSchema.index({ name: 1, locationId: 1 });
 
 TransactionSchema.index({ customerId: 1, isDeleted: 1 });
 TransactionSchema.index({ locationId: 1, date: -1 });
 TransactionSchema.index({ tripId: 1 });
 TransactionSchema.index({ date: -1 });
 TransactionSchema.index({ isDeleted: 1 });
+TransactionSchema.index({ isDeleted: 1, date: -1 });
+TransactionSchema.index({ isDeleted: 1, locationId: 1, date: -1 });
+TransactionSchema.index({ isDeleted: 1, customerId: 1, date: -1 });
 TransactionSchema.index({ receiptNo: -1 });
 
 LorryTripSchema.index({ vehicleNo: 1, status: 1 });
 LorryTripSchema.index({ locationId: 1, dispatchedDate: -1 });
+LorryTripSchema.index({ isDeleted: 1, status: 1, locationId: 1 });
+LorryTripSchema.index({ isDeleted: 1, dispatchedDate: -1 });
+
+DamageLogSchema.index({ isDeleted: 1, locationId: 1, date: -1 });
 
 // Compile models
 const LocationModel = mongoose.model('Location', LocationSchema);
@@ -687,24 +699,28 @@ const Customer = {
         if (locFilter) {
             Object.assign(filter, locFilter);
         }
-        const customers = await CustomerModel.find(filter).lean();
+
+        const promises = [
+            CustomerModel.find(filter).lean(),
+            LocationModel.find({}).lean()
+        ];
+        if (includePendingDeposit) {
+            promises.push(Customer.getPendingDepositsMap(null, locationId));
+        }
+
+        const [customers, locations, pendingMap] = await Promise.all(promises);
         const mapped = customers.map(mapDoc);
 
-        const locations = await LocationModel.find({}).lean();
         const locMap = {};
         locations.forEach(l => { locMap[l._id] = l.name; });
         mapped.forEach(c => {
             const lid = c.locationId || 'main';
             c.locationName = locMap[lid] || (lid === 'main' ? 'Head Office' : lid);
-        });
-
-        if (includePendingDeposit) {
-            const pendingMap = await Customer.getPendingDepositsMap(null, locationId);
-            mapped.forEach(c => {
+            if (includePendingDeposit && pendingMap) {
                 const p = pendingMap[String(c.id || c._id)];
                 c.pendingDeposit = (p && p > 0) ? p : 0;
-            });
-        }
+            }
+        });
 
         return mapped.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
     },
@@ -1809,8 +1825,10 @@ const LorryTrip = {
             }
         }
 
-        const trips = await LorryTripModel.find(filter).sort({ dispatchedDate: -1 });
-        const locations = await LocationModel.find({}).lean();
+        const [trips, locations] = await Promise.all([
+            LorryTripModel.find(filter).sort({ dispatchedDate: -1 }).lean(),
+            LocationModel.find({}).lean()
+        ]);
         const locMap = {};
         const locCodes = {};
         locations.forEach(l => { 
