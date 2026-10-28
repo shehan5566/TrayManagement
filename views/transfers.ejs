@@ -207,8 +207,8 @@
                                                          <i class="fa-solid fa-print"></i>
                                                      </a>
 
-                                                     <% const isAdminOrPermitted = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_edit') || hasPerm('stock_transfers_backdate') || hasPerm('manage_stock')))); %>
-                                                     <% if (isAdminOrPermitted) { %>
+                                                     <% const canEditTransfer = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('stock_transfers_edit'))); %>
+                                                     <% if (canEditTransfer) { %>
                                                          <button type="button" class="btn btn-action-edit edit-transfer-btn" 
                                                              data-id="<%= t._id || t.id %>"
                                                              data-qty="<%= t.dispatchedQty %>"
@@ -378,7 +378,7 @@
                                         <label style="font-weight: bold; color: var(--primary-green-dark);"><i class="fa-solid fa-calendar-day" style="color: var(--primary-green);"></i> Dispatch Date & Time</label>
                                         <input type="datetime-local" id="swal-date" class="swal2-input" value="${formattedDate}" style="width: 90%; margin: 5px 0; cursor: pointer;" onclick="try{this.showPicker()}catch(e){}">
                                     </div>
-                                    <% if (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_edit') || hasPerm('stock_transfers_backdate')))) { %>
+                                    <% if (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('stock_transfers_edit'))) { %>
                                     <div>
                                         <label style="font-weight: bold; color: var(--primary-green-dark);"><i class="fa-solid fa-code-branch" style="color: var(--primary-green);"></i> To Branch</label>
                                         <select id="swal-to-location" class="swal2-select" style="width: 90%; margin: 5px 0;">

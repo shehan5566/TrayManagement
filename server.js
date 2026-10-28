@@ -2821,7 +2821,7 @@ app.get('/transactions/:id/receipt', async (req, res) => {
 });
 
 // Stock Transfers Routes
-app.get('/transfers', requireAuth, requirePermission('manage_stock'), async (req, res) => {
+app.get('/transfers', requireAuth, requirePermission('stock_transfers_view'), async (req, res) => {
     try {
         const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo' }).format(new Date());
         let startDate = req.query.startDate || today;
@@ -2941,7 +2941,7 @@ app.post('/transfers/:id/grn', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/transfers/:id/edit', requireAuth, async (req, res) => {
+app.post('/transfers/:id/edit', requireAuth, requirePermission('stock_transfers_edit'), async (req, res) => {
     try {
         const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
         const canEdit = isAdmin || (req.session.user.permissions && (req.session.user.permissions.includes('stock_transfers_edit') || req.session.user.permissions.includes('backdate_records')));
