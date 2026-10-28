@@ -1188,6 +1188,9 @@ const Transaction = {
         if (!tx) throw new Error('Transaction not found');
 
         const oldCustomerId = tx.customerId;
+        const oldType = tx.type;
+        const oldCount = tx.count || 0;
+        const oldLocId = tx.locationId || 'main';
 
         if (txData.customerId) {
             const customer = await CustomerModel.findById(txData.customerId);
@@ -1244,14 +1247,34 @@ const Transaction = {
 
         if (tx.tripId) {
             await LorryTrip.recalculateTripStock(tx.tripId);
-        } else if (tx.vehicleNo && tx.vehicleNo !== 'N/A') {
-            const activeTrip = await LorryTripModel.findOne({ 
-                vehicleNo: tx.vehicleNo.trim(), 
-                status: 'ON_ROUTE', 
-                isDeleted: false 
-            });
-            if (activeTrip) {
-                await LorryTrip.recalculateTripStock(activeTrip._id);
+        } else {
+            let handledByTrip = false;
+            if (tx.vehicleNo && tx.vehicleNo !== 'N/A') {
+                const activeTrip = await LorryTripModel.findOne({ 
+                    vehicleNo: tx.vehicleNo.trim(), 
+                    status: 'ON_ROUTE', 
+                    isDeleted: false 
+                });
+                if (activeTrip) {
+                    await LorryTrip.recalculateTripStock(activeTrip._id);
+                    handledByTrip = true;
+                }
+            }
+            if (!handledByTrip) {
+                // Adjust warehouse currentStock for direct transactions
+                const locId = tx.locationId || oldLocId || 'main';
+                const loc = await LocationModel.findById(locId);
+                if (loc) {
+                    // Revert old effect
+                    if (oldType === 'OUT') loc.currentStock = (loc.currentStock || 0) + oldCount;
+                    else if (oldType === 'IN') loc.currentStock = Math.max(0, (loc.currentStock || 0) - oldCount);
+
+                    // Apply new effect
+                    if (tx.type === 'OUT') loc.currentStock = Math.max(0, (loc.currentStock || 0) - tx.count);
+                    else if (tx.type === 'IN') loc.currentStock = (loc.currentStock || 0) + tx.count;
+
+                    await loc.save();
+                }
             }
         }
 

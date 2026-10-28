@@ -609,7 +609,8 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             });
         }
         
-        let warehouseOpeningBalance = warehouseCurrentBalance + totalTransferQty - totalGRNQty;
+        // Opening Balance calculation (reversing transfers, customer direct transactions, and lorry trips)
+        let warehouseOpeningBalance = warehouseCurrentBalance + totalTransferQty - totalGRNQty + totalTrayOut - totalTrayIn;
         const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
         const manualBalance = await MonthlyBalance.getByMonth(myLocationId || 'main', currentMonth);
         let isManualBalance = false;
@@ -3203,6 +3204,69 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             }
         });
 
+        // 2. Direct Warehouse Customer Transactions (Returns IN & Issues OUT)
+        let directTxQuery = { isDeleted: false, tripId: null };
+        applyBranchFilter(directTxQuery, userLoc, 'locationId');
+        const directCustomerTxs = await TransactionModel.find(directTxQuery).lean().catch(() => []);
+        directCustomerTxs.forEach(ctx => {
+            const txDate = ctx.date || ctx.createdAt;
+            const refNo = ctx.receiptNo ? ('RE-' + String(ctx.receiptNo).padStart(6, '0')) : '-';
+            if (ctx.type === 'IN' && ctx.count > 0) {
+                warehouseEvents.push({
+                    date: txDate,
+                    transferDocNo: refNo,
+                    grnNo: 'Customer Return: ' + (ctx.customerName || 'Customer'),
+                    dispatchedQty: 0,
+                    grnQty: ctx.count,
+                    type: 'GRN',
+                    fromLocationName: ctx.customerName || 'Customer',
+                    toLocationName: 'Warehouse'
+                });
+            } else if (ctx.type === 'OUT' && ctx.count > 0) {
+                warehouseEvents.push({
+                    date: txDate,
+                    transferDocNo: refNo,
+                    grnNo: 'Customer Issue: ' + (ctx.customerName || 'Customer'),
+                    dispatchedQty: ctx.count,
+                    grnQty: 0,
+                    type: 'DISPATCH',
+                    fromLocationName: 'Warehouse',
+                    toLocationName: ctx.customerName || 'Customer'
+                });
+            }
+        });
+
+        // 3. Lorry Trips (Loading OUT & Unloading IN)
+        let tripLedgerQuery = { isDeleted: false };
+        applyBranchFilter(tripLedgerQuery, userLoc, 'locationId');
+        const locTrips = await LorryTripModel.find(tripLedgerQuery).lean().catch(() => []);
+        locTrips.forEach(tr => {
+            if (tr.loadedQty && tr.loadedQty > 0 && tr.status !== 'CANCELLED') {
+                warehouseEvents.push({
+                    date: tr.dispatchedDate || tr.createdAt,
+                    transferDocNo: tr.tripNo || '-',
+                    grnNo: 'Lorry Loaded: ' + (tr.vehicleNo || 'Vehicle'),
+                    dispatchedQty: tr.loadedQty,
+                    grnQty: 0,
+                    type: 'DISPATCH',
+                    fromLocationName: 'Warehouse',
+                    toLocationName: 'Lorry ' + (tr.vehicleNo || '')
+                });
+            }
+            if (tr.status === 'COMPLETED' && tr.actualUnloadedQty && tr.actualUnloadedQty > 0) {
+                warehouseEvents.push({
+                    date: tr.returnedDate || tr.updatedAt,
+                    transferDocNo: tr.unloadingNo || tr.tripNo || '-',
+                    grnNo: 'Lorry Unloaded: ' + (tr.vehicleNo || 'Vehicle'),
+                    dispatchedQty: 0,
+                    grnQty: tr.actualUnloadedQty,
+                    type: 'GRN',
+                    fromLocationName: 'Lorry ' + (tr.vehicleNo || ''),
+                    toLocationName: 'Warehouse'
+                });
+            }
+        });
+
         // Sort events chronologically
         warehouseEvents.sort((a, b) => {
             let dA = a.date ? new Date(a.date) : new Date(0);
@@ -3212,7 +3276,10 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             return dA - dB;
         });
 
-        let currentRunningBal = 0;
+        const activeMonth = (startDate || today).slice(0, 7);
+        const { MonthlyBalance: MBModel } = require('./db');
+        const locMonthlyBal = await MBModel.getByMonth(userLoc || 'main', activeMonth);
+        let currentRunningBal = locMonthlyBal ? locMonthlyBal.openingBalance : 0;
         const fullWarehouseBalanceList = warehouseEvents.map(ev => {
             const openingBalance = currentRunningBal;
             let closingBalance = openingBalance;
