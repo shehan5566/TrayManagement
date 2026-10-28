@@ -327,7 +327,13 @@ app.use(async (req, res, next) => {
         res.locals.canSwitchLocation = canSwitchLocation;
         res.locals.availableLocations = availableLocations;
         res.locals.hasPerm = (perm) => {
-            if (!userPermissions) return false;
+            if (!req.session.user) return false;
+            if (req.session.user.role === 'admin' || req.session.user.username === 'admin') return true;
+            if (req.session.user.role === 'viewer') return perm.includes('_view') || perm === 'dashboard_main' || perm === 'customer_history';
+            if (!userPermissions || userPermissions.length === 0) {
+                if (req.session.user.role === 'user') return !perm.startsWith('admin_');
+                return false;
+            }
             if (userPermissions.includes('*')) return true;
             const valid = permissionAliases[perm] || [perm];
             return valid.some(p => userPermissions.includes(p));

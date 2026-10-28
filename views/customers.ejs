@@ -54,7 +54,7 @@
                         <th>Initial Balance</th>
                         <th>Initial Deposit</th>
                         <th>Current Balance</th>
-                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
+                        <% if (!user || user.role !== 'viewer') { %>
                         <th style="text-align: center; width: 150px;">Actions</th>
                         <% } %>
                     </tr>
@@ -74,22 +74,19 @@
                             <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                     <span><%= c.currentBalance %></span>
-                                    <% if (typeof hasPerm !== 'function' || hasPerm('customer_sms')) { %>
+                                    <% if (!user || user.role !== 'viewer') { %>
                                     <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
                                         <i class="fa-solid fa-comment-sms"></i>
                                     </button>
                                     <% } %>
                                 </div>
                             </td>
-                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('customer_edit') || hasPerm('customer_delete') || hasPerm('customer_history')))) { %>
+                            <% if (!user || user.role !== 'viewer') { %>
                             <td>
                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
-                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_history'))) { %>
                                     <a href="/customers/<%= c.id %>/history" class="btn btn-action-view" title="View History">
                                         <i class="fa-solid fa-clock-rotate-left"></i>
                                     </a>
-                                    <% } %>
-                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_edit'))) { %>
                                     <button type="button" 
                                         data-id="<%= c.id %>"
                                         data-name="<%= c.name || '' %>"
@@ -104,14 +101,11 @@
                                         title="Edit Customer">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
-                                    <% } %>
-                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_delete'))) { %>
                                     <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')" style="display: inline-flex; margin: 0; padding: 0;">
                                         <button type="submit" class="btn btn-action-delete" title="Delete">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
-                                    <% } %>
                                 </div>
                             </td>
                             <% } %>
