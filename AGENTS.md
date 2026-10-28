@@ -55,3 +55,41 @@ The selected customer balance display beneath the customer search input is LOCKE
 - **Receipt Print Preview Modal (`views/driver-mobile.ejs`)**: `.receipt-preview-overlay` must have `z-index: 99999` so it is never occluded by SweetAlert backdrops (`z-index: 1060`).
 - **Database Persistence (`db.js`)**: `Transaction.create` must always persist `specialApprovalId` and `approvedBy` into the `TransactionModel`.
 
+## 6. Locked Company Address & Official Contact Info
+The official company letterhead address and phone numbers in `views/reports.ejs` and all printed reports are LOCKED:
+- **Address & Telephone**: `No. 558, Avissawella Road, Ihala Bomiriya, Kaduwela | Tel: 0112054212 | 0771430103`
+- Must never revert to the old Ogodapola or temporary farm numbers.
+
+## 7. Locked Reports Dashboard & PDF Export Rules (`views/reports.ejs`)
+- **PDF Page Totals**: Intermediate pages must NOT show running totals. Grand Total and Outstanding Tray Balance rows must strictly appear ONLY on the final page of the downloaded PDF.
+- **Font Weighting**: Table row data must NOT be bolded (`font-weight: 500` or normal). Header row columns (`th`), Grand Totals, and Outstanding Tray Balance rows MUST remain bold (`font-weight: 700` or `800`).
+- **Date Defaults & Refresh**: Date filters must default to today's date in `Asia/Colombo` (+05:30) timezone. When the page is reloaded or refreshed, the date filters must automatically reset to today's date.
+- **Customer Breakup View**:
+  - View button (`.btn-view-customer`) is styled in clean black (`color: #000000; border: 1px solid #cbd5e1;`).
+  - Current Net Balance line must display `X Trays` (no duplicate "Trays Trays").
+  - Date Breakup Statement table type column is formatted as `IN / OUT`.
+- **Report Action Buttons**: The top-level export and print action buttons in the Reports Dashboard (`Download PDF`, `Export Sheet to Excel`, `Download Full Master Report`, `Export Statement (.xlsx)`) are LOCKED to include their full descriptive text labels and icons. They must NEVER be compressed into icon-only buttons.
+
+## 8. Locked Uniform Compact Action Buttons (Tables Across All Pages)
+In all data tables across `views/transactions.ejs`, `views/transfers.ejs`, `views/receive-stock.ejs`, `views/loading.ejs`, `views/unloading.ejs`, `views/damages.ejs`, `views/customers.ejs`, `views/users.ejs`, and `views/roles.ejs`:
+- **Uniform Dimensions**: Action buttons (`print`, `edit`, `delete`, `view/history`) are LOCKED to an ultra-compact square size:
+  `width: 28px; height: 28px; min-width: 28px; padding: 0; font-size: 11.5px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;`
+- **Icon Only (No Text)**: Buttons must NEVER contain text labels (e.g., no "Receipt", "Print", "Edit", "Delete" text). They must contain **icons only** (`<i class="fa-solid fa-print"></i>`, `<i class="fa-solid fa-pen"></i>`, `<i class="fa-solid fa-trash"></i>`, etc.), with hover tooltips (`title="..."`).
+- **Standardized Classes (`public/css/style.css`)**:
+  - Print: `.btn-receipt-action` (Slate/neutral background `#eef2f6`, dark icon)
+  - Edit: `.btn-action-edit` (Dark forest green `#144d37`, white icon)
+  - Delete: `.btn-action-delete` (Amber/yellow `#ffc107`, black icon)
+  - View / History: `.btn-action-view` (Green `#1b5e20`, white icon)
+
+## 9. Locked Stock Transfers UI (`views/transfers.ejs`)
+- **Header**: Contains `+ New Transfer` button opening `#dispatchModal`.
+- **Dispatch Trays Modal**: Matches the modern card design:
+  - Container: `background: #ffffff; max-width: 430px; border-radius: 20px; border-top: 5px solid #14532d; box-shadow: 0 20px 45px rgba(0,0,0,0.22);`
+  - Elements: "Dispatch Trays" title + `[🪄 AI Scan Document]` button + `×` close button.
+  - Fields: To Branch, Tray Quantity (Avl. X), Vehicle Number, Remarks, Dispatch Date & Time with `YYYY-MM-DD HH:MM AM/PM` Flatpickr formatting and "Leave empty for current time".
+  - Submit: Full-width dark green `[✈ Send Trays]` button.
+- **Transfer History**: Renders at **100% full-page width** (not cramped in a 2-column layout).
+
+## 10. Locked Warehouse Stock & Transaction Deletion Integrity (`db.js`)
+- **Stock Reversal on Transaction Delete**: In `Transaction.delete`, if a transaction is not linked to an active on-route lorry trip (`activeTrip` is null/undefined), warehouse current stock (`loc.currentStock`) MUST always be reversed and restored back to the branch location (`loc.currentStock = (loc.currentStock || 0) + count` for OUT transactions).
+- **QA Test Suite Isolation**: Automated test runs (`test_qa.js`) must clean up temporary records without leaking stock reductions or altering live branch warehouse balances.
