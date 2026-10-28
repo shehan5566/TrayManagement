@@ -3728,7 +3728,7 @@ app.get('/reports/export/unloading-csv', requireAuth, async (req, res) => {
         });
 
         let csvContent = '\uFEFF';
-        csvContent += 'Date & Time,Unloading No,Loading No,Vehicle No,Driver Name,Warehouse,Loaded Qty,OUT (Delivered),IN (Collected),Expected Qty,Unloaded Qty,Variance,Received By,Remarks\n';
+        csvContent += 'Date & Time,Unloading No,Loading No,Vehicle No,Driver,Helper,Warehouse,Loaded Qty,OUT (Delivered),IN (Collected),Expected Qty,Unloaded Qty,Variance,Received By,Remarks\n';
         
         trips.forEach(t => {
             const locName = locMap[t.locationId] || 'Head Office';
@@ -3739,7 +3739,7 @@ app.get('/reports/export/unloading-csv', requireAuth, async (req, res) => {
                 unlNo = locCode + 'UNLOD' + digits;
             }
             const dateStr = t.returnedDate ? new Date(t.returnedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) : (t.dispatchedDate ? new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) : '-');
-            csvContent += `"${dateStr}","${unlNo}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${locName}",${t.loadedQty || 0},${t.totalDeliveredQty || 0},${t.totalCollectedQty || 0},${t.expectedRemainingQty || 0},${t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : ''},${t.variance || 0},"${t.receivedBy || ''}","${(t.notes || '').replace(/"/g, '""')}"\n`;
+            csvContent += `"${dateStr}","${unlNo}","${t.tripNo || ''}","${t.vehicleNo || ''}","${(t.driverName || '').replace(/"/g, '""')}","${(t.helperName || '').replace(/"/g, '""')}","${locName}",${t.loadedQty || 0},${t.totalDeliveredQty || 0},${t.totalCollectedQty || 0},${t.expectedRemainingQty || 0},${t.actualUnloadedQty !== undefined && t.actualUnloadedQty !== null ? t.actualUnloadedQty : ''},${t.variance || 0},"${t.receivedBy || ''}","${(t.notes || '').replace(/"/g, '""')}"\n`;
         });
         
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');

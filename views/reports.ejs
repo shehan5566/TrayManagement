@@ -687,7 +687,8 @@
                         <tr>
                             <th>Date & Time</th>
                             <th>Loading No</th>
-                            <th>Vehicle & Driver</th>
+                            <th>Vehicle No</th>
+                            <th>Driver</th>
                             <th>Warehouse</th>
                             <th>Created By</th>
                             <th style="text-align: center;">Status</th>
@@ -705,7 +706,8 @@
                                     <%= t.tripNo %>
                                 </td>
                                 <td style="white-space: nowrap; color: #000000;">
-                                    <%= t.vehicleNo %><% if (t.driverName) { %> <span style="font-size: 11px; color: #000000; font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                    <%= t.vehicleNo %></td>
+                                <td style="white-space: nowrap; color: #000000;"><%= t.driverName || '-' %><% if (t.helperName) { %> <span style="font-size: 11px; color: #000000; font-weight: normal;">(Helper: <%= t.helperName %>)</span><% } %>
                                 </td>
                                 <td style="white-space: nowrap;">
                                     <span class="badge" style="background: #f1f5f9; color: #000000; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
@@ -807,7 +809,8 @@
                             <th>Date & Time</th>
                             <th>Unloading No</th>
                             <th>Loading No</th>
-                            <th>Vehicle & Driver</th>
+                            <th>Vehicle No</th>
+                            <th>Driver</th>
                             <th>Warehouse</th>
                             <th style="text-align: right;">Loaded</th>
                             <th style="text-align: right;">OUT</th>
@@ -828,7 +831,8 @@
                                 <td style="white-space: nowrap; color: #000000;"><%= t.unloadingNo || '-' %></td>
                                 <td style="white-space: nowrap; color: #000000;"><%= t.tripNo %></td>
                                 <td style="white-space: nowrap; color: #000000;">
-                                    <%= t.vehicleNo %><% if (t.driverName) { %> <span style="font-size: 11px; color: #000000; font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                    <%= t.vehicleNo %></td>
+                                <td style="white-space: nowrap; color: #000000;"><%= t.driverName || '-' %><% if (t.helperName) { %> <span style="font-size: 11px; color: #000000; font-weight: normal;">(Helper: <%= t.helperName %>)</span><% } %>
                                 </td>
                                 <td style="white-space: nowrap;">
                                     <span class="badge" style="background: #f1f5f9; color: #000000; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">

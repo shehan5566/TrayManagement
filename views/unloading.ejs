@@ -33,7 +33,8 @@
                     <tr>
                         <th>Date & Time</th>
                         <th>Loading No</th>
-                        <th>Vehicle & Driver</th>
+                        <th>Vehicle No</th>
+                        <th>Driver</th>
                         <th>Warehouse</th>
                         <th style="text-align: right;">Loaded</th>
                         <th style="text-align: right;">Delivered (OUT)</th>
@@ -50,7 +51,10 @@
                             </td>
                             <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
                             <td style="white-space: nowrap;">
-                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong>
+                            </td>
+                            <td style="white-space: nowrap;">
+                                <%= t.driverName || '-' %><% if (t.helperName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(Helper: <%= t.helperName %>)</span><% } %>
                             </td>
                             <td>
                                 <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px;">
@@ -130,7 +134,8 @@
                         <th style="white-space: nowrap;">Date & Time</th>
                         <th style="white-space: nowrap;">Unloading No</th>
                         <th style="white-space: nowrap;">Loading No</th>
-                        <th style="white-space: nowrap;">Vehicle & Driver</th>
+                        <th style="white-space: nowrap;">Vehicle No</th>
+                        <th style="white-space: nowrap;">Driver</th>
                         <th style="white-space: nowrap;">Warehouse</th>
                         <th style="text-align: right; white-space: nowrap;">Loaded</th>
                         <th style="text-align: right; white-space: nowrap;">OUT</th>
@@ -150,7 +155,10 @@
                             <td style="white-space: nowrap;"><strong style="color: #1e293b;"><%= t.unloadingNo || '-' %></strong></td>
                             <td style="white-space: nowrap;"><strong><%= t.tripNo %></strong></td>
                             <td style="white-space: nowrap;">
-                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong><% if (t.driverName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(<%= t.driverName %>)</span><% } %>
+                                <strong style="color: var(--primary-green-dark);"><%= t.vehicleNo %></strong>
+                            </td>
+                            <td style="white-space: nowrap;">
+                                <%= t.driverName || '-' %><% if (t.helperName) { %> <span style="font-size: 11px; color: var(--text-light); font-weight: normal;">(Helper: <%= t.helperName %>)</span><% } %>
                             </td>
                             <td style="white-space: nowrap;">
                                 <span class="badge" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; font-weight: 600; font-size: 11px; white-space: nowrap;">
