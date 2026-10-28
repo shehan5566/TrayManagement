@@ -12,7 +12,7 @@
         <h2 style="color: var(--primary-green-dark); margin: 0;"><i class="fa-solid fa-users"></i> Customer Management</h2>
         <p style="color: var(--text-light); font-size: 14px; margin: 4px 0 0 0;">Manage Nelna Agri customer profiles and balances.</p>
     </div>
-    <% if (typeof hasPerm !== 'function' || hasPerm('customer_create')) { %>
+    <% if (!user || user.role !== 'viewer') { %>
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <button type="button" onclick="openBulkImportModal()" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; padding: 10px 16px; border-radius: 8px; border: 1.5px solid #cbd5e1; background: #ffffff; color: #1e293b; cursor: pointer; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
             <i class="fa-solid fa-file-excel" style="color: #107c41; font-size: 16px;"></i> Bulk Import (Excel)
