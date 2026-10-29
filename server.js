@@ -3226,17 +3226,17 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
                 warehouseEvents.push({
                     date: txDate,
                     refNo: refNo,
-                    label: 'Customer Return: ' + (ctx.customerName || 'Customer'),
-                    inQty: ctx.count,
+                    label: 'Customer Return: ' + (ctx.customerName || 'Customer') + ' (' + ctx.count + ' Trays Handover)',
+                    inQty: 0,
                     outQty: 0
                 });
             } else if (ctx.type === 'OUT' && ctx.count > 0) {
                 warehouseEvents.push({
                     date: txDate,
                     refNo: refNo,
-                    label: 'Customer Issue: ' + (ctx.customerName || 'Customer'),
+                    label: 'Customer Issue: ' + (ctx.customerName || 'Customer') + ' (' + ctx.count + ' Trays Handover)',
                     inQty: 0,
-                    outQty: ctx.count
+                    outQty: 0
                 });
             }
         });
@@ -3286,7 +3286,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const warehouseStartingStock = locMonthlyBal ? (locMonthlyBal.openingBalance || 0) : 4459;
         const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
         const officialOpeningBalance = warehouseStartingStock + customerInitialTotal;
-        const initialHistoricalBalance = finalTargetStock - (totalAllIn - totalAllOut);
+        const initialHistoricalBalance = officialOpeningBalance > 0 ? officialOpeningBalance : (finalTargetStock - (totalAllIn - totalAllOut));
 
         let runningBal = initialHistoricalBalance;
         warehouseEvents.forEach(ev => {
