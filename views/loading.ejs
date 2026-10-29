@@ -177,12 +177,12 @@
                                     <% if (typeof hasPerm !== 'function' || hasPerm('loading_print')) { %>
                                     <a href="/loading/<%= t.id %>/print" target="_blank" class="btn btn-receipt-action" title="Print Loading Note"><i class="fa-solid fa-print"></i></a>
                                     <% } %>
-                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('loading_edit') || hasPerm('transactions_edit'))))) { %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('loading_edit')))) { %>
                                         <button onclick='openEditModal(<%- JSON.stringify(t).replace(/'/g, "\\'") %>)' class="btn btn-action-edit" title="Edit Loading Record" type="button">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
                                     <% } %>
-                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('loading_delete') || hasPerm('transactions_delete') || hasPerm('delete_records'))))) { %>
+                                    <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('loading_delete')))) { %>
                                         <form action="/loading/<%= t.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'loading record')" style="display: inline-flex; margin: 0; padding: 0;">
                                             <button type="submit" class="btn btn-action-delete" title="Delete Record">
                                                 <i class="fa-solid fa-trash"></i>

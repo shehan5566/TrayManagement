@@ -14,7 +14,7 @@
                 Track broken, lost, or written-off trays across all branches and reconcile physical stock counts.
             </p>
         </div>
-        <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_create') || hasPerm('transactions_create'))))) { %>
+        <% if (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('damages_create')))) { %>
         <button class="btn btn-primary" onclick="openAddDamageModal()" style="display: inline-flex; align-items: center; gap: 8px;">
             <i class="fa-solid fa-plus"></i> Record Damage / Audit Loss
         </button>
@@ -86,7 +86,7 @@
                     <th>Qty</th>
                     <th>Reason / Details</th>
                     <th>Reported By</th>
-                    <% const canManageDamages = (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_edit') || hasPerm('damages_delete') || hasPerm('transactions_edit') || hasPerm('delete_records'))))); %>
+                    <% const canManageDamages = (typeof user !== 'undefined' && user && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_edit') || hasPerm('damages_delete'))))); %>
                     <% if (canManageDamages) { %>
                         <th style="text-align: right;">Action</th>
                     <% } %>
@@ -114,12 +114,12 @@
                             <% if (canManageDamages) { %>
                                 <td style="text-align: right;">
                                     <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_edit') || hasPerm('transactions_edit')))) { %>
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('damages_edit'))) { %>
                                         <button class="btn btn-action-edit" onclick="openEditDamageModal('<%= log.id %>', '<%= log.locationId %>', '<%= log.type %>', <%= log.qty %>, `<%= log.reason %>`)" title="Edit Record">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
                                         <% } %>
-                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('damages_delete') || hasPerm('delete_records')))) { %>
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('damages_delete'))) { %>
                                         <button class="btn btn-action-delete" onclick="deleteDamageRecord('<%= log.id %>', '<%= log.damageNo %>')" title="Delete Record">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>

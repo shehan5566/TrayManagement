@@ -162,68 +162,67 @@ app.use(session({
     }
 }));
 
-// Permission Alias Mapping for backward compatibility & flexible role configurations
+// Strict Permission Mapping corresponding 1:1 to User Role Page configurations
 const permissionAliases = {
     // 1. Transactions
     'transactions_view': ['transactions_view', 'view_transactions'],
     'transactions_create': ['transactions_create', 'create_transactions'],
     'transactions_edit': ['transactions_edit', 'edit_transactions'],
-    'transactions_delete': ['transactions_delete', 'delete_records'],
-    'transactions_backdate': ['transactions_backdate', 'backdate_records'],
+    'transactions_delete': ['transactions_delete'],
+    'transactions_backdate': ['transactions_backdate'],
 
     // 2. Stock Transfers
-    'manage_stock': ['manage_stock', 'stock_transfers_view', 'stock_transfers_create', 'stock_transfers_edit'],
-    'stock_transfers_view': ['stock_transfers_view', 'manage_stock'],
-    'stock_transfers_create': ['stock_transfers_create', 'manage_stock'],
-    'stock_transfers_edit': ['stock_transfers_edit', 'manage_stock'],
-    'stock_transfers_delete': ['stock_transfers_delete', 'delete_records'],
-    'stock_transfers_backdate': ['stock_transfers_backdate', 'backdate_records'],
+    'stock_transfers_view': ['stock_transfers_view'],
+    'stock_transfers_create': ['stock_transfers_create'],
+    'stock_transfers_edit': ['stock_transfers_edit'],
+    'stock_transfers_delete': ['stock_transfers_delete'],
+    'stock_transfers_backdate': ['stock_transfers_backdate'],
 
-    // 3. Receive Stock
-    'receive_stock_view': ['receive_stock_view', 'manage_stock', 'stock_transfers_view'],
-    'receive_stock_edit': ['receive_stock_edit', 'stock_transfers_edit'],
-    'receive_stock_approve': ['receive_stock_approve', 'manage_stock', 'stock_transfers_edit'],
-    'receive_stock_delete': ['receive_stock_delete', 'delete_records', 'stock_transfers_delete'],
-    'receive_stock_backdate': ['receive_stock_backdate', 'backdate_records', 'stock_transfers_backdate'],
+    // 3. Receive Stock (GRN)
+    'receive_stock_view': ['receive_stock_view'],
+    'receive_stock_approve': ['receive_stock_approve'],
+    'receive_stock_edit': ['receive_stock_edit'],
+    'receive_stock_delete': ['receive_stock_delete'],
+    'receive_stock_backdate': ['receive_stock_backdate'],
 
     // 4. Lorry Loading (Dispatch)
-    'loading_view': ['loading_view', 'manage_stock', 'stock_transfers_view'],
-    'loading_create': ['loading_create', 'transactions_create', 'manage_stock'],
-    'loading_edit': ['loading_edit', 'transactions_edit', 'manage_stock'],
-    'loading_delete': ['loading_delete', 'delete_records'],
-    'loading_print': ['loading_print', 'loading_view'],
+    'loading_view': ['loading_view'],
+    'loading_create': ['loading_create'],
+    'loading_edit': ['loading_edit'],
+    'loading_delete': ['loading_delete'],
+    'loading_print': ['loading_print'],
 
     // 5. Lorry Unloading (Collection)
-    'unloading_view': ['unloading_view', 'manage_stock', 'stock_transfers_view'],
-    'unloading_create': ['unloading_create', 'transactions_create', 'receive_stock_approve', 'manage_stock'],
-    'unloading_edit': ['unloading_edit', 'transactions_edit', 'manage_stock'],
-    'unloading_delete': ['unloading_delete', 'delete_records'],
-    'unloading_print': ['unloading_print', 'unloading_view'],
+    'unloading_view': ['unloading_view'],
+    'unloading_create': ['unloading_create'],
+    'unloading_edit': ['unloading_edit'],
+    'unloading_delete': ['unloading_delete'],
+    'unloading_print': ['unloading_print'],
 
     // 6. Damages & Audit Logs
-    'damages_view': ['damages_view', 'manage_stock', 'dashboard_main'],
-    'damages_create': ['damages_create', 'manage_stock'],
-    'damages_edit': ['damages_edit', 'manage_stock'],
-    'damages_delete': ['damages_delete', 'delete_records'],
+    'damages_view': ['damages_view'],
+    'damages_create': ['damages_create'],
+    'damages_edit': ['damages_edit'],
+    'damages_delete': ['damages_delete'],
 
     // 7. Dashboards & Analytics
     'dashboard_main': ['dashboard_main'],
-    'analytics_view': ['analytics_view', 'dashboard_main', 'reports_view'],
+    'analytics_view': ['analytics_view'],
     'view_reports': ['view_reports', 'reports_view'],
     'reports_view': ['reports_view', 'view_reports'],
-    'reports_send_manually': ['reports_send_manually', 'reports_view'],
+    'reports_send_manually': ['reports_send_manually'],
 
     // 8. Customer Management
     'customer_view': ['customer_view'],
     'customer_create': ['customer_create'],
     'customer_edit': ['customer_edit'],
-    'customer_delete': ['customer_delete', 'delete_records'],
+    'customer_delete': ['customer_delete'],
     'customer_sms': ['customer_sms', 'action_sms'],
     'customer_history': ['customer_history', 'action_view_history'],
 
     // 9. Special Approvals & Overdraft
-    'approvals_request': ['approvals_request', 'transactions_create'],
-    'approvals_manage': ['approvals_manage', 'admin'],
+    'approvals_request': ['approvals_request'],
+    'approvals_manage': ['approvals_manage'],
 
     // 10. Opening Balance
     'opening_balance_edit': ['opening_balance_edit'],
@@ -231,17 +230,18 @@ const permissionAliases = {
     // 11. Administration & Settings
     'admin_view_logs': ['admin_view_logs', 'view_logs'],
     'view_logs': ['view_logs', 'admin_view_logs'],
-    'admin_branches_users': ['admin_branches_users', 'admin'],
-    'admin_roles': ['admin_roles', 'admin'],
-    'admin_settings': ['admin_settings', 'admin'],
+    'admin_branches_users': ['admin_branches_users'],
+    'admin_roles': ['admin_roles'],
+    'admin_settings': ['admin_settings'],
 
     // 12. Action Required
     'action_sms': ['action_sms', 'customer_sms'],
     'action_view_history': ['action_view_history', 'customer_history'],
 
-    // Legacy General Permissions
-    'delete_records': ['delete_records', 'transactions_delete', 'stock_transfers_delete', 'customer_delete', 'receive_stock_delete', 'loading_delete', 'unloading_delete', 'damages_delete'],
-    'backdate_records': ['backdate_records', 'transactions_backdate', 'stock_transfers_backdate', 'receive_stock_backdate']
+    // Standalone legacy compatibility
+    'manage_stock': ['manage_stock'],
+    'delete_records': ['delete_records'],
+    'backdate_records': ['backdate_records']
 };
 
 // Helper for Mongo location filter in server routes
@@ -334,14 +334,20 @@ app.use(async (req, res, next) => {
         res.locals.hasPerm = (perm) => {
             if (!req.session.user) return false;
             if (req.session.user.role === 'admin' || req.session.user.username === 'admin') return true;
+            if (userPermissions && userPermissions.includes('*')) return true;
+            // If user has a role assigned (roleId), strictly check that role's permissions
+            if (req.session.user.roleId) {
+                const valid = permissionAliases[perm] || [perm];
+                return valid.some(p => userPermissions && userPermissions.includes(p));
+            }
+            // Fallback for legacy users without a roleId
             if (req.session.user.role === 'viewer') return perm.includes('_view') || perm === 'dashboard_main' || perm === 'customer_history';
-            if (!req.session.user.roleId && (!userPermissions || userPermissions.length === 0)) {
+            if (!userPermissions || userPermissions.length === 0) {
                 if (req.session.user.role === 'user') return !perm.startsWith('admin_');
                 return false;
             }
-            if (userPermissions.includes('*')) return true;
             const valid = permissionAliases[perm] || [perm];
-            return valid.some(p => userPermissions.includes(p));
+            return valid.some(p => userPermissions && userPermissions.includes(p));
         };
     } else {
         res.locals.user = null;
@@ -574,6 +580,23 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard', requireAuth, async (req, res) => {
     try {
+        const perms = await getUserPermissions(req.session.user);
+        if (!perms.includes('*') && !perms.includes('dashboard_main')) {
+            if (perms.includes('transactions_view')) return res.redirect('/transactions');
+            if (perms.includes('customer_view')) return res.redirect('/customers');
+            if (perms.includes('stock_transfers_view')) return res.redirect('/transfers');
+            if (perms.includes('receive_stock_view')) return res.redirect('/receive-stock');
+            if (perms.includes('loading_view')) return res.redirect('/loading');
+            if (perms.includes('unloading_view')) return res.redirect('/unloading');
+            if (perms.includes('damages_view')) return res.redirect('/damages');
+            if (perms.includes('reports_view') || perms.includes('view_reports')) return res.redirect('/reports');
+            if (perms.includes('analytics_view')) return res.redirect('/analytics');
+            if (perms.includes('admin_branches_users')) return res.redirect('/users');
+            if (perms.includes('admin_roles')) return res.redirect('/roles');
+            if (perms.includes('admin_view_logs') || perms.includes('view_logs')) return res.redirect('/logs');
+            if (perms.includes('admin_settings')) return res.redirect('/settings');
+            return res.status(403).send('Unauthorized. You do not have permission to view the Dashboard.');
+        }
         const [customers, transactions] = await Promise.all([
             Customer.getAll(req.session.user.locationId, req.session.user.role),
             Transaction.getAll(req.session.user.locationId, req.session.user.role)
@@ -811,7 +834,7 @@ app.post('/api/user/switch-location', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/api/monthly-balance', requireAuth, async (req, res) => {
+app.post('/api/monthly-balance', requireAuth, requirePermission('opening_balance_edit'), async (req, res) => {
     try {
         const { month, openingBalance } = req.body;
         const locationId = req.session.user.locationId;
@@ -836,7 +859,7 @@ app.post('/api/monthly-balance', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/api/net-tray-balance', requireAuth, async (req, res) => {
+app.post('/api/net-tray-balance', requireAuth, requirePermission('opening_balance_edit'), async (req, res) => {
     try {
         const currentUser = req.session.user;
         const isUserAdmin = currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin');
@@ -1307,7 +1330,7 @@ app.post('/customers/:id/delete', requireAuth, requirePermission('customer_delet
 });
 
 // Transactions & Entry Routes
-app.get('/transactions', requireAuth, async (req, res) => {
+app.get('/transactions', requireAuth, requirePermission('transactions_view'), async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const search = req.query.search || '';
@@ -1335,7 +1358,7 @@ app.get('/transactions', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/transactions', requireEditAccess, async (req, res) => {
+app.post('/transactions', requireAuth, requirePermission('transactions_create'), async (req, res) => {
     const { customerId, type, count, depositPerTray, depositOption, actualDeposit, vehicleNo, remarks, date } = req.body;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
@@ -1630,7 +1653,7 @@ app.post('/transactions/import', requireEditAccess, requirePermission('transacti
     }
 });
 
-app.post('/transactions/:id/delete', requireAuth, requirePermission('delete_records'), async (req, res) => {
+app.post('/transactions/:id/delete', requireAuth, requirePermission('transactions_delete'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const txToDelete = await TransactionModel.findById(req.params.id);
@@ -2234,7 +2257,7 @@ app.post('/lorry-trips/:id/settle', requireAuth, requireEditAccess, requirePermi
 });
 
 // Cancel Trip Dispatch
-app.post('/lorry-trips/:id/cancel', requireAuth, requireEditAccess, async (req, res) => {
+app.post('/lorry-trips/:id/cancel', requireAuth, requirePermission('loading_delete'), async (req, res) => {
     try {
         const cancelled = await LorryTrip.cancel(req.params.id, req.session.user.username);
         await ActivityLog.log(
@@ -2887,7 +2910,7 @@ app.get('/receive-stock/:id/print', requireAuth, async (req, res) => {
     res.redirect('/transfers/' + req.params.id + '/print-grn');
 });
 
-app.get('/receive-stock', requireAuth, async (req, res) => {
+app.get('/receive-stock', requireAuth, requirePermission('receive_stock_view'), async (req, res) => {
     try {
         const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo' }).format(new Date());
         let startDate = req.query.startDate || today;
@@ -2901,7 +2924,7 @@ app.get('/receive-stock', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/transfers/dispatch', requireAuth, async (req, res) => {
+app.post('/transfers/dispatch', requireAuth, requirePermission('stock_transfers_create'), async (req, res) => {
     try {
         const data = {
             fromLocationId: req.session.user.locationId,
@@ -2933,7 +2956,7 @@ app.post('/transfers/dispatch', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/transfers/:id/grn', requireAuth, async (req, res) => {
+app.post('/transfers/:id/grn', requireAuth, requirePermission('receive_stock_approve'), async (req, res) => {
     try {
         const grnData = {
             action: req.body.action, // ACCEPT or REJECT
@@ -2984,7 +3007,7 @@ app.post('/transfers/:id/edit', requireAuth, requirePermission('stock_transfers_
     }
 });
 
-app.post('/transfers/:id/backdate', requireAuth, requirePermission('backdate_records'), async (req, res) => {
+app.post('/transfers/:id/backdate', requireAuth, requirePermission('stock_transfers_backdate'), async (req, res) => {
     try {
         const { dispatchedDate, receivedDate } = req.body;
         const dDate = dispatchedDate ? parseLocalDatetime(dispatchedDate) : undefined;
@@ -2997,7 +3020,7 @@ app.post('/transfers/:id/backdate', requireAuth, requirePermission('backdate_rec
     }
 });
 
-app.delete('/transfers/:id', requireAuth, requirePermission('delete_records'), async (req, res) => {
+app.delete('/transfers/:id', requireAuth, requirePermission('stock_transfers_delete'), async (req, res) => {
     try {
         const transferToDelete = await StockTransferModel.findById(req.params.id);
         if (!transferToDelete) {
@@ -3857,7 +3880,7 @@ app.post('/profile', requireAuth, async (req, res) => {
 });
 
 // Manual Email Report Route (Admin / Reports Authorized)
-app.post('/admin/email/send', requireAuth, async (req, res) => {
+app.post('/admin/email/send', requireAuth, requirePermission('reports_send_manually'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const user = req.session.user;

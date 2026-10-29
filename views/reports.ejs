@@ -35,7 +35,7 @@
             </a>
         </form>
 
-        <% if (user.role==='admin' || user.username==='admin' ) { %>
+        <% if (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('reports_send_manually'))) { %>
             <!-- Manual Email Report Form -->
             <form id="manualEmailForm" action="/admin/email/send" method="POST" class="responsive-filter-form"
                 onsubmit="sendManualEmailReport(event, this)"

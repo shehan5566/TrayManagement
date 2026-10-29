@@ -222,7 +222,7 @@
                                                          </button>
                                                      <% } %>
 
-                                                     <% const canDelete = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('stock_transfers_delete') || hasPerm('delete_records')))); %>
+                                                     <% const canDelete = (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('stock_transfers_delete'))); %>
                                                      <% if (canDelete && (user.username === 'admin' || user.role === 'admin' || t.status !== 'ACCEPTED')) { %>
                                                          <button type="button" class="btn btn-action-delete delete-transfer-btn" 
                                                              data-id="<%= t._id || t.id %>"

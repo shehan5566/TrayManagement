@@ -168,10 +168,10 @@
                                                     <div style="display: flex; gap: 6px; justify-content: center; align-items: center; margin: 0 auto; width: fit-content;">
                                                         <a href="/transfers/<%= t._id || t.id %>/print-grn" target="_blank" class="btn btn-receipt-action" title="Print Goods Received Note (GRN)"><i class="fa-solid fa-print"></i></a>
                                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_backdate') || hasPerm('receive_stock_delete')))) { %>
-                                                            <% if (t.status === 'ACCEPTED' && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_backdate') || hasPerm('backdate_records'))))) { %>
+                                                            <% if (t.status === 'ACCEPTED' && (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_backdate')))) { %>
                                                                 <button class="btn btn-action-edit" onclick="openBackdateGRNModal('<%= t._id || t.id %>', '<%= t.receivedDate || '' %>')" title="Backdate GRN"><i class="fa-solid fa-calendar-day"></i></button>
                                                             <% } %>
-                                                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_delete') || hasPerm('delete_records')))) { %>
+                                                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_delete'))) { %>
                                                                 <button class="btn btn-action-delete" onclick="deleteTransfer('<%= t.id %>')" title="Delete Record"><i class="fa-solid fa-trash"></i></button>
                                                             <% } %>
                                                         <% } %>
@@ -211,7 +211,7 @@
 
                         <input type="hidden" name="action" value="ACCEPT">
 
-                        <% if (user.role==='admin' || user.username==='admin' ) { %>
+                        <% if (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_backdate'))) { %>
                             <div class="form-group" style="margin-top: 15px;">
                                 <label>Received Date & Time</label>
                                 <input type="datetime-local" id="receivedDate" name="receivedDate" class="form-control">

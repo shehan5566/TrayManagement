@@ -259,7 +259,7 @@
                                                                     <i class="fa-solid fa-pen"></i>
                                                                 </button>
                                                             <% } %>
-                                                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('transactions_delete') || hasPerm('delete_records')))) { %>
+                                                            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('transactions_delete'))) { %>
                                                                 <form action="/transactions/<%= tx.id %>/delete"
                                                                     method="POST"
                                                                     onsubmit="confirmAjaxDelete(event, this, 'transaction record')"
