@@ -106,7 +106,7 @@
 </div>
 
 <!-- Customer Stats Grid -->
-<div class="stats-grid">
+<div class="stats-grid" style="margin-bottom: 25px;">
     <div class="card">
         <div class="card-title">Total Customers</div>
         <div class="card-value"><%= stats.totalCustomers %></div>
@@ -136,6 +136,41 @@
         <div class="card-value"><%= stats.currentBalance %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-scale-balanced"></i> Outstanding with customers
+        </div>
+    </div>
+</div>
+
+<!-- Warehouse Lorry Loading & Unloading Stats Grid -->
+<div class="stats-grid">
+    <div class="card">
+        <div class="card-title">Total Loading -count</div>
+        <div class="card-value"><%= (typeof lorryStats !== 'undefined' && lorryStats.totalLoadingCount) ? lorryStats.totalLoadingCount : 0 %></div>
+        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+            <i class="fa-solid fa-truck-loading"></i> Dispatched lorry trips
+        </div>
+    </div>
+    
+    <div class="card yellow-border">
+        <div class="card-title">Loading QTY</div>
+        <div class="card-value" style="color: #006400;"><%= (typeof lorryStats !== 'undefined' && lorryStats.totalLoadingQty) ? lorryStats.totalLoadingQty : 0 %></div>
+        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+            <i class="fa-solid fa-boxes-stacked"></i> Trays loaded to lorries
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Total Unloading-count</div>
+        <div class="card-value"><%= (typeof lorryStats !== 'undefined' && lorryStats.totalUnloadingCount) ? lorryStats.totalUnloadingCount : 0 %></div>
+        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+            <i class="fa-solid fa-truck-ramp-box"></i> Returned & settled trips
+        </div>
+    </div>
+
+    <div class="card yellow-border">
+        <div class="card-title">Unloading QTY</div>
+        <div class="card-value" style="color: var(--success);"><%= (typeof lorryStats !== 'undefined' && lorryStats.totalUnloadingQty) ? lorryStats.totalUnloadingQty : 0 %></div>
+        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+            <i class="fa-solid fa-boxes-packing"></i> Trays unloaded to warehouse
         </div>
     </div>
 </div>

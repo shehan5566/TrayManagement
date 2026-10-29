@@ -738,9 +738,27 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
         const totalBranchStock = (warehouseCurrentBalance || 0) + (currentBalance || 0);
 
+        // Lorry Loading & Unloading Stats for warehouse
+        const lorryTrips = await LorryTrip.getAll(myLocationId, req.session.user.role);
+        const validLoadingTrips = (lorryTrips || []).filter(t => t.status !== 'CANCELLED');
+        const totalLoadingCount = validLoadingTrips.length;
+        const totalLoadingQty = validLoadingTrips.reduce((sum, t) => sum + (t.loadedQty || 0), 0);
+
+        const completedUnloadingTrips = (lorryTrips || []).filter(t => t.status === 'COMPLETED');
+        const totalUnloadingCount = completedUnloadingTrips.length;
+        const totalUnloadingQty = completedUnloadingTrips.reduce((sum, t) => sum + (t.actualUnloadedQty || 0), 0);
+
+        const lorryStats = {
+            totalLoadingCount,
+            totalLoadingQty,
+            totalUnloadingCount,
+            totalUnloadingQty
+        };
+
         res.render('dashboard', { 
             stats: { totalCustomers, totalTrayOut, totalTrayIn, currentBalance },
             warehouseStats: { warehouseOpeningBalance, totalTransferQty, totalGRNQty, warehouseCurrentBalance, totalBranchStock, isManualBalance, currentMonth },
+            lorryStats,
             recentTransactions,
             chartData,
             alerts,
