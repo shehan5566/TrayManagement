@@ -233,6 +233,7 @@ const permissionAliases = {
     'admin_branches_users': ['admin_branches_users'],
     'admin_roles': ['admin_roles'],
     'admin_settings': ['admin_settings'],
+    'location_switch': ['location_switch'],
 
     // 12. Action Required
     'action_sms': ['action_sms', 'customer_sms'],
@@ -297,8 +298,12 @@ app.use(async (req, res, next) => {
             console.error('Error loading user location name:', e);
         }
 
-        // Determine if user has permission to switch locations (Admin or Finance role)
+        userPermissions = await getUserPermissions(req.session.user);
+
+        // Determine if user has permission to switch locations (Admin, location_switch perm, or Finance role)
         if (req.session.user.role === 'admin' || req.session.user.username === 'admin') {
+            canSwitchLocation = true;
+        } else if (userPermissions.includes('*') || userPermissions.includes('location_switch')) {
             canSwitchLocation = true;
         } else if (req.session.user.roleId) {
             try {
@@ -325,8 +330,6 @@ app.use(async (req, res, next) => {
                 console.error('Error fetching locations for location switcher:', e);
             }
         }
-
-        userPermissions = await getUserPermissions(req.session.user);
         res.locals.user = { ...req.session.user, locationName, permissions: userPermissions, canSwitchLocation };
         res.locals.userPermissions = userPermissions;
         res.locals.canSwitchLocation = canSwitchLocation;
@@ -758,7 +761,8 @@ app.post('/api/user/switch-location', requireAuth, async (req, res) => {
         const currentUser = req.session.user;
         let isAllowed = false;
 
-        if (currentUser.role === 'admin' || currentUser.username === 'admin') {
+        const perms = await getUserPermissions(currentUser);
+        if (currentUser.role === 'admin' || currentUser.username === 'admin' || perms.includes('*') || perms.includes('location_switch')) {
             isAllowed = true;
         } else if (currentUser.roleId) {
             const userRole = await Role.getById(currentUser.roleId);

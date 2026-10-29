@@ -90,7 +90,7 @@
                                             <span class="loc-count-pill"><%= availableLocations.length %> branches</span>
                                         </div>
                                         <div class="loc-menu-list">
-                                            <% if (user.role === 'admin' || user.username === 'admin') { 
+                                            <% if (user.role === 'admin' || user.username === 'admin' || (typeof canSwitchLocation !== 'undefined' && canSwitchLocation)) { 
                                                 const isAllActive = user.locationId === 'all';
                                             %>
                                                 <div class="loc-menu-item <%= isAllActive ? 'active' : '' %>" role="button" tabindex="0" onclick="switchUserLocation('all', 'All Locations (Global)')" style="border-bottom: 1px dashed rgba(0,0,0,0.1); margin-bottom: 4px; padding-bottom: 8px;">
