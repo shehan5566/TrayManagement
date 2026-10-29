@@ -901,6 +901,7 @@ const Customer = {
                         customerId: customer._id,
                         customerName: customer.name,
                         phone: customer.phone,
+                        repPhone: customer.repPhone || '',
                         currentBalance: customer.currentBalance,
                         lastTransactionDate: lastTx.date,
                         daysPending: diffDays
@@ -912,6 +913,7 @@ const Customer = {
                         customerId: customer._id,
                         customerName: customer.name,
                         phone: customer.phone,
+                        repPhone: customer.repPhone || '',
                         currentBalance: customer.currentBalance,
                         lastTransactionDate: now,
                         daysPending: 0

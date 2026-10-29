@@ -111,7 +111,7 @@ const sendSMS = async (phone, message) => {
 /**
  * Send an SMS for a new transaction
  */
-const sendTransactionSMS = async (phone, name, tx, newBalance) => {
+const sendTransactionSMS = async (phone, name, tx, newBalance, repPhone = null) => {
     let helpline = '0761391535 (Sales Admin)';
     try {
         const { SystemSettingModel } = require('./db');
@@ -149,14 +149,35 @@ New Balance: ${newBalance} Trays
 
 Thank you!`;
     
-    return await sendSMS(phone, msg);
+    const result = await sendSMS(phone, msg);
+
+    // Also send duplicate alert to assigned Sales Rep if phone available
+    let targetRepPhone = repPhone;
+    if (!targetRepPhone && tx && tx.customerId) {
+        try {
+            const { CustomerModel } = require('./db');
+            const cust = await CustomerModel.findById(tx.customerId).lean();
+            if (cust && cust.repPhone) {
+                targetRepPhone = cust.repPhone;
+            }
+        } catch (e) {}
+    }
+    if (targetRepPhone) {
+        const cleanCustPhone = formatPhoneNumber(phone);
+        const cleanRepPhone = formatPhoneNumber(targetRepPhone);
+        if (cleanRepPhone && cleanRepPhone !== cleanCustPhone) {
+            console.log(`[SMS] Sending duplicate transaction alert to Sales Rep (${cleanRepPhone}) for customer ${name}...`);
+            await sendSMS(cleanRepPhone, msg);
+        }
+    }
+    return result;
 };
 
 
 /**
  * Send an SMS manually for balance reminder
  */
-const sendManualSMS = async (phone, name, balance) => {
+const sendManualSMS = async (phone, name, balance, repPhone = null) => {
     let helpline = '0761391535 (Sales Admin)';
     try {
         const { SystemSettingModel } = require('./db');
@@ -188,7 +209,18 @@ Please return the due trays at your earliest convenience.
 
 Thank you!`;
     
-    return await sendSMS(phone, msg);
+    const result = await sendSMS(phone, msg);
+
+    // Also send duplicate reminder to assigned Sales Rep if phone available
+    if (repPhone) {
+        const cleanCustPhone = formatPhoneNumber(phone);
+        const cleanRepPhone = formatPhoneNumber(repPhone);
+        if (cleanRepPhone && cleanRepPhone !== cleanCustPhone) {
+            console.log(`[SMS] Sending duplicate balance reminder to Sales Rep (${cleanRepPhone}) for customer ${name}...`);
+            await sendSMS(cleanRepPhone, msg);
+        }
+    }
+    return result;
 };
 
 const buildApprovalMessage = (details = {}, approvalUrl, pin) => {

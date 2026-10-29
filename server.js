@@ -76,7 +76,7 @@ cron.schedule('0 9 * * *', async () => {
         for (const alert of alerts) {
             if ((alert.daysPending >= 7 || alert.currentBalance >= 50) && alert.phone) {
                 console.log(`[CRON] Sending automated reminder to ${alert.customerName} (${alert.phone}) - ${alert.currentBalance} trays (${alert.daysPending} days)`);
-                await smsService.sendManualSMS(alert.phone, alert.customerName, alert.currentBalance);
+                await smsService.sendManualSMS(alert.phone, alert.customerName, alert.currentBalance, alert.repPhone);
             }
         }
     } catch (err) {
@@ -518,7 +518,7 @@ app.post('/api/sms/send-overdue-reminders', requireAuth, requireAdmin, async (re
         for (const alert of alerts) {
             if (alert.daysPending >= 7 && alert.phone) {
                 console.log(`[MANUAL TRIGGER] Sending 1-week overdue reminder to ${alert.customerName} (${alert.phone})`);
-                await smsService.sendManualSMS(alert.phone, alert.customerName, alert.currentBalance);
+                await smsService.sendManualSMS(alert.phone, alert.customerName, alert.currentBalance, alert.repPhone);
                 sentCount++;
             }
         }
@@ -1048,7 +1048,7 @@ app.post('/api/sms/send-balance', requireAuth, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Customer SMS alerts are currently turned OFF in System Settings. Please enable them first.' });
         }
         
-        const success = await smsService.sendManualSMS(customer.phone, customer.name, customer.currentBalance);
+        const success = await smsService.sendManualSMS(customer.phone, customer.name, customer.currentBalance, customer.repPhone);
         if (success) {
             return res.json({ success: true, message: 'SMS sent successfully' });
         } else {
@@ -1444,7 +1444,7 @@ app.post('/transactions', requireEditAccess, async (req, res) => {
                 await ActivityLog.log(req.session.user.username, 'CREATE', 'Transaction', `Created ${type} transaction for ${newTx.count} trays${refNo}`);
                 const customer = await Customer.getById(customerId);
                 if (customer && customer.phone) {
-                    await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance);
+                    await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance, customer.repPhone);
                 }
             } catch (asyncErr) {
                 console.error("[Async Side-effect Error]:", asyncErr);
@@ -1940,7 +1940,7 @@ app.post('/api/approvals/verify-pin', requireUserOrDriver, async (req, res) => {
                     await ActivityLog.log(approval.requestedBy, 'CREATE', 'Transaction', `Created OUT transaction for ${newTx.count} trays with Special Approval via PIN (Ref: RE-${String(newTx.receiptNo).padStart(6, '0')})`);
                     const customer = await Customer.getById(newTx.customerId);
                     if (customer && customer.phone) {
-                        await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance);
+                        await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance, customer.repPhone);
                     }
                 } catch (e) {}
             });
@@ -1992,7 +1992,7 @@ app.post('/approval/:token/action', async (req, res) => {
                         await ActivityLog.log(approval.requestedBy, 'CREATE', 'Transaction', `Special Approval granted by ${approval.approvedBy} for ${newTx.count} trays (Ref: RE-${String(newTx.receiptNo).padStart(6, '0')})`);
                         const customer = await Customer.getById(newTx.customerId);
                         if (customer && customer.phone) {
-                            await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance);
+                            await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance, customer.repPhone);
                         }
                     } catch (e) {}
                 });
@@ -2712,7 +2712,7 @@ app.post('/driver/transaction', async (req, res) => {
         try {
             const customer = await Customer.getById(customerId);
             if (customer && customer.phone) {
-                await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance);
+                await smsService.sendTransactionSMS(customer.phone, customer.name, newTx, customer.currentBalance, customer.repPhone);
             }
         } catch (smsErr) {
             console.error('[SMS Delivery Warning]:', smsErr);
