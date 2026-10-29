@@ -893,11 +893,6 @@
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="color: #64748b; font-weight: 600;">Opening Balance:</span>
                     <span style="font-weight: 700; color: #0f172a;"><%= typeof warehouseOpeningBalance !== 'undefined' ? warehouseOpeningBalance : 0 %></span>
-                    <% if (typeof warehouseStartingStock !== 'undefined' && typeof customerInitialTotal !== 'undefined' && warehouseStartingStock > 0) { %>
-                        <span style="font-size: 11px; color: #475569; background: #e2e8f0; padding: 1px 6px; border-radius: 4px;" title="Warehouse: <%= warehouseStartingStock %> + Customers: <%= customerInitialTotal %>">
-                            (Warehouse: <%= warehouseStartingStock %> + Customers: <%= customerInitialTotal %>)
-                        </span>
-                    <% } %>
                 </div>
                 <div style="color: #cbd5e1;">|</div>
                 <div style="display: flex; align-items: center; gap: 6px;">
@@ -944,14 +939,7 @@
                         <tr style="background-color: #f8fafc;">
                             <td><strong><%= typeof warehouseOpeningDate !== 'undefined' ? warehouseOpeningDate : (startDate || today) %></strong></td>
                             <td><code style="color: #64748b;">-</code></td>
-                            <td>
-                                <strong style="color: #0f172a;">Opening Balance</strong>
-                                <% if (typeof warehouseStartingStock !== 'undefined' && typeof customerInitialTotal !== 'undefined' && warehouseStartingStock > 0) { %>
-                                    <small style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;">
-                                        Warehouse: <%= warehouseStartingStock %> + Customers: <%= customerInitialTotal %>
-                                    </small>
-                                <% } %>
-                            </td>
+                            <td><strong style="color: #0f172a;">Opening Balance</strong></td>
                             <td style="text-align: right; color: #64748b;">-</td>
                             <td style="text-align: right; color: #64748b;">-</td>
                             <td style="text-align: right; font-weight: bold; color: #000000;"><%= typeof warehouseOpeningBalance !== 'undefined' ? warehouseOpeningBalance : 0 %></td>
