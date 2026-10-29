@@ -68,7 +68,7 @@
                                 <%= (t.loadedQty || 0) - (t.totalDeliveredQty || 0) + (t.totalCollectedQty || 0) %>
                             </td>
                             <td style="text-align: center;">
-                                <% if (typeof hasPerm !== 'function' || hasPerm('unloading_create') || hasPerm('transactions_create')) { %>
+                                <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('unloading_create'))) { %>
                                 <button onclick="openSettleModal('<%= t.id %>', '<%= t.tripNo %>', '<%= t.vehicleNo %>', '<%= t.driverName %>', <%= t.loadedQty %>, <%= t.totalDeliveredQty || 0 %>, <%= t.totalCollectedQty || 0 %>)" 
                                         class="btn btn-primary" 
                                         style="padding: 6px 14px; font-size: 12px; background: #144d37; color: #ffffff; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; border-radius: 6px;">

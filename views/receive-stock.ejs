@@ -56,6 +56,7 @@
                                                     <%= t.remarks || '-' %>
                                                 </td>
                                                 <td>
+                                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_approve'))) { %>
                                                     <div style="display: flex; gap: 8px; justify-content: center;">
                                                         <button
                                                             onclick="openGRNModal('<%= t.id %>', <%= t.dispatchedQty %>, '<%= t.fromLocationName %>', '<%= t.transferDocNo %>')"
@@ -64,6 +65,9 @@
                                                             Process GRN
                                                         </button>
                                                     </div>
+                                                    <% } else { %>
+                                                        <span style="color: var(--text-light); font-size: 11px;">View only</span>
+                                                    <% } %>
                                                 </td>
                                             </tr>
                                 <% }) %>
@@ -184,6 +188,7 @@
                 </div>
             </div>
 
+            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_approve'))) { %>
             <!-- GRN Modal -->
             <div id="grnModal" class="modal"
                 style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
@@ -226,6 +231,7 @@
                     </form>
                 </div>
             </div>
+            <% } %>
 
             <script>
                 function openGRNModal(transferId, expectedQty, fromBranch, transferDocNo) {

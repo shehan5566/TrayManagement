@@ -194,9 +194,11 @@
                                 </td>
                                 <td style="padding: 10px 12px; text-align: right;">
                                     <div style="display: inline-flex; gap: 6px;">
+                                        <% if (typeof hasPerm === 'function' && hasPerm('customer_sms')) { %>
                                         <button onclick="sendReminderSMS('<%= c.id %>')" class="btn btn-sm" style="font-size: 11px; background: #174e3e; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Send Reminder SMS">
                                             <i class="fa-solid fa-comment-sms"></i> SMS
                                         </button>
+                                        <% } %>
                                         <a href="/reports?showBreakup=<%= c.id %>" class="btn btn-secondary btn-sm" style="font-size: 11px; padding: 4px 8px; border-radius: 4px; text-decoration: none;" title="View Statement">
                                             <i class="fa-solid fa-clock-rotate-left"></i> History
                                         </a>

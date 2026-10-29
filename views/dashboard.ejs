@@ -63,7 +63,9 @@
     <div class="card">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>Opening Balance (Warehouse)</span>
+            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('opening_balance_edit'))) { %>
             <i class="fa-solid fa-pen" style="cursor: pointer; color: var(--accent-yellow);" onclick="openMonthlyBalanceModal('<%= warehouseStats.currentMonth %>', <%= warehouseStats.warehouseOpeningBalance %>)" title="Set Manual Monthly Balance"></i>
+            <% } %>
         </div>
         <div class="card-value">
             <%= warehouseStats.warehouseOpeningBalance %>
@@ -217,9 +219,11 @@
                             </td>
                             <td style="text-align: right;">
                                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                    <% if (typeof hasPerm === 'function' && hasPerm('customer_sms')) { %>
                                     <button onclick="sendReminderSMS('<%= alert.customerId %>')" class="btn btn-primary btn-sm" style="font-size: 12px; background: #174e3e; border: none; display: inline-flex; align-items: center; gap: 6px;">
                                         <i class="fa-solid fa-comment-sms"></i> Send SMS
                                     </button>
+                                    <% } %>
                                     <a href="/reports?showBreakup=<%= alert.customerId %>" class="btn btn-secondary btn-sm" style="font-size: 12px;">
                                         <i class="fa-solid fa-clock-rotate-left"></i> History
                                     </a>
@@ -440,6 +444,7 @@
 </script>
 
 <!-- Monthly Balance Modal -->
+<% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('opening_balance_edit'))) { %>
 <div id="monthlyBalanceModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
     <div class="modal-content" style="background-color: #fefefe; margin: 10% auto; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
@@ -462,6 +467,7 @@
         </form>
     </div>
 </div>
+<% } %>
 
 <script>
     function openMonthlyBalanceModal(currentMonth, currentBalance) {

@@ -12,7 +12,7 @@
 <% } %>
 
 <!-- 1. Dispatch Lorry (Load Trays) -->
-<% if (typeof hasPerm !== 'function' || hasPerm('loading_create') || hasPerm('transactions_create')) { %>
+<% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('loading_create'))) { %>
 <div class="content-box" style="border-top: 4px solid var(--primary-green);">
     <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <span class="box-title"><i class="fa-solid fa-truck-loading"></i> Loading</span>
