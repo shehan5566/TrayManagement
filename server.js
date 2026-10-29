@@ -1133,7 +1133,7 @@ app.get('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), 
 });
 
 app.post('/customers', requireAuth, requirePermission('customer_create'), async (req, res) => {
-    const { name, address, phone, initialBalance, initialDeposit, depositAmount, locationId } = req.body;
+    const { name, address, phone, repName, repPhone, initialBalance, initialDeposit, depositAmount, locationId } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
@@ -1153,7 +1153,7 @@ app.post('/customers', requireAuth, requirePermission('customer_create'), async 
         if (locationId && (req.session.user.role === 'admin' || req.session.user.username === 'admin' || res.locals.canSwitchLocation)) {
             customerLoc = locationId;
         }
-        const newCustomer = await Customer.create({ name, address, phone, initialBalance, initialDeposit: initialDeposit || depositAmount, locationId: customerLoc });
+        const newCustomer = await Customer.create({ name, address, phone, repName, repPhone, initialBalance, initialDeposit: initialDeposit || depositAmount, locationId: customerLoc });
         await ActivityLog.log(req.session.user.username, 'CREATE', 'Customer', `Added customer: ${newCustomer.name} (${customerLoc})`);
         if (isAjax) return res.json({ success: true, message: 'Customer created successfully', data: newCustomer });
         res.redirect('/customers');
@@ -1188,6 +1188,8 @@ app.post('/customers/import', requireAuth, requirePermission('customer_create'),
             const address = row['Address'] || row['address'] || row['ADDRESS'] || '';
             const initialBalance = parseInt(row['InitialBalance'] || row['initialBalance'] || row['Initial Balance'] || row['initial balance'] || row['INITIAL BALANCE'] || row['Opening Balance'] || 0) || 0;
             const depositAmount = parseFloat(row['Deposit Amount'] || row['deposit amount'] || row['DEPOSIT AMOUNT'] || row['DepositAmount'] || row['depositAmount'] || row['Deposit'] || row['deposit'] || row['DEPOSIT'] || 0) || 0;
+            const repName = row['Rep Name'] || row['repName'] || row['Rep'] || row['Sales Rep'] || '';
+            const repPhone = row['Rep Phone'] || row['repPhone'] || row['Rep Phone Number'] || '';
 
             if (!name || !phoneStr) {
                 skipCount++;
@@ -1214,7 +1216,7 @@ app.post('/customers/import', requireAuth, requirePermission('customer_create'),
             
             if (!exists) {
                 const customerLoc = (req.session.user && req.session.user.locationId && req.session.user.locationId !== 'all') ? req.session.user.locationId : 'main';
-                await Customer.create({ name, address, phone, initialBalance, initialDeposit: depositAmount, locationId: customerLoc });
+                await Customer.create({ name, address, phone, repName, repPhone, initialBalance, initialDeposit: depositAmount, locationId: customerLoc });
                 successCount++;
             } else {
                 skipCount++;
@@ -1235,7 +1237,7 @@ app.post('/customers/import', requireAuth, requirePermission('customer_create'),
 });
 
 app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'), async (req, res) => {
-    const { name, address, phone, initialBalance, currentBalance, initialDeposit, depositAmount, locationId } = req.body;
+    const { name, address, phone, repName, repPhone, initialBalance, currentBalance, initialDeposit, depositAmount, locationId } = req.body;
     const phoneRegex = /^[0-9]{10}$/;
     
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
@@ -1268,7 +1270,7 @@ app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'),
     }
     try {
         const updatePayload = {
-            name, address, phone, initialBalance, currentBalance,
+            name, address, phone, repName, repPhone, initialBalance, currentBalance,
             initialDeposit: initialDeposit !== undefined ? initialDeposit : depositAmount
         };
         if (locationId && (req.session.user.role === 'admin' || req.session.user.username === 'admin' || res.locals.canSwitchLocation)) {

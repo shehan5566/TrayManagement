@@ -38,7 +38,7 @@
     </div>
 
     <div class="search-container" style="margin-bottom: 15px;">
-        <input type="text" id="customerSearch" class="search-input" placeholder="Search customer by name or phone...">
+        <input type="text" id="customerSearch" class="search-input" placeholder="Search customer by name, phone or rep...">
     </div>
 
     <% if (customers.length === 0) { %>
@@ -51,6 +51,8 @@
                         <th>Name</th>
                         <th>Address</th>
                         <th>Phone</th>
+                        <th>Rep Name</th>
+                        <th>Rep Phone</th>
                         <th>Initial Balance</th>
                         <th>Initial Deposit</th>
                         <th>Current Balance</th>
@@ -69,6 +71,8 @@
                             </td>
                             <td><%= c.address || '-' %></td>
                             <td><%= c.phone %></td>
+                            <td><%= c.repName || '-' %></td>
+                            <td><%= c.repPhone || '-' %></td>
                             <td><%= c.initialBalance %></td>
                             <td><%= Number(c.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></td>
                             <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
@@ -92,6 +96,8 @@
                                         data-name="<%= c.name || '' %>"
                                         data-address="<%= c.address || '' %>"
                                         data-phone="<%= c.phone || '' %>"
+                                        data-rep-name="<%= c.repName || '' %>"
+                                        data-rep-phone="<%= c.repPhone || '' %>"
                                         data-initial-balance="<%= c.initialBalance || 0 %>"
                                         data-initial-deposit="<%= c.initialDeposit || 0 %>"
                                         data-current-balance="<%= c.currentBalance || 0 %>"
@@ -144,6 +150,17 @@
                 <div>
                     <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Phone Number <span style="color: #dc2626;">*</span></label>
                     <input type="tel" name="phone" placeholder="e.g. 0771234567" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" required style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Name</label>
+                        <input type="text" name="repName" placeholder="e.g. Kamal Silva" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Phone No</label>
+                        <input type="tel" name="repPhone" placeholder="e.g. 0771234567" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
                 </div>
 
                 <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation && typeof availableLocations !== 'undefined' && availableLocations.length > 0) { %>
@@ -251,6 +268,17 @@
                     <input type="tel" id="modalCustomerPhone" name="phone" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" required style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                 </div>
 
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label for="modalCustomerRepName" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Name</label>
+                        <input type="text" id="modalCustomerRepName" name="repName" placeholder="e.g. Kamal Silva" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
+                    <div>
+                        <label for="modalCustomerRepPhone" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Phone No</label>
+                        <input type="tel" id="modalCustomerRepPhone" name="repPhone" placeholder="e.g. 0771234567" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                    </div>
+                </div>
+
                 <% if (typeof canSwitchLocation !== 'undefined' && canSwitchLocation && typeof availableLocations !== 'undefined' && availableLocations.length > 0) { %>
                 <div>
                     <label for="modalCustomerLocationId" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Assigned Branch / Location</label>
@@ -328,7 +356,7 @@ function closeBulkImportModal() {
     if (modal) modal.style.display = 'none';
 }
 
-function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit, locationId) {
+function openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit, locationId, repName, repPhone) {
     const form = document.getElementById('editCustomerForm');
     if (form) form.action = '/customers/' + id + '/edit';
     const nameInput = document.getElementById('modalCustomerName');
@@ -337,6 +365,10 @@ function openEditCustomerModal(id, name, address, phone, initialBalance, current
     if (addrInput) addrInput.value = address || '';
     const phoneInput = document.getElementById('modalCustomerPhone');
     if (phoneInput) phoneInput.value = phone || '';
+    const repNameInput = document.getElementById('modalCustomerRepName');
+    if (repNameInput) repNameInput.value = repName || '';
+    const repPhoneInput = document.getElementById('modalCustomerRepPhone');
+    if (repPhoneInput) repPhoneInput.value = repPhone || '';
     const locInput = document.getElementById('modalCustomerLocationId');
     if (locInput) locInput.value = locationId || 'main';
     const initBalInput = document.getElementById('modalCustomerInitialBalance');
@@ -361,11 +393,13 @@ function handleEditCustomerClick(btn) {
     const name = btn.getAttribute('data-name');
     const address = btn.getAttribute('data-address');
     const phone = btn.getAttribute('data-phone');
+    const repName = btn.getAttribute('data-rep-name');
+    const repPhone = btn.getAttribute('data-rep-phone');
     const initialBalance = btn.getAttribute('data-initial-balance');
     const initialDeposit = btn.getAttribute('data-initial-deposit');
     const currentBalance = btn.getAttribute('data-current-balance');
     const locationId = btn.getAttribute('data-location-id');
-    openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit, locationId);
+    openEditCustomerModal(id, name, address, phone, initialBalance, currentBalance, initialDeposit, locationId, repName, repPhone);
 }
 
 window.addEventListener('click', function(event) {
@@ -387,10 +421,26 @@ document.addEventListener('DOMContentLoaded', function() {
         <%= editCustomer.initialBalance || 0 %>,
         <%= editCustomer.currentBalance || 0 %>,
         <%= editCustomer.initialDeposit || 0 %>,
-        <%- JSON.stringify(editCustomer.locationId || 'main') %>
+        <%- JSON.stringify(editCustomer.locationId || 'main') %>,
+        <%- JSON.stringify(editCustomer.repName || '') %>,
+        <%- JSON.stringify(editCustomer.repPhone || '') %>
     );
 });
 <% } %>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const custSearch = document.getElementById('customerSearch');
+    if (custSearch) {
+        custSearch.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#customersTable tbody tr');
+            rows.forEach(r => {
+                const text = r.innerText.toLowerCase();
+                r.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+    }
+});
 
 async function sendBalanceSMS(customerId) {
     if(!confirm("Are you sure you want to send a manual SMS balance update to this customer?")) return;

@@ -158,6 +158,8 @@ const CustomerSchema = new mongoose.Schema({
     name: { type: String },
     address: { type: String },
     phone: { type: String },
+    repName: { type: String, default: '' },
+    repPhone: { type: String, default: '' },
     initialBalance: { type: Number, default: 0 },
     currentBalance: { type: Number, default: 0 },
     initialDeposit: { type: Number, default: 0 },
@@ -780,6 +782,8 @@ const Customer = {
             name: customerData.name,
             address: customerData.address,
             phone: customerData.phone,
+            repName: (customerData.repName || '').trim(),
+            repPhone: (customerData.repPhone || '').trim(),
             initialBalance: parseInt(customerData.initialBalance) || 0,
             currentBalance: parseInt(customerData.initialBalance) || 0,
             initialDeposit: parseFloat(customerData.initialDeposit || customerData.depositAmount) || 0,
@@ -794,6 +798,8 @@ const Customer = {
             customer.name = customerData.name;
             customer.address = customerData.address;
             customer.phone = customerData.phone;
+            if (customerData.repName !== undefined) customer.repName = (customerData.repName || '').trim();
+            if (customerData.repPhone !== undefined) customer.repPhone = (customerData.repPhone || '').trim();
             if (customerData.locationId) {
                 customer.locationId = customerData.locationId;
             }
