@@ -143,7 +143,7 @@
 <!-- Warehouse Lorry Loading & Unloading Stats Grid -->
 <div class="stats-grid">
     <div class="card">
-        <div class="card-title">Total Loading -count</div>
+        <div class="card-title">Total Loading</div>
         <div class="card-value"><%= (typeof lorryStats !== 'undefined' && lorryStats.totalLoadingCount) ? lorryStats.totalLoadingCount : 0 %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-truck-loading"></i> Dispatched lorry trips
@@ -159,7 +159,7 @@
     </div>
 
     <div class="card">
-        <div class="card-title">Total Unloading-count</div>
+        <div class="card-title">Total Unloading</div>
         <div class="card-value"><%= (typeof lorryStats !== 'undefined' && lorryStats.totalUnloadingCount) ? lorryStats.totalUnloadingCount : 0 %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-truck-ramp-box"></i> Returned & settled trips
