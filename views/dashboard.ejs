@@ -79,7 +79,7 @@
     </div>
     
     <div class="card yellow-border">
-        <div class="card-title">Total Transfer Qty</div>
+        <div class="card-title">Total Transfer Qty (Warehouse)</div>
         <div class="card-value" style="color: #006400;"><%= warehouseStats.totalTransferQty %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-truck-fast"></i> Dispatched to branches
@@ -87,7 +87,7 @@
     </div>
 
     <div class="card">
-        <div class="card-title">Total GRN Qty</div>
+        <div class="card-title">Total GRN Qty (Warehouse)</div>
         <div class="card-value" style="color: var(--success);"><%= warehouseStats.totalGRNQty %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-boxes-packing"></i> Received from branches
@@ -116,7 +116,7 @@
     </div>
     
     <div class="card yellow-border">
-        <div class="card-title">Total Trays Issued (Out)</div>
+        <div class="card-title">Total Trays Issued (Out-Customer)</div>
         <div class="card-value" style="color: #006400;"><%= stats.totalTrayOut %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-arrow-up-from-bracket"></i> Trays sent to fields
@@ -124,7 +124,7 @@
     </div>
 
     <div class="card">
-        <div class="card-title">Total Trays Returned (In)</div>
+        <div class="card-title">Total Trays Returned (In-Customer)</div>
         <div class="card-value" style="color: var(--success);"><%= stats.totalTrayIn %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-arrow-down-to-bracket"></i> Trays returned back
@@ -132,7 +132,7 @@
     </div>
 
     <div class="card yellow-border">
-        <div class="card-title">Current Tray Balance</div>
+        <div class="card-title">Current Tray Balance (Customer)</div>
         <div class="card-value"><%= stats.currentBalance %></div>
         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
             <i class="fa-solid fa-scale-balanced"></i> Outstanding with customers
