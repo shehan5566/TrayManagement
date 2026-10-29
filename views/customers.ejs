@@ -155,11 +155,20 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
                         <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Name</label>
-                        <input type="text" name="repName" placeholder="e.g. Kamal Silva" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <select id="newCustomerRepName" name="repName" onchange="onRepChange(this, 'newCustomerRepPhone')" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                            <option value="">-- Select Rep --</option>
+                            <option value="Risitha" data-phone="0772690646">Risitha</option>
+                            <option value="Rashmika" data-phone="0771456470">Rashmika</option>
+                            <option value="Dilshan" data-phone="0768500440">Dilshan</option>
+                            <option value="Amila" data-phone="0728925661">Amila</option>
+                            <option value="Ayesha" data-phone="0775491650">Ayesha</option>
+                            <option value="Sajeewa" data-phone="0772852702">Sajeewa</option>
+                            <option value="Tharaka" data-phone="0717462903">Tharaka</option>
+                        </select>
                     </div>
                     <div>
                         <label style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Phone No</label>
-                        <input type="tel" name="repPhone" placeholder="e.g. 0771234567" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <input type="tel" id="newCustomerRepPhone" name="repPhone" placeholder="Auto-fills on rep selection..." pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #f8fafc; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                     </div>
                 </div>
 
@@ -271,11 +280,20 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div>
                         <label for="modalCustomerRepName" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Name</label>
-                        <input type="text" id="modalCustomerRepName" name="repName" placeholder="e.g. Kamal Silva" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <select id="modalCustomerRepName" name="repName" onchange="onRepChange(this, 'modalCustomerRepPhone')" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                            <option value="">-- Select Rep --</option>
+                            <option value="Risitha" data-phone="0772690646">Risitha</option>
+                            <option value="Rashmika" data-phone="0771456470">Rashmika</option>
+                            <option value="Dilshan" data-phone="0768500440">Dilshan</option>
+                            <option value="Amila" data-phone="0728925661">Amila</option>
+                            <option value="Ayesha" data-phone="0775491650">Ayesha</option>
+                            <option value="Sajeewa" data-phone="0772852702">Sajeewa</option>
+                            <option value="Tharaka" data-phone="0717462903">Tharaka</option>
+                        </select>
                     </div>
                     <div>
                         <label for="modalCustomerRepPhone" style="display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 6px;">Rep Phone No</label>
-                        <input type="tel" id="modalCustomerRepPhone" name="repPhone" placeholder="e.g. 0771234567" pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #ffffff; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
+                        <input type="tel" id="modalCustomerRepPhone" name="repPhone" placeholder="Auto-fills on rep selection..." pattern="[0-9]{10}" maxlength="10" title="Please enter a valid 10-digit phone number (e.g. 0771234567)" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; color: #1e293b; background-color: #f8fafc; outline: none; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='#14532d'" onblur="this.style.borderColor='#cbd5e1'">
                     </div>
                 </div>
 
@@ -328,12 +346,40 @@
 </div>
 
 <script>
+const SALES_REPS = {
+    'Risitha': '0772690646',
+    'Rashmika': '0771456470',
+    'Dilshan': '0768500440',
+    'Amila': '0728925661',
+    'Ayesha': '0775491650',
+    'Sajeewa': '0772852702',
+    'Tharaka': '0717462903'
+};
+
+function onRepChange(selectEl, phoneInputId) {
+    const selectedRep = selectEl ? selectEl.value : '';
+    const phoneInput = document.getElementById(phoneInputId);
+    if (!phoneInput) return;
+    
+    if (SALES_REPS[selectedRep]) {
+        phoneInput.value = SALES_REPS[selectedRep];
+    } else {
+        const selectedOption = selectEl && selectEl.options ? selectEl.options[selectEl.selectedIndex] : null;
+        const dataPhone = selectedOption ? selectedOption.getAttribute('data-phone') : '';
+        phoneInput.value = dataPhone || '';
+    }
+}
+
 function openNewCustomerModal() {
     const modal = document.getElementById('newCustomerModal');
     if (modal) {
         modal.style.display = 'flex';
         const form = document.getElementById('newCustomerForm');
         if (form) form.reset();
+        const repSelect = document.getElementById('newCustomerRepName');
+        if (repSelect) repSelect.value = '';
+        const repPhoneInput = document.getElementById('newCustomerRepPhone');
+        if (repPhoneInput) repPhoneInput.value = '';
     }
 }
 
@@ -365,10 +411,36 @@ function openEditCustomerModal(id, name, address, phone, initialBalance, current
     if (addrInput) addrInput.value = address || '';
     const phoneInput = document.getElementById('modalCustomerPhone');
     if (phoneInput) phoneInput.value = phone || '';
-    const repNameInput = document.getElementById('modalCustomerRepName');
-    if (repNameInput) repNameInput.value = repName || '';
+
+    const repSelect = document.getElementById('modalCustomerRepName');
+    if (repSelect) {
+        if (repName) {
+            let optionExists = false;
+            for (let i = 0; i < repSelect.options.length; i++) {
+                if (repSelect.options[i].value.toLowerCase() === repName.trim().toLowerCase()) {
+                    repSelect.selectedIndex = i;
+                    optionExists = true;
+                    break;
+                }
+            }
+            if (!optionExists) {
+                const opt = document.createElement('option');
+                opt.value = repName;
+                opt.text = repName;
+                opt.setAttribute('data-phone', repPhone || '');
+                repSelect.appendChild(opt);
+                repSelect.value = repName;
+            }
+        } else {
+            repSelect.value = '';
+        }
+    }
+
     const repPhoneInput = document.getElementById('modalCustomerRepPhone');
-    if (repPhoneInput) repPhoneInput.value = repPhone || '';
+    if (repPhoneInput) {
+        repPhoneInput.value = repPhone || (repName && SALES_REPS[repName]) || '';
+    }
+
     const locInput = document.getElementById('modalCustomerLocationId');
     if (locInput) locInput.value = locationId || 'main';
     const initBalInput = document.getElementById('modalCustomerInitialBalance');
