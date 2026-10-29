@@ -3055,111 +3055,76 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const trayInList = periodTransactions.filter(t => t.type === 'IN');
 
         const { StockTransferModel, DamageLogModel } = require('./db');
-        let tfrQuery = { isDeleted: false };
-        let recQuery = { isDeleted: false, status: 'ACCEPTED' };
-        let dmgQuery = { isDeleted: false };
-        
-        let dateFilteredTfrQuery = { ...tfrQuery };
-        let dateFilteredRecQuery = { ...recQuery };
-        let dateFilteredDmgQuery = { ...dmgQuery };
+
+        const start = startDate ? parseLocalDatetime(startDate + "T00:00:00") : null;
+        const end = endDate ? parseLocalDatetime(endDate + "T23:59:59") : null;
+
+        let dateFilteredTfrQuery = { isDeleted: false };
+        let dateFilteredRecQuery = { isDeleted: false, status: 'ACCEPTED' };
+        let dateFilteredDmgQuery = { isDeleted: false };
 
         if (userLoc && userLoc !== 'all') {
-            tfrQuery.fromLocationId = userLoc;
-            recQuery.toLocationId = userLoc;
-            applyBranchFilter(dmgQuery, userLoc, 'locationId');
-
             dateFilteredTfrQuery.fromLocationId = userLoc;
             dateFilteredRecQuery.toLocationId = userLoc;
             applyBranchFilter(dateFilteredDmgQuery, userLoc, 'locationId');
         }
 
-        // Apply date range filters if provided
-        if (req.query.startDate || req.query.endDate) {
-            const start = req.query.startDate ? parseLocalDatetime(req.query.startDate + "T00:00:00") : null;
-            const end = req.query.endDate ? parseLocalDatetime(req.query.endDate + "T23:59:59") : null;
+        if (start || end) {
+            let dispCond = {};
+            if (start) dispCond.$gte = start;
+            if (end) dispCond.$lte = end;
+            dateFilteredTfrQuery.dispatchedDate = dispCond;
+            dateFilteredDmgQuery.date = dispCond;
 
-            if (start) {
-                dateFilteredTfrQuery.dispatchedDate = { $gte: start };
-                dateFilteredRecQuery.receivedDate = { $gte: start };
-                dateFilteredDmgQuery.date = { $gte: start };
-            }
-            if (end) {
-                dateFilteredTfrQuery.dispatchedDate = { ...(dateFilteredTfrQuery.dispatchedDate || {}), $lte: end };
-                dateFilteredRecQuery.receivedDate = { ...(dateFilteredRecQuery.receivedDate || {}), $lte: end };
-                dateFilteredDmgQuery.date = { ...(dateFilteredDmgQuery.date || {}), $lte: end };
-            }
+            let recCond = {};
+            if (start) recCond.$gte = start;
+            if (end) recCond.$lte = end;
+            dateFilteredRecQuery.$or = [
+                { receivedDate: recCond },
+                { receivedDate: { $exists: false }, dispatchedDate: recCond }
+            ];
         }
 
         // Fetch date filtered records in parallel
         const [
-            dispatchedTransfersRawRes,
-            receivedTransfersRawRes,
-            damageLogsRawRes
+            dispatchedTransfersRaw,
+            receivedTransfersRaw,
+            damageLogsRaw
         ] = await Promise.all([
             StockTransferModel.find(dateFilteredTfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []),
-            StockTransferModel.find(dateFilteredRecQuery).sort({ receivedDate: -1 }).limit(1000).lean().catch(() => []),
+            StockTransferModel.find(dateFilteredRecQuery).sort({ receivedDate: -1, dispatchedDate: -1 }).limit(1000).lean().catch(() => []),
             DamageLogModel.find(dateFilteredDmgQuery).sort({ date: -1 }).limit(1000).lean().catch(() => [])
         ]);
-        let dispatchedTransfersRaw = dispatchedTransfersRawRes;
-        let receivedTransfersRaw = receivedTransfersRawRes;
-        let damageLogsRaw = damageLogsRawRes;
-
-        // Fallback: If date-filtered queries returned empty results (e.g. today has no transfers), fetch recent 1000 records
-        if (dispatchedTransfersRaw.length === 0) {
-            dispatchedTransfersRaw = await StockTransferModel.find(tfrQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
-        }
-        if (receivedTransfersRaw.length === 0) {
-            receivedTransfersRaw = await StockTransferModel.find(recQuery).sort({ receivedDate: -1 }).limit(1000).lean().catch(() => []);
-        }
-        if (damageLogsRaw.length === 0) {
-            damageLogsRaw = await DamageLogModel.find(dmgQuery).sort({ date: -1 }).limit(1000).lean().catch(() => []);
-        }
 
         const dispatchedTransfers = dispatchedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const receivedTransfers = receivedTransfersRaw.map(doc => { doc.id = doc._id; return doc; });
         const damageLogs = damageLogsRaw.map(doc => { doc.id = doc._id; return doc; });
 
-        // Query Lorry Trips for Loading & Unloading Reports
-        let tripReportQuery = { isDeleted: { $ne: true } };
-        applyBranchFilter(tripReportQuery, userLoc, 'locationId');
+        // Query Lorry Trips for Loading & Unloading Reports (strictly filtered to selected dates)
+        let dateFilteredLoadingQuery = { isDeleted: { $ne: true } };
+        let dateFilteredUnloadingQuery = { isDeleted: { $ne: true }, status: { $in: ['COMPLETED', 'CANCELLED'] } };
+        applyBranchFilter(dateFilteredLoadingQuery, userLoc, 'locationId');
+        applyBranchFilter(dateFilteredUnloadingQuery, userLoc, 'locationId');
 
-        let dateFilteredLoadingQuery = { ...tripReportQuery };
-        let dateFilteredUnloadingQuery = { ...tripReportQuery, status: { $in: ['COMPLETED', 'CANCELLED'] } };
-
-        if (req.query.startDate || req.query.endDate) {
-            const startL = req.query.startDate ? parseLocalDatetime(req.query.startDate + "T00:00:00") : null;
-            const endL = req.query.endDate ? parseLocalDatetime(req.query.endDate + "T23:59:59") : null;
-
-            if (startL) {
-                dateFilteredLoadingQuery.dispatchedDate = { $gte: startL };
-            }
-            if (endL) {
-                dateFilteredLoadingQuery.dispatchedDate = { ...(dateFilteredLoadingQuery.dispatchedDate || {}), $lte: endL };
-            }
+        if (start || end) {
+            let loadCond = {};
+            if (start) loadCond.$gte = start;
+            if (end) loadCond.$lte = end;
+            dateFilteredLoadingQuery.dispatchedDate = loadCond;
 
             let uCond = {};
-            if (startL) uCond.$gte = startL;
-            if (endL) uCond.$lte = endL;
+            if (start) uCond.$gte = start;
+            if (end) uCond.$lte = end;
             dateFilteredUnloadingQuery.$or = [
                 { returnedDate: uCond },
                 { returnedDate: { $exists: false }, dispatchedDate: uCond }
             ];
         }
 
-        const [loadingTripsRawRes, unloadingTripsRawRes] = await Promise.all([
+        const [loadingTripsRaw, unloadingTripsRaw] = await Promise.all([
             LorryTripModel.find(dateFilteredLoadingQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []),
             LorryTripModel.find(dateFilteredUnloadingQuery).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(1000).lean().catch(() => [])
         ]);
-        let loadingTripsRaw = loadingTripsRawRes;
-        let unloadingTripsRaw = unloadingTripsRawRes;
-
-        // Fallback: If date-filtered queries returned empty results (e.g. today has no trips yet), fetch recent 1000 records
-        if (loadingTripsRaw.length === 0) {
-            loadingTripsRaw = await LorryTripModel.find(tripReportQuery).sort({ dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
-        }
-        if (unloadingTripsRaw.length === 0) {
-            unloadingTripsRaw = await LorryTripModel.find({ ...tripReportQuery, status: { $in: ['COMPLETED', 'CANCELLED'] } }).sort({ returnedDate: -1, dispatchedDate: -1 }).limit(1000).lean().catch(() => []);
-        }
 
         const locations = await LocationModel.find({}).lean().catch(() => []);
         const locMap = {};
