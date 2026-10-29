@@ -596,6 +596,7 @@ app.get('/dashboard', requireAuth, async (req, res) => {
 
         // Warehouse (Branch) Stats
         const myLocationId = req.session.user.locationId;
+        const targetLocId = myLocationId || 'main';
         let warehouseCurrentBalance = 0;
         let totalTransferQty = 0;
         let totalGRNQty = 0;
@@ -609,14 +610,14 @@ app.get('/dashboard', requireAuth, async (req, res) => {
                 if (t.status === 'ACCEPTED') totalGRNQty += t.receivedQty || 0;
             });
         } else {
-            const myLocation = await Location.getById(myLocationId || 'main');
+            const myLocation = await Location.getById(targetLocId);
             warehouseCurrentBalance = myLocation ? (myLocation.currentStock || 0) : 0;
-            const allTransfers = await StockTransfer.getAll(myLocationId || 'main');
+            const allTransfers = await StockTransfer.getAll(targetLocId, req.session.user.role, { page: 'dashboard' });
             allTransfers.forEach(t => {
-                if (t.fromLocationId === myLocationId) {
+                if (t.fromLocationId === targetLocId) {
                     totalTransferQty += t.dispatchedQty;
                 }
-                if (t.toLocationId === myLocationId && t.status === 'ACCEPTED') {
+                if (t.toLocationId === targetLocId && t.status === 'ACCEPTED') {
                     totalGRNQty += t.receivedQty || 0;
                 }
             });

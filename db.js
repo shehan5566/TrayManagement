@@ -390,6 +390,13 @@ const StockTransfer = {
         if (locationId && locationId !== 'all') {
             if (queryParams.page === 'receive') {
                 conditions.push({ toLocationId: locationId });
+            } else if (queryParams.page === 'dashboard' || queryParams.page === 'all' || queryParams.type === 'both') {
+                conditions.push({
+                    $or: [
+                        { fromLocationId: locationId },
+                        { toLocationId: locationId }
+                    ]
+                });
             } else {
                 conditions.push({ fromLocationId: locationId });
             }
