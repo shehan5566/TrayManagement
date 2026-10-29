@@ -3151,7 +3151,18 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             return t;
         });
 
-        // Build Warehouse Tray Balance Ledger (Date, Stock Transfer No, GRN No, Opening Balance, Dispatched Qty, GRN Qty, Closing Balance)
+        // Build Warehouse Tray Balance Ledger (Date, Ref. No, IN, OUT, Closing Balance)
+        // Closing Balance = Current Tray Balance (Warehouse) + Current Tray Balance (Customer)
+        let locWarehouseStock = 0;
+        if (userLoc && userLoc !== 'all') {
+            const currentLocDoc = locations.find(l => String(l._id) === String(userLoc));
+            locWarehouseStock = currentLocDoc ? (currentLocDoc.currentStock || 0) : 0;
+        } else {
+            locWarehouseStock = locations.reduce((s, l) => s + (l.currentStock || 0), 0);
+        }
+        const customerCurrentBalance = (customerBalances || []).reduce((s, c) => s + (c.currentBalance || 0), 0);
+        const finalTargetStock = locWarehouseStock + customerCurrentBalance;
+
         // Fetch all non-deleted transfers to compute complete running balances
         let allTransfersQuery = { isDeleted: false };
         if (userLoc && userLoc !== 'all') {
@@ -3167,6 +3178,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
 
         let warehouseEvents = [];
 
+        // 1. Stock Transfers (Dispatch OUT & GRN IN)
         allTransfers.forEach(t => {
             if (t.isDeleted) return;
             const isFromLoc = !userLoc || userLoc === 'all' || t.fromLocationId === userLoc;
@@ -3179,13 +3191,10 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (isFromLoc && t.dispatchedQty && t.dispatchedQty > 0) {
                 warehouseEvents.push({
                     date: dispatchDate,
-                    transferDocNo: t.transferDocNo || '-',
-                    grnNo: t.grnNo || '-',
-                    dispatchedQty: t.dispatchedQty || 0,
-                    grnQty: 0,
-                    type: 'DISPATCH',
-                    fromLocationName: t.fromLocationName || 'Head Office',
-                    toLocationName: t.toLocationName || 'Branch'
+                    refNo: t.transferDocNo || '-',
+                    label: 'Stock Transfer to ' + (t.toLocationName || locMap[t.toLocationId] || 'Branch'),
+                    inQty: 0,
+                    outQty: t.dispatchedQty || 0
                 });
             }
 
@@ -3193,19 +3202,19 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (isToLoc && t.status === 'ACCEPTED' && (t.receivedQty || t.dispatchedQty)) {
                 warehouseEvents.push({
                     date: receiveDate,
-                    transferDocNo: t.transferDocNo || '-',
-                    grnNo: t.grnNo || '-',
-                    dispatchedQty: 0,
-                    grnQty: t.receivedQty || t.dispatchedQty || 0,
-                    type: 'GRN',
-                    fromLocationName: t.fromLocationName || 'Head Office',
-                    toLocationName: t.toLocationName || 'Branch'
+                    refNo: t.grnNo || t.transferDocNo || '-',
+                    label: 'GRN from ' + (t.fromLocationName || locMap[t.fromLocationId] || 'Head Office'),
+                    inQty: t.receivedQty || t.dispatchedQty || 0,
+                    outQty: 0
                 });
             }
         });
 
         // 2. Direct Warehouse Customer Transactions (Returns IN & Issues OUT)
-        let directTxQuery = { isDeleted: false, tripId: null };
+        let directTxQuery = { 
+            isDeleted: false,
+            $or: [{ tripId: null }, { tripId: '' }, { tripId: { $exists: false } }]
+        };
         applyBranchFilter(directTxQuery, userLoc, 'locationId');
         const directCustomerTxs = await TransactionModel.find(directTxQuery).lean().catch(() => []);
         directCustomerTxs.forEach(ctx => {
@@ -3214,24 +3223,18 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (ctx.type === 'IN' && ctx.count > 0) {
                 warehouseEvents.push({
                     date: txDate,
-                    transferDocNo: refNo,
-                    grnNo: 'Customer Return: ' + (ctx.customerName || 'Customer'),
-                    dispatchedQty: 0,
-                    grnQty: ctx.count,
-                    type: 'GRN',
-                    fromLocationName: ctx.customerName || 'Customer',
-                    toLocationName: 'Warehouse'
+                    refNo: refNo,
+                    label: 'Customer Return: ' + (ctx.customerName || 'Customer'),
+                    inQty: ctx.count,
+                    outQty: 0
                 });
             } else if (ctx.type === 'OUT' && ctx.count > 0) {
                 warehouseEvents.push({
                     date: txDate,
-                    transferDocNo: refNo,
-                    grnNo: 'Customer Issue: ' + (ctx.customerName || 'Customer'),
-                    dispatchedQty: ctx.count,
-                    grnQty: 0,
-                    type: 'DISPATCH',
-                    fromLocationName: 'Warehouse',
-                    toLocationName: ctx.customerName || 'Customer'
+                    refNo: refNo,
+                    label: 'Customer Issue: ' + (ctx.customerName || 'Customer'),
+                    inQty: 0,
+                    outQty: ctx.count
                 });
             }
         });
@@ -3244,85 +3247,78 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (tr.loadedQty && tr.loadedQty > 0 && tr.status !== 'CANCELLED') {
                 warehouseEvents.push({
                     date: tr.dispatchedDate || tr.createdAt,
-                    transferDocNo: tr.tripNo || '-',
-                    grnNo: 'Lorry Loaded: ' + (tr.vehicleNo || 'Vehicle'),
-                    dispatchedQty: tr.loadedQty,
-                    grnQty: 0,
-                    type: 'DISPATCH',
-                    fromLocationName: 'Warehouse',
-                    toLocationName: 'Lorry ' + (tr.vehicleNo || '')
+                    refNo: tr.tripNo || '-',
+                    label: 'Lorry Loaded: ' + (tr.vehicleNo || 'Vehicle'),
+                    inQty: 0,
+                    outQty: tr.loadedQty
                 });
             }
             if (tr.status === 'COMPLETED' && tr.actualUnloadedQty && tr.actualUnloadedQty > 0) {
+                const digits = (tr.tripNo || '').replace(/D/g, '').padStart(5, '0');
+                const unlNo = tr.unloadingNo || ((locCodes[tr.locationId] || 'HO') + 'UNLOD' + digits);
                 warehouseEvents.push({
                     date: tr.returnedDate || tr.updatedAt,
-                    transferDocNo: tr.unloadingNo || tr.tripNo || '-',
-                    grnNo: 'Lorry Unloaded: ' + (tr.vehicleNo || 'Vehicle'),
-                    dispatchedQty: 0,
-                    grnQty: tr.actualUnloadedQty,
-                    type: 'GRN',
-                    fromLocationName: 'Lorry ' + (tr.vehicleNo || ''),
-                    toLocationName: 'Warehouse'
+                    refNo: unlNo,
+                    label: 'Lorry Unloaded: ' + (tr.vehicleNo || 'Vehicle'),
+                    inQty: tr.actualUnloadedQty,
+                    outQty: 0
                 });
             }
         });
 
         // Sort events chronologically
         warehouseEvents.sort((a, b) => {
-            let dA = a.date ? new Date(a.date) : new Date(0);
-            if (isNaN(dA.getTime()) && !isNaN(Number(a.date))) dA = new Date(Number(a.date));
-            let dB = b.date ? new Date(b.date) : new Date(0);
-            if (isNaN(dB.getTime()) && !isNaN(Number(b.date))) dB = new Date(Number(b.date));
+            let dA = a.date ? new Date(a.date).getTime() : 0;
+            if (isNaN(dA) && !isNaN(Number(a.date))) dA = Number(a.date);
+            let dB = b.date ? new Date(b.date).getTime() : 0;
+            if (isNaN(dB) && !isNaN(Number(b.date))) dB = Number(b.date);
             return dA - dB;
         });
 
-        const activeMonth = (startDate || today).slice(0, 7);
-        const { MonthlyBalance: MBModel } = require('./db');
-        const locMonthlyBal = await MBModel.getByMonth(userLoc || 'main', activeMonth);
-        let currentRunningBal = locMonthlyBal ? locMonthlyBal.openingBalance : 0;
-        const fullWarehouseBalanceList = warehouseEvents.map(ev => {
-            const openingBalance = currentRunningBal;
-            let closingBalance = openingBalance;
-            if (ev.type === 'DISPATCH') {
-                closingBalance = openingBalance - ev.dispatchedQty;
-            } else if (ev.type === 'GRN') {
-                closingBalance = openingBalance + ev.grnQty;
-            }
-            currentRunningBal = closingBalance;
-            return {
-                ...ev,
-                openingBalance,
-                closingBalance
-            };
+        // Reconcile running balances across full event history ending at finalTargetStock
+        const totalAllIn = warehouseEvents.reduce((s, e) => s + (e.inQty || 0), 0);
+        const totalAllOut = warehouseEvents.reduce((s, e) => s + (e.outQty || 0), 0);
+        const initialHistoricalBalance = finalTargetStock - (totalAllIn - totalAllOut);
+
+        let runningBal = initialHistoricalBalance;
+        warehouseEvents.forEach(ev => {
+            ev.openingBalance = runningBal;
+            runningBal = runningBal + (ev.inQty || 0) - (ev.outQty || 0);
+            ev.closingBalance = runningBal;
         });
 
-        // Reverse so most recent events are on top
-        fullWarehouseBalanceList.reverse();
+        // Filter events by selected date range
+        const startStr = req.query.startDate || startDate;
+        const endStr = req.query.endDate || endDate;
 
-        // Filter by date range if user specified start/end date
-        let warehouseBalanceList = fullWarehouseBalanceList;
-        if (req.query.startDate || req.query.endDate) {
-            const startStr = req.query.startDate ? req.query.startDate : null;
-            const endStr = req.query.endDate ? req.query.endDate : null;
-
-            const dateFiltered = fullWarehouseBalanceList.filter(ev => {
-                if (!ev.date) return true;
-                let d = new Date(ev.date);
-                if (isNaN(d.getTime()) && !isNaN(Number(ev.date))) {
-                    d = new Date(Number(ev.date));
-                }
-                if (isNaN(d.getTime())) return true;
-                const evDateStr = d.toISOString().split('T')[0];
-                if (startStr && evDateStr < startStr) return false;
-                if (endStr && evDateStr > endStr) return false;
-                return true;
-            });
-
-            // Fallback: If date filter produced 0 rows, use full list so user is never shown empty table
-            if (dateFiltered.length > 0) {
-                warehouseBalanceList = dateFiltered;
-            }
+        function getEventDateStr(dVal) {
+            if (!dVal) return '';
+            let d = new Date(dVal);
+            if (isNaN(d.getTime()) && !isNaN(Number(dVal))) d = new Date(Number(dVal));
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
         }
+
+        const pastEvents = warehouseEvents.filter(ev => {
+            const evDateStr = getEventDateStr(ev.date);
+            return startStr ? (evDateStr < startStr) : false;
+        });
+
+        const periodOpeningBalance = pastEvents.length > 0 
+            ? pastEvents[pastEvents.length - 1].closingBalance 
+            : initialHistoricalBalance;
+
+        let warehouseBalanceList = warehouseEvents.filter(ev => {
+            const evDateStr = getEventDateStr(ev.date);
+            if (!evDateStr) return true;
+            if (startStr && evDateStr < startStr) return false;
+            if (endStr && evDateStr > endStr) return false;
+            return true;
+        });
+
+        const totalInMovement = warehouseBalanceList.reduce((s, e) => s + (e.inQty || 0), 0);
+        const totalOutMovement = warehouseBalanceList.reduce((s, e) => s + (e.outQty || 0), 0);
+        const warehouseFinalClosingBalance = periodOpeningBalance + totalInMovement - totalOutMovement;
 
         let activeTab = req.query.activeTab || 'balanceReport';
 
@@ -3335,6 +3331,13 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             receivedTransfers,
             damageLogs,
             warehouseBalanceList,
+            warehouseOpeningDate: startStr || today,
+            warehouseOpeningBalance: periodOpeningBalance,
+            totalInMovement,
+            totalOutMovement,
+            totalWarehouseCurrentStock: locWarehouseStock,
+            customerCurrentBalance,
+            warehouseFinalClosingBalance,
             loadingReportList,
             unloadingReportList,
             startDate,

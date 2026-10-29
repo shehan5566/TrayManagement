@@ -888,20 +888,60 @@
                 </div>
             </div>
 
+            <!-- Summary Ribbon -->
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding: 10px 14px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #64748b; font-weight: 600;">Opening Balance:</span>
+                    <span style="font-weight: 700; color: #0f172a;"><%= typeof warehouseOpeningBalance !== 'undefined' ? warehouseOpeningBalance : 0 %></span>
+                </div>
+                <div style="color: #cbd5e1;">|</div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #64748b; font-weight: 600;">Total IN:</span>
+                    <span style="font-weight: 700; color: #15803d;">+<%= typeof totalInMovement !== 'undefined' ? totalInMovement : 0 %></span>
+                </div>
+                <div style="color: #cbd5e1;">|</div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #64748b; font-weight: 600;">Total OUT:</span>
+                    <span style="font-weight: 700; color: #b91c1c;">-<%= typeof totalOutMovement !== 'undefined' ? totalOutMovement : 0 %></span>
+                </div>
+                <div style="color: #cbd5e1;">|</div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #64748b; font-weight: 600;">Warehouse Trays:</span>
+                    <span style="font-weight: 700; color: #0f172a;"><%= typeof totalWarehouseCurrentStock !== 'undefined' ? totalWarehouseCurrentStock : 0 %></span>
+                </div>
+                <div style="color: #cbd5e1;">|</div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #64748b; font-weight: 600;">Customer Trays:</span>
+                    <span style="font-weight: 700; color: #0f172a;"><%= typeof customerCurrentBalance !== 'undefined' ? customerCurrentBalance : 0 %></span>
+                </div>
+                <div style="color: #cbd5e1;">|</div>
+                <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+                    <span style="color: #0f172a; font-weight: 700;">Closing Balance:</span>
+                    <span style="font-weight: 800; font-size: 14px; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 4px; border: 1px solid #86efac;">
+                        <%= typeof warehouseFinalClosingBalance !== 'undefined' ? warehouseFinalClosingBalance : 0 %>
+                    </span>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table id="warehouseBalanceTable" class="display" style="width:100%">
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Stock Transfer No</th>
-                            <th>GRN No</th>
-                            <th style="text-align: right; color: #000000;">Opening Balance</th>
-                            <th style="text-align: right; color: #000000;">Dispatched Qty</th>
-                            <th style="text-align: right; color: #000000;">GRN Qty</th>
+                            <th>Ref. No</th>
+                            <th style="text-align: right; color: #15803d;">IN</th>
+                            <th style="text-align: right; color: #b91c1c;">OUT</th>
                             <th style="text-align: right; font-weight: bold; color: #000000;">Closing Balance</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <tr style="background-color: #f8fafc;">
+                            <td><strong><%= typeof warehouseOpeningDate !== 'undefined' ? warehouseOpeningDate : (startDate || today) %></strong></td>
+                            <td><strong style="color: #0f172a;"><i class="fa-solid fa-flag-checkered" style="color: #64748b; margin-right: 5px;"></i>Opening Balance</strong></td>
+                            <td style="text-align: right; color: #64748b;">-</td>
+                            <td style="text-align: right; color: #64748b;">-</td>
+                            <td style="text-align: right; font-weight: bold; color: #000000;"><%= typeof warehouseOpeningBalance !== 'undefined' ? warehouseOpeningBalance : 0 %></td>
+                        </tr>
                         <% (typeof warehouseBalanceList !== 'undefined' ? warehouseBalanceList : []).forEach(wb => { %>
                             <tr>
                                 <td>
@@ -919,19 +959,30 @@
                                     %>
                                     <%= formattedDate %>
                                 </td>
-                                <td><code><%= wb.transferDocNo || '-' %></code></td>
-                                <td><code><%= wb.grnNo || '-' %></code></td>
-                                <td style="text-align: right; color: #000000;"><%= wb.openingBalance %></td>
-                                <td style="text-align: right; color: #000000;">
-                                    <%= wb.dispatchedQty > 0 ? wb.dispatchedQty : '-' %>
+                                <td>
+                                    <code><%= wb.refNo || '-' %></code>
+                                    <% if (wb.label) { %>
+                                        <small style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;"><%= wb.label %></small>
+                                    <% } %>
                                 </td>
-                                <td style="text-align: right; color: #000000;">
-                                    <%= wb.grnQty > 0 ? wb.grnQty : '-' %>
+                                <td style="text-align: right; color: <%= wb.inQty > 0 ? '#15803d' : '#64748b' %>; font-weight: <%= wb.inQty > 0 ? '600' : 'normal' %>;">
+                                    <%= wb.inQty > 0 ? ('+' + wb.inQty) : '-' %>
                                 </td>
-                                <td style="text-align: right; color: #000000;"><%= wb.closingBalance %></td>
+                                <td style="text-align: right; color: <%= wb.outQty > 0 ? '#b91c1c' : '#64748b' %>; font-weight: <%= wb.outQty > 0 ? '600' : 'normal' %>;">
+                                    <%= wb.outQty > 0 ? ('-' + wb.outQty) : '-' %>
+                                </td>
+                                <td style="text-align: right; color: #000000; font-weight: bold;"><%= wb.closingBalance %></td>
                             </tr>
                         <% }); %>
                     </tbody>
+                    <tfoot>
+                        <tr style="background-color: #f8fafc; border-top: 2px solid #cbd5e1;">
+                            <th colspan="2" style="text-align: right; font-weight: 700; color: #000000;">Period Total Movement / Closing:</th>
+                            <th style="text-align: right; font-weight: 700; color: #15803d;"><%= typeof totalInMovement !== 'undefined' ? ('+' + totalInMovement) : 0 %></th>
+                            <th style="text-align: right; font-weight: 700; color: #b91c1c;"><%= typeof totalOutMovement !== 'undefined' ? ('-' + totalOutMovement) : 0 %></th>
+                            <th style="text-align: right; font-weight: 700; color: #000000;"><%= typeof warehouseFinalClosingBalance !== 'undefined' ? warehouseFinalClosingBalance : 0 %></th>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -1514,7 +1565,7 @@
             $('#receiveStockTable').DataTable(tableConfig);
             $('#reportLoadingTable').DataTable(tableConfig);
             $('#reportUnloadingTable').DataTable(tableConfig);
-            $('#warehouseBalanceTable').DataTable(tableConfig);
+            $('#warehouseBalanceTable').DataTable(Object.assign({}, tableConfig, { order: [] }));
             $('#damagesReportTable').DataTable(tableConfig);
 
             // Delegated click handler for View Customer Breakup buttons
