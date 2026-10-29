@@ -172,7 +172,9 @@
                                 <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
                             </button>
                             <div class="user-dropdown-menu">
+                                <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('profile_manage'))) { %>
                                 <a href="/profile"><i class="fa-solid fa-user-gear"></i> Profile</a>
+                                <% } %>
                                 <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
                             </div>
                         </div>
@@ -443,12 +445,14 @@
                                                                                 <% } %>
 
                                                                                     <!-- 10. Profile -->
+                                                                                    <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('profile_manage'))) { %>
                                                                                     <li
                                                                                         class="<%= activePath === '/profile' ? 'active' : '' %>">
                                                                                         <a href="/profile"><i
                                                                                                 class="fa-solid fa-user-gear"></i>
                                                                                             Profile</a>
                                                                                     </li>
+                                                                                    <% } %>
                     </ul>
                     <div class="sidebar-collapse-area">
                         <button class="sidebar-collapse-btn" onclick="toggleDesktopSidebar()" title="Collapse Sidebar">

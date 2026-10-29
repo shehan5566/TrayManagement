@@ -234,6 +234,8 @@ const permissionAliases = {
     'admin_roles': ['admin_roles'],
     'admin_settings': ['admin_settings'],
     'location_switch': ['location_switch'],
+    'profile_manage': ['profile_manage', 'profile_view'],
+    'profile_view': ['profile_view', 'profile_manage'],
 
     // 12. Action Required
     'action_sms': ['action_sms', 'customer_sms'],
@@ -3784,7 +3786,7 @@ app.get('/reports/export/unloading-csv', requireAuth, async (req, res) => {
 
 
 // Profile Routes
-app.get('/profile', requireAuth, async (req, res) => {
+app.get('/profile', requireAuth, requirePermission('profile_manage'), async (req, res) => {
     try {
         const username = req.session.user.username;
         const userTransactions = await TransactionModel.find({ user: username, isDeleted: { $ne: true } });
@@ -3812,7 +3814,7 @@ app.get('/profile', requireAuth, async (req, res) => {
     }
 });
 
-app.post('/profile', requireAuth, async (req, res) => {
+app.post('/profile', requireAuth, requirePermission('profile_manage'), async (req, res) => {
     const { username, currentPassword, newPassword, confirmPassword } = req.body;
     const userId = req.session.user.id;
 
