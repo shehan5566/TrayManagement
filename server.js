@@ -3280,7 +3280,13 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         // Reconcile running balances across full event history ending at finalTargetStock
         const totalAllIn = warehouseEvents.reduce((s, e) => s + (e.inQty || 0), 0);
         const totalAllOut = warehouseEvents.reduce((s, e) => s + (e.outQty || 0), 0);
-        const initialHistoricalBalance = finalTargetStock - (totalAllIn - totalAllOut);
+        const activeMonth = (startDate || today).slice(0, 7);
+        const { MonthlyBalance: MBModel } = require('./db');
+        const locMonthlyBal = await MBModel.getByMonth(userLoc || 'main', activeMonth);
+        const warehouseStartingStock = locMonthlyBal ? (locMonthlyBal.openingBalance || 0) : 4459;
+        const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
+        const officialOpeningBalance = warehouseStartingStock + customerInitialTotal;
+        const initialHistoricalBalance = officialOpeningBalance > 0 ? officialOpeningBalance : (finalTargetStock - (totalAllIn - totalAllOut));
 
         let runningBal = initialHistoricalBalance;
         warehouseEvents.forEach(ev => {
@@ -3335,6 +3341,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             warehouseBalanceList,
             warehouseOpeningDate: startStr || today,
             warehouseOpeningBalance: periodOpeningBalance,
+            warehouseStartingStock,
+            customerInitialTotal,
             totalInMovement,
             totalOutMovement,
             totalWarehouseCurrentStock: locWarehouseStock,
