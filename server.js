@@ -3286,7 +3286,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const warehouseStartingStock = locMonthlyBal ? (locMonthlyBal.openingBalance || 0) : 4459;
         const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
         const officialOpeningBalance = warehouseStartingStock + customerInitialTotal;
-        const initialHistoricalBalance = officialOpeningBalance > 0 ? officialOpeningBalance : (finalTargetStock - (totalAllIn - totalAllOut));
+        const initialHistoricalBalance = finalTargetStock - (totalAllIn - totalAllOut);
 
         let runningBal = initialHistoricalBalance;
         warehouseEvents.forEach(ev => {
