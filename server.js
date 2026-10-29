@@ -335,7 +335,7 @@ app.use(async (req, res, next) => {
             if (!req.session.user) return false;
             if (req.session.user.role === 'admin' || req.session.user.username === 'admin') return true;
             if (req.session.user.role === 'viewer') return perm.includes('_view') || perm === 'dashboard_main' || perm === 'customer_history';
-            if (!userPermissions || userPermissions.length === 0) {
+            if (!req.session.user.roleId && (!userPermissions || userPermissions.length === 0)) {
                 if (req.session.user.role === 'user') return !perm.startsWith('admin_');
                 return false;
             }
@@ -1032,7 +1032,7 @@ app.get('/api/customers/:id/transactions', requireAuth, async (req, res) => {
 });
 
 // API: Send Manual Balance SMS
-app.post('/api/sms/send-balance', requireAuth, async (req, res) => {
+app.post('/api/sms/send-balance', requireAuth, requirePermission('customer_sms'), async (req, res) => {
     try {
         const { customerId } = req.body;
         const customer = await Customer.getById(customerId);
@@ -1059,7 +1059,7 @@ app.post('/api/sms/send-balance', requireAuth, async (req, res) => {
     }
 });
 
-app.get('/customers/:id/history', requireAuth, async (req, res) => {
+app.get('/customers/:id/history', requireAuth, requirePermission('customer_history'), async (req, res) => {
     try {
         const customer = await Customer.getById(req.params.id);
         if (!customer) {
@@ -1098,7 +1098,7 @@ app.get('/customers/:id/history', requireAuth, async (req, res) => {
     }
 });
 
-app.get('/customers', requireAuth, async (req, res) => {
+app.get('/customers', requireAuth, requirePermission('customer_view'), async (req, res) => {
     try {
         const userLoc = (req.session.user && req.session.user.locationId) ? req.session.user.locationId : null;
         const customers = await Customer.getAll(userLoc, req.session.user.role);
@@ -1290,7 +1290,7 @@ app.post('/customers/:id/edit', requireAuth, requirePermission('customer_edit'),
     }
 });
 
-app.post('/customers/:id/delete', requireAuth, requireAdmin, async (req, res) => {
+app.post('/customers/:id/delete', requireAuth, requirePermission('customer_delete'), async (req, res) => {
     const isAjax = req.headers.accept && req.headers.accept.includes('application/json');
     try {
         const customerToDelete = await Customer.getById(req.params.id);

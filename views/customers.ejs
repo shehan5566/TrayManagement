@@ -44,6 +44,13 @@
     <% if (customers.length === 0) { %>
         <p style="text-align: center; color: var(--text-light); padding: 30px 0;">No customers found. Create a customer to start tracking.</p>
     <% } else { %>
+        <% 
+            const canEditCustomer = typeof hasPerm === 'function' && hasPerm('customer_edit');
+            const canDeleteCustomer = typeof hasPerm === 'function' && hasPerm('customer_delete');
+            const canViewHistory = typeof hasPerm === 'function' && hasPerm('customer_history');
+            const canSendSms = typeof hasPerm === 'function' && hasPerm('customer_sms');
+            const hasCustomerAction = canEditCustomer || canDeleteCustomer || canViewHistory;
+        %>
         <div class="table-responsive">
             <table id="customersTable">
                 <thead>
@@ -56,7 +63,7 @@
                         <th>Initial Balance</th>
                         <th>Initial Deposit</th>
                         <th>Current Balance</th>
-                        <% if (!user || user.role !== 'viewer') { %>
+                        <% if (hasCustomerAction) { %>
                         <th style="text-align: center; width: 150px;">Actions</th>
                         <% } %>
                     </tr>
@@ -65,9 +72,13 @@
                     <% customers.forEach(c => { %>
                         <tr>
                             <td>
+                                <% if (canViewHistory) { %>
                                 <a href="/customers/<%= c.id %>/history" style="color: var(--primary-green-dark); text-decoration: none;" title="View History">
                                     <strong><%= c.name %></strong> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px; margin-left: 5px; color: var(--text-light);"></i>
                                 </a>
+                                <% } else { %>
+                                <strong style="color: var(--primary-green-dark);"><%= c.name %></strong>
+                                <% } %>
                             </td>
                             <td><%= c.address || '-' %></td>
                             <td><%= c.phone %></td>
@@ -78,19 +89,22 @@
                             <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                     <span><%= c.currentBalance %></span>
-                                    <% if (!user || user.role !== 'viewer') { %>
+                                    <% if (canSendSms) { %>
                                     <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
                                         <i class="fa-solid fa-comment-sms"></i>
                                     </button>
                                     <% } %>
                                 </div>
                             </td>
-                            <% if (!user || user.role !== 'viewer') { %>
+                            <% if (hasCustomerAction) { %>
                             <td>
                                 <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                                    <% if (canViewHistory) { %>
                                     <a href="/customers/<%= c.id %>/history" class="btn btn-action-view" title="View History">
                                         <i class="fa-solid fa-clock-rotate-left"></i>
                                     </a>
+                                    <% } %>
+                                    <% if (canEditCustomer) { %>
                                     <button type="button" 
                                         data-id="<%= c.id %>"
                                         data-name="<%= c.name || '' %>"
@@ -107,11 +121,14 @@
                                         title="Edit Customer">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
+                                    <% } %>
+                                    <% if (canDeleteCustomer) { %>
                                     <form action="/customers/<%= c.id %>/delete" method="POST" onsubmit="confirmAjaxDelete(event, this, 'customer profile')" style="display: inline-flex; margin: 0; padding: 0;">
                                         <button type="submit" class="btn btn-action-delete" title="Delete">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </form>
+                                    <% } %>
                                 </div>
                             </td>
                             <% } %>
@@ -250,6 +267,7 @@
 <% } %>
 
 <!-- Edit Customer Modal Window -->
+<% if (user && (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('customer_edit')))) { %>
 <div id="editCustomerModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(3px); align-items: center; justify-content: center; padding: 20px;">
     <div style="position: relative; background: #ffffff; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; border-radius: 20px; border-top: 5px solid var(--accent-yellow); box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22); padding: 26px 28px 24px 28px; box-sizing: border-box; animation: customerModalFadeIn 0.2s ease-out;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
@@ -344,6 +362,7 @@
         </form>
     </div>
 </div>
+<% } %>
 
 <script>
 const SALES_REPS = {
