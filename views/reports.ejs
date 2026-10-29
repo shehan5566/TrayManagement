@@ -929,6 +929,7 @@
                         <tr>
                             <th>Date</th>
                             <th>Ref. No</th>
+                            <th>Description</th>
                             <th style="text-align: right; color: #15803d;">IN</th>
                             <th style="text-align: right; color: #b91c1c;">OUT</th>
                             <th style="text-align: right; font-weight: bold; color: #000000;">Closing Balance</th>
@@ -937,6 +938,7 @@
                     <tbody>
                         <tr style="background-color: #f8fafc;">
                             <td><strong><%= typeof warehouseOpeningDate !== 'undefined' ? warehouseOpeningDate : (startDate || today) %></strong></td>
+                            <td><code style="color: #64748b;">-</code></td>
                             <td><strong style="color: #0f172a;"><i class="fa-solid fa-flag-checkered" style="color: #64748b; margin-right: 5px;"></i>Opening Balance</strong></td>
                             <td style="text-align: right; color: #64748b;">-</td>
                             <td style="text-align: right; color: #64748b;">-</td>
@@ -959,12 +961,8 @@
                                     %>
                                     <%= formattedDate %>
                                 </td>
-                                <td>
-                                    <code><%= wb.refNo || '-' %></code>
-                                    <% if (wb.label) { %>
-                                        <small style="display: block; font-size: 11px; color: #64748b; margin-top: 2px;"><%= wb.label %></small>
-                                    <% } %>
-                                </td>
+                                <td><code><%= wb.refNo || '-' %></code></td>
+                                <td style="color: #334155;"><%= wb.label || '-' %></td>
                                 <td style="text-align: right; color: <%= wb.inQty > 0 ? '#15803d' : '#64748b' %>; font-weight: <%= wb.inQty > 0 ? '600' : 'normal' %>;">
                                     <%= wb.inQty > 0 ? ('+' + wb.inQty) : '-' %>
                                 </td>
@@ -977,7 +975,7 @@
                     </tbody>
                     <tfoot>
                         <tr style="background-color: #f8fafc; border-top: 2px solid #cbd5e1;">
-                            <th colspan="2" style="text-align: right; font-weight: 700; color: #000000;">Period Total Movement / Closing:</th>
+                            <th colspan="3" style="text-align: right; font-weight: 700; color: #000000;">Period Total Movement / Closing:</th>
                             <th style="text-align: right; font-weight: 700; color: #15803d;"><%= typeof totalInMovement !== 'undefined' ? ('+' + totalInMovement) : 0 %></th>
                             <th style="text-align: right; font-weight: 700; color: #b91c1c;"><%= typeof totalOutMovement !== 'undefined' ? ('-' + totalOutMovement) : 0 %></th>
                             <th style="text-align: right; font-weight: 700; color: #000000;"><%= typeof warehouseFinalClosingBalance !== 'undefined' ? warehouseFinalClosingBalance : 0 %></th>
