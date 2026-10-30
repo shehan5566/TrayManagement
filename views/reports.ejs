@@ -873,10 +873,10 @@
     <div id="warehouseBalanceReport" class="tab-content">
         <div class="content-box">
             <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span class="box-title"><i class="fa-solid fa-warehouse" style="color: var(--primary-green);"></i> Warehouse Tray Balance Audit Report</span>
+                <span class="box-title"><i class="fa-solid fa-warehouse" style="color: var(--primary-green);"></i> <%= (!user || !user.locationId || user.locationId === 'all') ? 'All Warehouses Tray Balance Audit Report' : 'Warehouse Tray Balance Audit Report' %></span>
                 <div>
                     <button
-                        onclick="printReportToPDF(`Warehouse Tray Balance Audit Report (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'warehouseBalanceTable')"
+                        onclick="printReportToPDF(`${(!user || !user.locationId || user.locationId === 'all') ? 'All Warehouses Tray Balance Audit Report' : 'Warehouse Tray Balance Audit Report'} (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'warehouseBalanceTable')"
                         class="btn btn-sm"
                         style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
                         <i class="fa-solid fa-file-pdf"></i> Download PDF
@@ -923,11 +923,82 @@
                 </div>
             </div>
 
+            <!-- All Warehouses Balance Summary (Shown when viewing All Locations) -->
+            <% if (typeof warehouseSummaryList !== 'undefined' && warehouseSummaryList.length > 0 && (!user || !user.locationId || user.locationId === 'all')) { %>
+            <div style="margin-bottom: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-layer-group" style="color: var(--primary-green);"></i> All Warehouses Balance Summary
+                    </span>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="printReportToPDF(`All Warehouses Balance Summary (${document.getElementById('startDate').value || 'All Time'} to ${document.getElementById('endDate').value || 'Today'})`, 'allWarehousesSummaryTable')" class="btn btn-sm"
+                            style="background-color: #27ae60; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        </button>
+                        <button onclick="exportTableToExcel('allWarehousesSummaryTable', 'All_Warehouses_Tray_Summary')" class="btn btn-sm"
+                            style="background-color: #1b5e20; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="allWarehousesSummaryTable" class="display" style="width:100%">
+                        <thead>
+                            <tr style="background-color: #f1f5f9;">
+                                <th>Warehouse / Branch</th>
+                                <th style="text-align: right;">Opening Balance</th>
+                                <th style="text-align: right; color: #15803d;">Total IN</th>
+                                <th style="text-align: right; color: #b91c1c;">Total OUT</th>
+                                <th style="text-align: right; color: #0f172a;">Current Stock</th>
+                                <th style="text-align: right; font-weight: bold; color: #000000;">Closing Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% warehouseSummaryList.forEach(ws => { %>
+                                <tr>
+                                    <td><strong><%= ws.name %></strong> <code style="font-size: 11px; color: #64748b;">(<%= ws.code %>)</code></td>
+                                    <td style="text-align: right; font-weight: 500;"><%= ws.openingBalance %></td>
+                                    <td style="text-align: right; color: <%= ws.totalIn > 0 ? '#15803d' : '#64748b' %>; font-weight: <%= ws.totalIn > 0 ? '600' : 'normal' %>;">
+                                        <%= ws.totalIn > 0 ? ('+' + ws.totalIn) : '-' %>
+                                    </td>
+                                    <td style="text-align: right; color: <%= ws.totalOut > 0 ? '#b91c1c' : '#64748b' %>; font-weight: <%= ws.totalOut > 0 ? '600' : 'normal' %>;">
+                                        <%= ws.totalOut > 0 ? ('-' + ws.totalOut) : '-' %>
+                                    </td>
+                                    <td style="text-align: right; font-weight: 500; color: #0f172a;"><%= ws.currentStock %></td>
+                                    <td style="text-align: right; font-weight: bold; color: #000000;"><%= ws.closingBalance %></td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                        <tfoot>
+                            <tr style="background-color: #f8fafc; border-top: 2px solid #cbd5e1;">
+                                <th style="font-weight: 700; color: #000000;">Total (All Warehouses):</th>
+                                <th style="text-align: right; font-weight: 700; color: #000000;"><%= warehouseSummaryList.reduce((s, w) => s + (w.openingBalance || 0), 0) %></th>
+                                <th style="text-align: right; font-weight: 700; color: #15803d;">+<%= warehouseSummaryList.reduce((s, w) => s + (w.totalIn || 0), 0) %></th>
+                                <th style="text-align: right; font-weight: 700; color: #b91c1c;">-<%= warehouseSummaryList.reduce((s, w) => s + (w.totalOut || 0), 0) %></th>
+                                <th style="text-align: right; font-weight: 700; color: #0f172a;"><%= warehouseSummaryList.reduce((s, w) => s + (w.currentStock || 0), 0) %></th>
+                                <th style="text-align: right; font-weight: 700; color: #000000;"><%= warehouseSummaryList.reduce((s, w) => s + (w.closingBalance || 0), 0) %></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <% } %>
+
+            <!-- Detailed Movement & Audit Log Table -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-clock-rotate-left" style="color: var(--primary-green);"></i> Detailed Movement & Audit Log
+                </span>
+            </div>
+
             <div class="table-responsive">
                 <table id="warehouseBalanceTable" class="display" style="width:100%">
                     <thead>
                         <tr>
                             <th>Date</th>
+                            <% if (!user || !user.locationId || user.locationId === 'all') { %>
+                                <th>Warehouse / Branch</th>
+                            <% } %>
                             <th>Ref. No</th>
                             <th>Description</th>
                             <th style="text-align: right; color: #15803d;">IN</th>
@@ -938,6 +1009,9 @@
                     <tbody>
                         <tr style="background-color: #f8fafc;">
                             <td><strong><%= typeof warehouseOpeningDate !== 'undefined' ? warehouseOpeningDate : (startDate || today) %></strong></td>
+                            <% if (!user || !user.locationId || user.locationId === 'all') { %>
+                                <td><span class="badge" style="background: #14532d; color: #fff; font-weight: 600;">All Warehouses</span></td>
+                            <% } %>
                             <td><code style="color: #64748b;">-</code></td>
                             <td><strong style="color: #0f172a;">Opening Balance</strong></td>
                             <td style="text-align: right; color: #64748b;">-</td>
@@ -961,6 +1035,13 @@
                                     %>
                                     <%= formattedDate %>
                                 </td>
+                                <% if (!user || !user.locationId || user.locationId === 'all') { %>
+                                    <td>
+                                        <span class="badge" style="background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; font-weight: 600;">
+                                            <%= wb.locationName || 'Head Office' %>
+                                        </span>
+                                    </td>
+                                <% } %>
                                 <td><code><%= wb.refNo || '-' %></code></td>
                                 <td style="color: #334155;"><%= wb.label || '-' %></td>
                                 <td style="text-align: right; color: <%= wb.inQty > 0 ? '#15803d' : '#64748b' %>; font-weight: <%= wb.inQty > 0 ? '600' : 'normal' %>;">
@@ -975,7 +1056,7 @@
                     </tbody>
                     <tfoot>
                         <tr style="background-color: #f8fafc; border-top: 2px solid #cbd5e1;">
-                            <th colspan="3" style="text-align: right; font-weight: 700; color: #000000;">Period Total Movement / Closing:</th>
+                            <th colspan="<%= (!user || !user.locationId || user.locationId === 'all') ? 4 : 3 %>" style="text-align: right; font-weight: 700; color: #000000;">Period Total Movement / Closing:</th>
                             <th style="text-align: right; font-weight: 700; color: #15803d;"><%= typeof totalInMovement !== 'undefined' ? ('+' + totalInMovement) : 0 %></th>
                             <th style="text-align: right; font-weight: 700; color: #b91c1c;"><%= typeof totalOutMovement !== 'undefined' ? ('-' + totalOutMovement) : 0 %></th>
                             <th style="text-align: right; font-weight: 700; color: #000000;"><%= typeof warehouseFinalClosingBalance !== 'undefined' ? warehouseFinalClosingBalance : 0 %></th>
@@ -1563,6 +1644,9 @@
             $('#receiveStockTable').DataTable(tableConfig);
             $('#reportLoadingTable').DataTable(tableConfig);
             $('#reportUnloadingTable').DataTable(tableConfig);
+            if ($('#allWarehousesSummaryTable').length) {
+                $('#allWarehousesSummaryTable').DataTable(tableConfig);
+            }
             $('#warehouseBalanceTable').DataTable(Object.assign({}, tableConfig, { order: [] }));
             $('#damagesReportTable').DataTable(tableConfig);
 
@@ -2337,6 +2421,7 @@
                 { id: 'receiveStockTable', name: 'Stock Received (GRN)' },
                 { id: 'reportLoadingTable', name: 'Lorry Loading' },
                 { id: 'reportUnloadingTable', name: 'Lorry Unloading' },
+                { id: 'allWarehousesSummaryTable', name: 'All Warehouses Summary' },
                 { id: 'warehouseBalanceTable', name: 'Warehouse Tray Balance' },
                 { id: 'damagesReportTable', name: 'Tray Damages & Loss' }
             ];

@@ -3267,6 +3267,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (isFromLoc && t.dispatchedQty && t.dispatchedQty > 0) {
                 warehouseEvents.push({
                     date: dispatchDate,
+                    locationId: t.fromLocationId,
+                    locationName: t.fromLocationName || locMap[t.fromLocationId] || 'Head Office',
                     refNo: t.transferDocNo || '-',
                     label: 'Stock Transfer to ' + (t.toLocationName || locMap[t.toLocationId] || 'Branch'),
                     inQty: 0,
@@ -3278,6 +3280,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (isToLoc && t.status === 'ACCEPTED' && (t.receivedQty || t.dispatchedQty)) {
                 warehouseEvents.push({
                     date: receiveDate,
+                    locationId: t.toLocationId,
+                    locationName: t.toLocationName || locMap[t.toLocationId] || 'Branch',
                     refNo: t.grnNo || t.transferDocNo || '-',
                     label: 'GRN from ' + (t.fromLocationName || locMap[t.fromLocationId] || 'Head Office'),
                     inQty: t.receivedQty || t.dispatchedQty || 0,
@@ -3296,9 +3300,13 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         directCustomerTxs.forEach(ctx => {
             const txDate = ctx.date || ctx.createdAt;
             const refNo = ctx.receiptNo ? ('RE-' + String(ctx.receiptNo).padStart(6, '0')) : '-';
+            const ctxLocId = ctx.locationId || 'main';
+            const ctxLocName = locMap[ctxLocId] || (ctxLocId === 'main' ? 'Head Office' : 'Branch');
             if (ctx.type === 'IN' && ctx.count > 0) {
                 warehouseEvents.push({
                     date: txDate,
+                    locationId: ctxLocId,
+                    locationName: ctxLocName,
                     refNo: refNo,
                     label: 'Customer Return: ' + (ctx.customerName || 'Customer') + ' (' + ctx.count + ' Trays Handover)',
                     inQty: 0,
@@ -3307,6 +3315,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             } else if (ctx.type === 'OUT' && ctx.count > 0) {
                 warehouseEvents.push({
                     date: txDate,
+                    locationId: ctxLocId,
+                    locationName: ctxLocName,
                     refNo: refNo,
                     label: 'Customer Issue: ' + (ctx.customerName || 'Customer') + ' (' + ctx.count + ' Trays Handover)',
                     inQty: 0,
@@ -3320,9 +3330,13 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         applyBranchFilter(tripLedgerQuery, userLoc, 'locationId');
         const locTrips = await LorryTripModel.find(tripLedgerQuery).lean().catch(() => []);
         locTrips.forEach(tr => {
+            const trLocId = tr.locationId || 'main';
+            const trLocName = locMap[trLocId] || (trLocId === 'main' ? 'Head Office' : 'Branch');
             if (tr.loadedQty && tr.loadedQty > 0 && tr.status !== 'CANCELLED') {
                 warehouseEvents.push({
                     date: tr.dispatchedDate || tr.createdAt,
+                    locationId: trLocId,
+                    locationName: trLocName,
                     refNo: tr.tripNo || '-',
                     label: 'Lorry Loaded: ' + (tr.vehicleNo || 'Vehicle'),
                     inQty: 0,
@@ -3330,10 +3344,12 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
                 });
             }
             if (tr.status === 'COMPLETED' && tr.actualUnloadedQty && tr.actualUnloadedQty > 0) {
-                const digits = (tr.tripNo || '').replace(/D/g, '').padStart(5, '0');
+                const digits = (tr.tripNo || '').replace(/\D/g, '').padStart(5, '0');
                 const unlNo = tr.unloadingNo || ((locCodes[tr.locationId] || 'HO') + 'UNLOD' + digits);
                 warehouseEvents.push({
                     date: tr.returnedDate || tr.updatedAt,
+                    locationId: trLocId,
+                    locationName: trLocName,
                     refNo: unlNo,
                     label: 'Lorry Unloaded: ' + (tr.vehicleNo || 'Vehicle'),
                     inQty: tr.actualUnloadedQty,
@@ -3351,25 +3367,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             return dA - dB;
         });
 
-        // Reconcile running balances across full event history ending at finalTargetStock
-        const totalAllIn = warehouseEvents.reduce((s, e) => s + (e.inQty || 0), 0);
-        const totalAllOut = warehouseEvents.reduce((s, e) => s + (e.outQty || 0), 0);
-        const activeMonth = (startDate || today).slice(0, 7);
-        const { MonthlyBalance: MBModel } = require('./db');
-        const locMonthlyBal = await MBModel.getByMonth(userLoc || 'main', activeMonth);
-        const warehouseStartingStock = locMonthlyBal ? (locMonthlyBal.openingBalance || 0) : 4459;
-        const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
-        const officialOpeningBalance = warehouseStartingStock + customerInitialTotal;
-        const initialHistoricalBalance = officialOpeningBalance > 0 ? officialOpeningBalance : (finalTargetStock - (totalAllIn - totalAllOut));
-
-        let runningBal = initialHistoricalBalance;
-        warehouseEvents.forEach(ev => {
-            ev.openingBalance = runningBal;
-            runningBal = runningBal + (ev.inQty || 0) - (ev.outQty || 0);
-            ev.closingBalance = runningBal;
-        });
-
-        // Filter events by selected date range
+        // Filter events by selected date range helper
         const startStr = req.query.startDate || startDate;
         const endStr = req.query.endDate || endDate;
 
@@ -3380,6 +3378,107 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (isNaN(d.getTime())) return '';
             return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
         }
+
+        // Build Per-Warehouse Balance Summary Report (for All Warehouses view)
+        const activeMonth = (startDate || today).slice(0, 7);
+        const { MonthlyBalance: MBModel } = require('./db');
+        const warehouseSummaryList = [];
+        let totalAllWarehousesOpening = 0;
+
+        for (const loc of locations) {
+            const locId = String(loc._id);
+            const manualBal = await MBModel.getByMonth(locId, activeMonth);
+            let locOpening = 0;
+            if (manualBal) {
+                locOpening = manualBal.openingBalance;
+            } else {
+                let locDispatched = 0;
+                let locReceived = 0;
+                allTransfers.forEach(t => {
+                    if (String(t.fromLocationId) === locId) locDispatched += (t.dispatchedQty || 0);
+                    if (String(t.toLocationId) === locId && t.status === 'ACCEPTED') locReceived += (t.receivedQty || 0);
+                });
+                const locTx = directCustomerTxs.filter(t => (String(t.locationId) === locId || (!t.locationId && locId === 'main')));
+                let locOut = 0;
+                let locIn = 0;
+                locTx.forEach(t => {
+                    if (t.type === 'OUT') locOut += (t.count || 0);
+                    if (t.type === 'IN') locIn += (t.count || 0);
+                });
+                locOpening = (loc.currentStock || 0) + locDispatched - locReceived + locOut - locIn;
+            }
+
+            // Calculate period movements for this specific warehouse
+            let locPeriodIn = 0;
+            let locPeriodOut = 0;
+
+            allTransfers.forEach(t => {
+                const dDate = getEventDateStr(t.dispatchedDate || t.createdDate);
+                const rDate = getEventDateStr(t.receivedDate || t.dispatchedDate);
+                if (String(t.fromLocationId) === locId && t.dispatchedQty > 0) {
+                    if ((!startStr || dDate >= startStr) && (!endStr || dDate <= endStr)) {
+                        locPeriodOut += (t.dispatchedQty || 0);
+                    }
+                }
+                if (String(t.toLocationId) === locId && t.status === 'ACCEPTED' && (t.receivedQty || t.dispatchedQty)) {
+                    if ((!startStr || rDate >= startStr) && (!endStr || rDate <= endStr)) {
+                        locPeriodIn += (t.receivedQty || t.dispatchedQty || 0);
+                    }
+                }
+            });
+
+            locTrips.forEach(tr => {
+                const lDate = getEventDateStr(tr.dispatchedDate || tr.createdAt);
+                const uDate = getEventDateStr(tr.returnedDate || tr.updatedAt);
+                if ((String(tr.locationId) === locId || (!tr.locationId && locId === 'main')) && tr.status !== 'CANCELLED' && tr.loadedQty > 0) {
+                    if ((!startStr || lDate >= startStr) && (!endStr || lDate <= endStr)) {
+                        locPeriodOut += (tr.loadedQty || 0);
+                    }
+                }
+                if ((String(tr.locationId) === locId || (!tr.locationId && locId === 'main')) && tr.status === 'COMPLETED' && tr.actualUnloadedQty > 0) {
+                    if ((!startStr || uDate >= startStr) && (!endStr || uDate <= endStr)) {
+                        locPeriodIn += (tr.actualUnloadedQty || 0);
+                    }
+                }
+            });
+
+            const locClosing = locOpening + locPeriodIn - locPeriodOut;
+            warehouseSummaryList.push({
+                id: locId,
+                name: loc.name,
+                code: loc.code || 'HO',
+                openingBalance: locOpening,
+                totalIn: locPeriodIn,
+                totalOut: locPeriodOut,
+                currentStock: loc.currentStock || 0,
+                closingBalance: locClosing
+            });
+
+            totalAllWarehousesOpening += locOpening;
+        }
+
+        // Reconcile running balances across full event history
+        const totalAllIn = warehouseEvents.reduce((s, e) => s + (e.inQty || 0), 0);
+        const totalAllOut = warehouseEvents.reduce((s, e) => s + (e.outQty || 0), 0);
+        
+        let warehouseStartingStock = 0;
+        if (userLoc && userLoc !== 'all') {
+            const locSummary = warehouseSummaryList.find(w => w.id === String(userLoc));
+            warehouseStartingStock = locSummary ? locSummary.openingBalance : 0;
+        } else {
+            warehouseStartingStock = totalAllWarehousesOpening;
+        }
+
+        const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
+        const officialOpeningBalance = warehouseStartingStock + customerInitialTotal;
+        const initialHistoricalBalance = officialOpeningBalance > 0 ? officialOpeningBalance : (finalTargetStock - (totalAllIn - totalAllOut));
+
+        let runningBal = initialHistoricalBalance;
+        warehouseEvents.forEach(ev => {
+            ev.openingBalance = runningBal;
+            runningBal = runningBal + (ev.inQty || 0) - (ev.outQty || 0);
+            ev.closingBalance = runningBal;
+        });
 
         const pastEvents = warehouseEvents.filter(ev => {
             const evDateStr = getEventDateStr(ev.date);
@@ -3412,6 +3511,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             dispatchedTransfers,
             receivedTransfers,
             damageLogs,
+            warehouseSummaryList,
             warehouseBalanceList,
             warehouseOpeningDate: startStr || today,
             warehouseOpeningBalance: periodOpeningBalance,
