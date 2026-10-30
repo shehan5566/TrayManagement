@@ -63,7 +63,7 @@
     <div class="card">
         <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>Opening Balance (Warehouse)</span>
-            <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('opening_balance_edit'))) { %>
+            <% if ((user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('opening_balance_edit'))) && user.locationId !== 'all') { %>
             <i class="fa-solid fa-pen" style="cursor: pointer; color: var(--accent-yellow);" onclick="openMonthlyBalanceModal('<%= warehouseStats.currentMonth %>', <%= warehouseStats.warehouseOpeningBalance %>)" title="Set Manual Monthly Balance"></i>
             <% } %>
         </div>

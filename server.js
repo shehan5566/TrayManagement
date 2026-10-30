@@ -625,9 +625,12 @@ app.get('/dashboard', requireAuth, async (req, res) => {
         // Warehouse (Branch) Stats
         const myLocationId = req.session.user.locationId;
         const targetLocId = myLocationId || 'main';
+        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
         let warehouseCurrentBalance = 0;
         let totalTransferQty = 0;
         let totalGRNQty = 0;
+        let warehouseOpeningBalance = 0;
+        let isManualBalance = false;
 
         if (myLocationId === 'all') {
             const allLocs = await Location.getAll();
@@ -637,6 +640,33 @@ app.get('/dashboard', requireAuth, async (req, res) => {
                 totalTransferQty += t.dispatchedQty || 0;
                 if (t.status === 'ACCEPTED') totalGRNQty += t.receivedQty || 0;
             });
+
+            // Calculate All Locations opening balance as the exact sum of each warehouse's individual Opening Balance card
+            let totalOpeningSum = 0;
+            for (const loc of allLocs) {
+                const manualBal = await MonthlyBalance.getByMonth(loc.id, currentMonth);
+                if (manualBal) {
+                    totalOpeningSum += manualBal.openingBalance;
+                } else {
+                    let locDispatched = 0;
+                    let locReceived = 0;
+                    allTransfers.forEach(t => {
+                        if (t.fromLocationId === loc.id) locDispatched += (t.dispatchedQty || 0);
+                        if (t.toLocationId === loc.id && t.status === 'ACCEPTED') locReceived += (t.receivedQty || 0);
+                    });
+                    const locTx = transactions.filter(t => (t.locationId === loc.id || (!t.locationId && loc.id === 'main')));
+                    let locOut = 0;
+                    let locIn = 0;
+                    locTx.forEach(t => {
+                        if (t.type === 'OUT') locOut += (t.count || 0);
+                        if (t.type === 'IN') locIn += (t.count || 0);
+                    });
+                    const locOpening = (loc.currentStock || 0) + locDispatched - locReceived + locOut - locIn;
+                    totalOpeningSum += locOpening;
+                }
+            }
+            warehouseOpeningBalance = totalOpeningSum;
+            isManualBalance = false;
         } else {
             const myLocation = await Location.getById(targetLocId);
             warehouseCurrentBalance = myLocation ? (myLocation.currentStock || 0) : 0;
@@ -649,16 +679,13 @@ app.get('/dashboard', requireAuth, async (req, res) => {
                     totalGRNQty += t.receivedQty || 0;
                 }
             });
-        }
-        
-        // Opening Balance calculation (reversing transfers, customer direct transactions, and lorry trips)
-        let warehouseOpeningBalance = warehouseCurrentBalance + totalTransferQty - totalGRNQty + totalTrayOut - totalTrayIn;
-        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-        const manualBalance = await MonthlyBalance.getByMonth(myLocationId || 'main', currentMonth);
-        let isManualBalance = false;
-        if (manualBalance) {
-            warehouseOpeningBalance = manualBalance.openingBalance;
-            isManualBalance = true;
+
+            warehouseOpeningBalance = warehouseCurrentBalance + totalTransferQty - totalGRNQty + totalTrayOut - totalTrayIn;
+            const manualBalance = await MonthlyBalance.getByMonth(targetLocId, currentMonth);
+            if (manualBalance) {
+                warehouseOpeningBalance = manualBalance.openingBalance;
+                isManualBalance = true;
+            }
         }
 
         // Recent 5 transactions
