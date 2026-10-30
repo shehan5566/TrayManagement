@@ -172,11 +172,8 @@
                                 <% const history = (user && user.locationId && user.locationId !== 'all') ? transfers.filter(t => t.fromLocationId === user.locationId) : transfers; %>
                                     <% history.forEach(t=> { %>
                                         <tr>
-                                            <td style="white-space: nowrap;">
-                                                <%= new Date(t.dispatchedDate).toLocaleDateString('en-GB', { timeZone: 'Asia/Colombo' }) %>
-                                                <small style="color: var(--text-light); display: block; font-size: 11px;">
-                                                    <%= new Date(t.dispatchedDate).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true }) %>
-                                                </small>
+                                            <td>
+                                                <%= new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %>
                                             </td>
                                             <td>
                                                 <%= t.transferDocNo || '-' %>
