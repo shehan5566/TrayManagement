@@ -14,82 +14,82 @@
     <!-- Key Analytics Cards -->
     <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 28px;">
         <!-- Outstanding Trays -->
-        <div class="card metric-card" style="border-left: 4px solid #f59e0b; padding: 20px;">
+        <div class="card metric-card" style="border-left: 4px solid var(--brand-yellow); padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <span style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase;">Outstanding Trays</span>
                     <h3 style="font-size: 26px; font-weight: 800; color: var(--text-dark); margin: 6px 0 0 0;">
                         <%= totalOutstanding.toLocaleString() %>
                     </h3>
-                    <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">Held by customers</span>
+                    <span style="font-size: 12px; color: #b45309; font-weight: 600;">Held by customers</span>
                 </div>
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 18px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(255, 195, 0, 0.18); display: flex; align-items: center; justify-content: center; color: #b45309; font-size: 18px;">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
             </div>
         </div>
 
         <!-- High Loss Risk Trays -->
-        <div class="card metric-card" style="border-left: 4px solid #ef4444; padding: 20px;">
+        <div class="card metric-card" style="border-left: 4px solid var(--brand-yellow); padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <span style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase;">High Loss Risk</span>
-                    <h3 style="font-size: 26px; font-weight: 800; color: #ef4444; margin: 6px 0 0 0;">
+                    <h3 style="font-size: 26px; font-weight: 800; color: #b45309; margin: 6px 0 0 0;">
                         <%= (typeof highRiskTrays !== 'undefined' ? highRiskTrays : 0).toLocaleString() %>
                     </h3>
-                    <span style="font-size: 12px; color: #ef4444; font-weight: 600;">
+                    <span style="font-size: 12px; color: #b45309; font-weight: 600;">
                         Exposure: Rs. <%= (typeof highRiskExposure !== 'undefined' ? highRiskExposure : 0).toLocaleString() %>
                     </span>
                 </div>
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.15); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 18px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(255, 195, 0, 0.18); display: flex; align-items: center; justify-content: center; color: #b45309; font-size: 18px;">
                     <i class="fa-solid fa-triangle-exclamation"></i>
                 </div>
             </div>
         </div>
 
         <!-- Transit Shortage -->
-        <div class="card metric-card" style="border-left: 4px solid #dc2626; padding: 20px;">
+        <div class="card metric-card" style="border-left: 4px solid var(--brand-yellow); padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <span style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase;">Transit Shortage</span>
                     <h3 style="font-size: 26px; font-weight: 800; color: var(--text-dark); margin: 6px 0 0 0;">
                         <%= (typeof totalTransitShortage !== 'undefined' ? totalTransitShortage : 0).toLocaleString() %>
                     </h3>
-                    <span style="font-size: 12px; color: #dc2626; font-weight: 600;">Shortage in transfers</span>
+                    <span style="font-size: 12px; color: #b45309; font-weight: 600;">Shortage in transfers</span>
                 </div>
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(220, 38, 38, 0.15); display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 18px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(255, 195, 0, 0.18); display: flex; align-items: center; justify-content: center; color: #b45309; font-size: 18px;">
                     <i class="fa-solid fa-truck-ramp-box"></i>
                 </div>
             </div>
         </div>
 
         <!-- Avg Turnaround Days -->
-        <div class="card metric-card" style="border-left: 4px solid #3b82f6; padding: 20px;">
+        <div class="card metric-card" style="border-left: 4px solid var(--primary-green); padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <span style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase;">Avg Return Cycle</span>
                     <h3 style="font-size: 26px; font-weight: 800; color: var(--text-dark); margin: 6px 0 0 0;">
                         <%= typeof avgTurnaroundDays !== 'undefined' ? avgTurnaroundDays : '7.0' %> <span style="font-size: 15px; font-weight: 600; color: var(--text-light);">Days</span>
                     </h3>
-                    <span style="font-size: 12px; color: #3b82f6; font-weight: 600;">Customer turnaround</span>
+                    <span style="font-size: 12px; color: var(--primary-green); font-weight: 600;">Customer turnaround</span>
                 </div>
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 18px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(23, 78, 62, 0.12); display: flex; align-items: center; justify-content: center; color: var(--primary-green); font-size: 18px;">
                     <i class="fa-solid fa-stopwatch"></i>
                 </div>
             </div>
         </div>
 
         <!-- Return Velocity -->
-        <div class="card metric-card" style="border-left: 4px solid #10b981; padding: 20px;">
+        <div class="card metric-card" style="border-left: 4px solid var(--primary-green); padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div>
                     <span style="font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase;">Return Velocity</span>
                     <h3 style="font-size: 26px; font-weight: 800; color: var(--text-dark); margin: 6px 0 0 0;">
                         <%= returnVelocity %>%
                     </h3>
-                    <span style="font-size: 12px; color: #10b981; font-weight: 600;"><i class="fa-solid fa-arrow-trend-up"></i> Inward vs Outward</span>
+                    <span style="font-size: 12px; color: var(--primary-green); font-weight: 600;"><i class="fa-solid fa-arrow-trend-up"></i> Inward vs Outward</span>
                 </div>
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 18px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(23, 78, 62, 0.12); display: flex; align-items: center; justify-content: center; color: var(--primary-green); font-size: 18px;">
                     <i class="fa-solid fa-bolt"></i>
                 </div>
             </div>
@@ -97,7 +97,7 @@
     </div>
 
     <!-- Predictive Forecast Banner -->
-    <div class="card" style="padding: 18px 22px; margin-bottom: 28px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.12)); border: 1px solid rgba(16, 185, 129, 0.3);">
+    <div class="card" style="padding: 18px 22px; margin-bottom: 28px; background: linear-gradient(135deg, rgba(23, 78, 62, 0.08), rgba(255, 195, 0, 0.12)); border: 1px solid rgba(23, 78, 62, 0.25);">
         <div style="display: flex; align-items: center; gap: 16px;">
             <div style="width: 46px; height: 46px; border-radius: 12px; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -114,11 +114,11 @@
     </div>
 
     <!-- SECTION 1: CUSTOMER LOSS RISK & RETURN CYCLE WATCHLIST -->
-    <div class="card" style="padding: 24px; margin-bottom: 28px; border-top: 4px solid #ef4444;">
+    <div class="card" style="padding: 24px; margin-bottom: 28px; border-top: 4px solid var(--brand-yellow);">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px;">
             <div>
                 <h3 style="font-size: 17px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-shield-halved" style="color: #ef4444;"></i> Predictive Customer Return Cycle & Loss Risk Watchlist
+                    <i class="fa-solid fa-shield-halved" style="color: var(--primary-green);"></i> Predictive Customer Return Cycle & Loss Risk Watchlist
                 </h3>
                 <p style="color: var(--text-light); font-size: 13px; margin: 4px 0 0 0;">
                     Compares individual customer turnaround cycle against actual overdue days to detect loss risk before it happens.
@@ -126,11 +126,11 @@
             </div>
             <div>
                 <% if (typeof highRiskList !== 'undefined' && highRiskList.length > 0) { %>
-                    <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 700; padding: 6px 12px; font-size: 12px;">
+                    <span class="badge" style="background: rgba(255, 195, 0, 0.2); color: #b45309; font-weight: 700; padding: 6px 12px; font-size: 12px; border: 1px solid rgba(255, 195, 0, 0.4);">
                         <i class="fa-solid fa-triangle-exclamation"></i> <%= highRiskList.length %> Critical Risk Account(s)
                     </span>
                 <% } else { %>
-                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; padding: 6px 12px; font-size: 12px;">
+                    <span class="badge" style="background: rgba(23, 78, 62, 0.12); color: var(--primary-green); font-weight: 700; padding: 6px 12px; font-size: 12px; border: 1px solid rgba(23, 78, 62, 0.25);">
                         <i class="fa-solid fa-check-circle"></i> All Customer Cycles Normal
                     </span>
                 <% } %>
@@ -162,7 +162,7 @@
                                     <%= c.phone %>
                                 </td>
                                 <td style="padding: 10px 12px; text-align: right;">
-                                    <span class="badge" style="background: <%= c.currentBalance >= 50 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)' %>; color: <%= c.currentBalance >= 50 ? '#ef4444' : '#f59e0b' %>; font-weight: 700; font-size: 12px;">
+                                    <span class="badge" style="background: <%= c.currentBalance >= 50 ? 'rgba(255, 195, 0, 0.22)' : 'rgba(255, 195, 0, 0.12)' %>; color: #b45309; font-weight: 700; font-size: 12px; border: 1px solid rgba(255, 195, 0, 0.35);">
                                         <%= c.currentBalance %> Trays
                                     </span>
                                 </td>
@@ -170,7 +170,7 @@
                                     <%= c.avgCycle %> Days
                                 </td>
                                 <td style="padding: 10px 12px; text-align: center;">
-                                    <strong style="color: <%= c.daysPending >= 14 ? '#ef4444' : (c.daysPending >= 7 ? '#f59e0b' : '#10b981') %>; font-size: 13px;">
+                                    <strong style="color: <%= c.daysPending >= 14 ? '#b45309' : (c.daysPending >= 7 ? '#d97706' : 'var(--primary-green)') %>; font-size: 13px;">
                                         <%= c.daysPending %> Days
                                     </strong>
                                 </td>
@@ -179,15 +179,15 @@
                                 </td>
                                 <td style="padding: 10px 12px; text-align: center;">
                                     <% if (c.riskLevel === 'HIGH') { %>
-                                        <span class="badge" style="background: #ef4444; color: white; font-weight: 700; font-size: 11px; padding: 4px 8px;">
+                                        <span class="badge" style="background: #b45309; color: white; font-weight: 700; font-size: 11px; padding: 4px 8px;">
                                             <i class="fa-solid fa-fire"></i> HIGH RISK (<%= c.riskScore %>%)
                                         </span>
                                     <% } else if (c.riskLevel === 'MEDIUM') { %>
-                                        <span class="badge" style="background: #f59e0b; color: white; font-weight: 700; font-size: 11px; padding: 4px 8px;">
+                                        <span class="badge" style="background: var(--brand-yellow); color: #0f3025; font-weight: 700; font-size: 11px; padding: 4px 8px;">
                                             <i class="fa-solid fa-clock"></i> MEDIUM (<%= c.riskScore %>%)
                                         </span>
                                     <% } else { %>
-                                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 700; font-size: 11px; padding: 4px 8px;">
+                                        <span class="badge" style="background: rgba(23, 78, 62, 0.12); color: var(--primary-green); font-weight: 700; font-size: 11px; padding: 4px 8px; border: 1px solid rgba(23, 78, 62, 0.25);">
                                             <i class="fa-solid fa-check"></i> NORMAL
                                         </span>
                                     <% } %>
@@ -195,7 +195,7 @@
                                 <td style="padding: 10px 12px; text-align: right;">
                                     <div style="display: inline-flex; gap: 6px;">
                                         <% if (typeof hasPerm === 'function' && hasPerm('customer_sms')) { %>
-                                        <button onclick="sendReminderSMS('<%= c.id %>')" class="btn btn-sm" style="font-size: 11px; background: #174e3e; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Send Reminder SMS">
+                                        <button onclick="sendReminderSMS('<%= c.id %>')" class="btn btn-sm" style="font-size: 11px; background: var(--brand-green); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Send Reminder SMS">
                                             <i class="fa-solid fa-comment-sms"></i> SMS
                                         </button>
                                         <% } %>
@@ -211,7 +211,7 @@
             </div>
         <% } else { %>
             <div style="text-align: center; padding: 32px; color: var(--text-light);">
-                <i class="fa-solid fa-circle-check" style="font-size: 38px; color: #10b981; margin-bottom: 12px; display: block;"></i>
+                <i class="fa-solid fa-circle-check" style="font-size: 38px; color: var(--primary-green); margin-bottom: 12px; display: block;"></i>
                 <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-dark);">Zero At-Risk Accounts</h4>
                 <p style="margin: 4px 0 0 0; font-size: 13.5px; color: var(--text-light);">Currently there are no overdue customer tray accounts. All customer return cycles are normal.</p>
             </div>
@@ -224,7 +224,7 @@
         <div class="card" style="padding: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0;">
-                    <i class="fa-solid fa-truck" style="color: #ef4444; margin-right: 8px;"></i> Vehicle Transit Shortage Variance
+                    <i class="fa-solid fa-truck" style="color: var(--primary-green); margin-right: 8px;"></i> Vehicle Transit Shortage Variance
                 </h3>
                 <span style="font-size: 12px; color: var(--text-light); font-weight: 600;">Lost trays in transit</span>
             </div>
@@ -237,7 +237,7 @@
         <div class="card" style="padding: 24px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0;">
-                    <i class="fa-solid fa-route" style="color: #f59e0b; margin-right: 8px;"></i> Route Loss Analysis
+                    <i class="fa-solid fa-route" style="color: var(--brand-yellow); margin-right: 8px;"></i> Route Loss Analysis
                 </h3>
                 <span style="font-size: 12px; color: var(--text-light); font-weight: 600;">By Transfer Routes</span>
             </div>
@@ -260,7 +260,7 @@
                                     <td style="padding: 8px 10px; text-align: right;"><%= r.transfers %></td>
                                     <td style="padding: 8px 10px; text-align: right;"><%= r.dispatched.toLocaleString() %></td>
                                     <td style="padding: 8px 10px; text-align: right;"><%= r.received.toLocaleString() %></td>
-                                    <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: <%= r.shortage > 0 ? '#ef4444' : '#10b981' %>;">
+                                    <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: <%= r.shortage > 0 ? '#b45309' : 'var(--primary-green)' %>;">
                                         <%= r.shortage > 0 ? '-' + r.shortage : '0' %>
                                     </td>
                                 </tr>
@@ -283,7 +283,7 @@
         <!-- Branch Stock Heatmap Chart -->
         <div class="card" style="padding: 24px;">
             <h3 style="font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0 0 16px 0;">
-                <i class="fa-solid fa-location-dot" style="color: #f59e0b; margin-right: 8px;"></i> Branch Stock Distribution
+                <i class="fa-solid fa-location-dot" style="color: var(--brand-yellow); margin-right: 8px;"></i> Branch Stock Distribution
             </h3>
             <div style="position: relative; height: 260px;">
                 <canvas id="branchStockChart"></canvas>
@@ -330,15 +330,15 @@
                             </td>
                             <td style="padding: 10px; text-align: center;">
                                 <% if (b.stock > 1000) { %>
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                                    <span class="badge" style="background: rgba(23, 78, 62, 0.12); color: var(--primary-green); border: 1px solid rgba(23, 78, 62, 0.25);">
                                         <i class="fa-solid fa-circle-check"></i> HIGH CAPACITY
                                     </span>
                                 <% } else if (b.stock > 200) { %>
-                                    <span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+                                    <span class="badge" style="background: rgba(255, 195, 0, 0.15); color: #b45309; border: 1px solid rgba(255, 195, 0, 0.3);">
                                         <i class="fa-solid fa-circle-info"></i> OPTIMAL
                                     </span>
                                 <% } else { %>
-                                    <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                                    <span class="badge" style="background: rgba(255, 195, 0, 0.25); color: #92400e; border: 1px solid rgba(255, 195, 0, 0.45); font-weight: 700;">
                                         <i class="fa-solid fa-triangle-exclamation"></i> LOW STOCK
                                     </span>
                                 <% } %>
@@ -407,8 +407,8 @@
                         datasets: [{
                             label: 'Tray Shortage (Lost/Missing)',
                             data: vehicleShortages,
-                            backgroundColor: 'rgba(239, 68, 68, 0.85)',
-                            borderColor: '#dc2626',
+                            backgroundColor: 'rgba(255, 195, 0, 0.85)',
+                            borderColor: '#d97706',
                             borderWidth: 2,
                             borderRadius: 6
                         }]
@@ -494,7 +494,7 @@
                         labels: ['Trays Returned (IN)', 'Trays Issued (OUT)', 'Outstanding with Customers'],
                         datasets: [{
                             data: [<%= totalIn %>, <%= totalOut %>, <%= totalOutstanding %>],
-                            backgroundColor: ['#10b981', '#f59e0b', '#174e3e'],
+                            backgroundColor: ['#174e3e', '#ffc300', '#2c6e49'],
                             borderWidth: 2,
                             borderColor: '#ffffff'
                         }]
