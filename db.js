@@ -407,12 +407,10 @@ const StockTransfer = {
         if (queryParams.startDate || queryParams.endDate) {
             let dateCondition = {};
             if (queryParams.startDate) {
-                dateCondition.$gte = new Date(queryParams.startDate);
+                dateCondition.$gte = new Date(queryParams.startDate + 'T00:00:00+05:30');
             }
             if (queryParams.endDate) {
-                const end = new Date(queryParams.endDate);
-                end.setHours(23, 59, 59, 999);
-                dateCondition.$lte = end;
+                dateCondition.$lte = new Date(queryParams.endDate + 'T23:59:59.999+05:30');
             }
 
             if (queryParams.page === 'receive') {
@@ -426,13 +424,8 @@ const StockTransfer = {
                     ]
                 });
             } else {
-                // On stock transfers page, also ensure PENDING transfers remain visible so in-transit stock is not hidden
-                conditions.push({
-                    $or: [
-                        { status: 'PENDING' },
-                        { dispatchedDate: dateCondition }
-                    ]
-                });
+                // On stock transfers page, strictly filter transfers dispatched within the selected date range
+                conditions.push({ dispatchedDate: dateCondition });
             }
         }
 
