@@ -3470,24 +3470,6 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         }
 
         const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
-        const officialOpeningBalance = warehouseStartingStock + customerInitialTotal;
-        const initialHistoricalBalance = officialOpeningBalance > 0 ? officialOpeningBalance : (finalTargetStock - (totalAllIn - totalAllOut));
-
-        let runningBal = initialHistoricalBalance;
-        warehouseEvents.forEach(ev => {
-            ev.openingBalance = runningBal;
-            runningBal = runningBal + (ev.inQty || 0) - (ev.outQty || 0);
-            ev.closingBalance = runningBal;
-        });
-
-        const pastEvents = warehouseEvents.filter(ev => {
-            const evDateStr = getEventDateStr(ev.date);
-            return startStr ? (evDateStr < startStr) : false;
-        });
-
-        const periodOpeningBalance = pastEvents.length > 0 
-            ? pastEvents[pastEvents.length - 1].closingBalance 
-            : initialHistoricalBalance;
 
         let warehouseBalanceList = warehouseEvents.filter(ev => {
             const evDateStr = getEventDateStr(ev.date);
@@ -3497,9 +3479,17 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             return true;
         });
 
+        // Compute running balance starting directly from the official warehouse opening balance (10,784 for All Locations)
+        let runningBal = warehouseStartingStock;
+        warehouseBalanceList.forEach(ev => {
+            ev.openingBalance = runningBal;
+            runningBal = runningBal + (ev.inQty || 0) - (ev.outQty || 0);
+            ev.closingBalance = runningBal;
+        });
+
         const totalInMovement = warehouseBalanceList.reduce((s, e) => s + (e.inQty || 0), 0);
         const totalOutMovement = warehouseBalanceList.reduce((s, e) => s + (e.outQty || 0), 0);
-        const warehouseFinalClosingBalance = periodOpeningBalance + totalInMovement - totalOutMovement;
+        const warehouseFinalClosingBalance = warehouseStartingStock + totalInMovement - totalOutMovement;
 
         let activeTab = req.query.activeTab || 'balanceReport';
 
@@ -3514,7 +3504,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             warehouseSummaryList,
             warehouseBalanceList,
             warehouseOpeningDate: startStr || today,
-            warehouseOpeningBalance: periodOpeningBalance,
+            warehouseOpeningBalance: warehouseStartingStock,
             warehouseStartingStock,
             customerInitialTotal,
             totalInMovement,
