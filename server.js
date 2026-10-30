@@ -3471,6 +3471,15 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
 
         const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
 
+        // Reconcile running balances ending exactly at locWarehouseStock (Current Tray Balance Warehouse)
+        let running = locWarehouseStock;
+        for (let i = warehouseEvents.length - 1; i >= 0; i--) {
+            const ev = warehouseEvents[i];
+            ev.closingBalance = running;
+            ev.openingBalance = running - (ev.inQty || 0) + (ev.outQty || 0);
+            running = ev.openingBalance;
+        }
+
         let warehouseBalanceList = warehouseEvents.filter(ev => {
             const evDateStr = getEventDateStr(ev.date);
             if (!evDateStr) return true;
@@ -3479,17 +3488,9 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             return true;
         });
 
-        // Compute running balance starting directly from the official warehouse opening balance (10,784 for All Locations)
-        let runningBal = warehouseStartingStock;
-        warehouseBalanceList.forEach(ev => {
-            ev.openingBalance = runningBal;
-            runningBal = runningBal + (ev.inQty || 0) - (ev.outQty || 0);
-            ev.closingBalance = runningBal;
-        });
-
         const totalInMovement = warehouseBalanceList.reduce((s, e) => s + (e.inQty || 0), 0);
         const totalOutMovement = warehouseBalanceList.reduce((s, e) => s + (e.outQty || 0), 0);
-        const warehouseFinalClosingBalance = warehouseStartingStock + totalInMovement - totalOutMovement;
+        const warehouseFinalClosingBalance = locWarehouseStock;
 
         let activeTab = req.query.activeTab || 'balanceReport';
 
