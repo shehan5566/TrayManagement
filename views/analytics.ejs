@@ -592,7 +592,7 @@
                             <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
                                 Counting Date <span style="color: #dc2626;">*</span>
                             </label>
-                            <input type="date" id="reconDate" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                            <input type="date" id="reconDate" required onchange="handleDateChange()" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                         </div>
 
                         <div>
@@ -768,15 +768,63 @@
             }
         });
 
+        function handleDateChange() {
+            const dateInput = document.getElementById('reconDate');
+            const periodInput = document.getElementById('reconPeriod');
+            if (dateInput && dateInput.value && periodInput) {
+                const parts = dateInput.value.split('-');
+                if (parts.length === 3) {
+                    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                    if (!isNaN(d.getTime())) {
+                        periodInput.value = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+                    }
+                }
+            }
+            updateSystemBalanceForDate();
+        }
+
         function handleLocationChange() {
+            updateSystemBalanceForDate();
+        }
+
+        async function updateSystemBalanceForDate() {
             const locSelect = document.getElementById('reconLocation');
+            const dateInput = document.getElementById('reconDate');
             const sysBalInput = document.getElementById('reconSystemBalance');
             if (!locSelect || !sysBalInput) return;
-            const selectedOpt = locSelect.options[locSelect.selectedIndex];
-            const stock = selectedOpt ? parseInt(selectedOpt.getAttribute('data-stock') || '0', 10) : 0;
-            sysBalInput.value = stock;
 
-            calculateReconMetrics();
+            const locId = locSelect.value;
+            const dateVal = dateInput ? dateInput.value : '';
+            const selectedOpt = locSelect.options[locSelect.selectedIndex];
+            const liveStock = selectedOpt ? parseInt(selectedOpt.getAttribute('data-stock') || '0', 10) : 0;
+
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            // If no date or date is today or future, use current live warehouse stock
+            if (!dateVal || dateVal >= todayStr) {
+                sysBalInput.value = liveStock;
+                calculateReconMetrics();
+                return;
+            }
+
+            // Historical date selected: fetch the exact warehouse balance as of that date
+            try {
+                sysBalInput.style.opacity = '0.5';
+                const response = await fetch(`/api/analytics/warehouse-balance?locationId=${encodeURIComponent(locId)}&date=${encodeURIComponent(dateVal)}`);
+                const data = await response.json();
+                if (data && data.success && typeof data.balance === 'number') {
+                    sysBalInput.value = data.balance;
+                } else {
+                    sysBalInput.value = liveStock;
+                }
+            } catch (err) {
+                console.error('Failed to fetch historical warehouse stock:', err);
+                sysBalInput.value = liveStock;
+            } finally {
+                sysBalInput.style.opacity = '1';
+                calculateReconMetrics();
+            }
         }
 
         function calculateReconMetrics() {

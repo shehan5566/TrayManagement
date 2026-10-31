@@ -4798,6 +4798,129 @@ app.get('/analytics', requireAuth, requirePermission('analytics_view'), async (r
         res.status(500).send('Error loading AI analytics page');
     }
 });
+
+// API: Get Warehouse System Balance for a Specific Historical Date
+app.get('/api/analytics/warehouse-balance', requireAuth, async (req, res) => {
+    try {
+        const { DamageLogModel } = require('./db');
+        const locationId = req.query.locationId || 'main';
+        const targetDateStr = req.query.date;
+        const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
+
+        function getColomboDate(dVal) {
+            if (!dVal) return '';
+            let d = new Date(dVal);
+            if (isNaN(d.getTime()) && !isNaN(Number(dVal))) d = new Date(Number(dVal));
+            if (isNaN(d.getTime())) return '';
+            return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Colombo' });
+        }
+
+        async function calcHistoricalForLoc(loc) {
+            const locId = String(loc._id || loc.id);
+            const currentStock = loc.currentStock || 0;
+            if (!targetDateStr || targetDateStr >= todayStr) {
+                return currentStock;
+            }
+
+            const [txs, transfers, trips, damages] = await Promise.all([
+                TransactionModel.find({
+                    isDeleted: { $ne: true },
+                    $or: [{ tripId: null }, { tripId: '' }, { tripId: { $exists: false } }],
+                    $and: [
+                        {
+                            $or: [
+                                { locationId: locId },
+                                (!locId || locId === 'main') ? { locationId: { $exists: false } } : { locationId: locId }
+                            ]
+                        }
+                    ]
+                }).lean().catch(() => []),
+                StockTransferModel.find({
+                    isDeleted: { $ne: true },
+                    $or: [{ fromLocationId: locId }, { toLocationId: locId }]
+                }).lean().catch(() => []),
+                LorryTripModel.find({
+                    isDeleted: { $ne: true },
+                    $or: [
+                        { locationId: locId },
+                        (!locId || locId === 'main') ? { locationId: { $exists: false } } : { locationId: locId }
+                    ]
+                }).lean().catch(() => []),
+                DamageLogModel.find({ locationId: locId }).lean().catch(() => [])
+            ]);
+
+            let incAfter = 0;
+            let decAfter = 0;
+
+            txs.forEach(t => {
+                const dStr = getColomboDate(t.date || t.createdAt);
+                if (dStr > targetDateStr) {
+                    if (t.type === 'IN') incAfter += (t.count || 0);
+                    if (t.type === 'OUT') decAfter += (t.count || 0);
+                }
+            });
+
+            transfers.forEach(t => {
+                if (String(t.fromLocationId) === locId && t.dispatchedQty > 0) {
+                    const dStr = getColomboDate(t.dispatchedDate || t.createdDate);
+                    if (dStr > targetDateStr) {
+                        decAfter += (t.dispatchedQty || 0);
+                    }
+                }
+                if (String(t.toLocationId) === locId && t.status === 'ACCEPTED' && (t.receivedQty || t.dispatchedQty)) {
+                    const rStr = getColomboDate(t.receivedDate || t.dispatchedDate);
+                    if (rStr > targetDateStr) {
+                        incAfter += (t.receivedQty || t.dispatchedQty || 0);
+                    }
+                }
+            });
+
+            trips.forEach(tr => {
+                if (tr.status !== 'CANCELLED' && tr.loadedQty > 0) {
+                    const lStr = getColomboDate(tr.dispatchedDate || tr.createdAt);
+                    if (lStr > targetDateStr) {
+                        decAfter += (tr.loadedQty || 0);
+                    }
+                }
+                if (tr.status === 'COMPLETED' && tr.actualUnloadedQty > 0) {
+                    const uStr = getColomboDate(tr.returnedDate || tr.updatedAt);
+                    if (uStr > targetDateStr) {
+                        incAfter += (tr.actualUnloadedQty || 0);
+                    }
+                }
+            });
+
+            damages.forEach(d => {
+                const dStr = getColomboDate(d.date || d.createdAt);
+                if (dStr > targetDateStr) {
+                    decAfter += (parseInt(d.qty) || 0);
+                }
+            });
+
+            return Math.max(0, currentStock - incAfter + decAfter);
+        }
+
+        if (locationId === 'all') {
+            const allLocs = await LocationModel.find({});
+            let total = 0;
+            for (const loc of allLocs) {
+                total += await calcHistoricalForLoc(loc);
+            }
+            return res.json({ success: true, locationId: 'all', date: targetDateStr, balance: total });
+        } else {
+            const loc = await LocationModel.findById(locationId);
+            if (!loc) {
+                return res.status(404).json({ success: false, error: 'Location not found' });
+            }
+            const balance = await calcHistoricalForLoc(loc);
+            return res.json({ success: true, locationId, locName: loc.name, date: targetDateStr, balance });
+        }
+    } catch (err) {
+        console.error('Error fetching historical warehouse balance:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Health / Keep-Alive Ping Route (for UptimeRobot / Cron-Job.org)
 app.get('/ping', (req, res) => {
     res.status(200).send('OK');
