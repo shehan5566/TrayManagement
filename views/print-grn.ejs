@@ -65,6 +65,8 @@
                     <span class="badge" style="background:#1b5e20; color:white; padding:4px 10px; font-size:12px;">ACCEPTED</span>
                 <% } else if (transfer.status === 'REJECTED') { %>
                     <span class="badge" style="background:#d32f2f; color:white; padding:4px 10px; font-size:12px;">REJECTED</span>
+                <% } else if (transfer.status === 'PENDING_APPROVAL') { %>
+                    <span class="badge" style="background:#f59e0b; color:white; padding:4px 10px; font-size:12px;">PENDING MANAGER APPROVAL</span>
                 <% } else { %>
                     <span class="badge" style="background:var(--accent-yellow); color:#333; padding:4px 10px; font-size:12px;">PENDING RECEIPT</span>
                 <% } %>
@@ -78,6 +80,25 @@
             <td class="label">Dispatched By & Date</td>
             <td class="value"><%= transfer.dispatchedBy || 'System' %> (<%= new Date(transfer.dispatchedDate).toLocaleDateString() %>)</td>
         </tr>
+        <% if (transfer.varianceApprovedBy) { %>
+            <tr>
+                <td class="label" style="font-weight: 600; color: #1b5e20;">Variance Authorized By</td>
+                <td class="value">
+                    <strong><%= transfer.varianceApprovedBy %></strong> 
+                    <% if (transfer.varianceApprovalDate) { %>
+                        (<%= new Date(transfer.varianceApprovalDate).toLocaleDateString('en-GB') %>)
+                    <% } %>
+                </td>
+            </tr>
+        <% } %>
+        <% if (transfer.varianceReason) { %>
+            <tr>
+                <td class="label" style="font-weight: 600; color: #1b5e20;">Variance Reason</td>
+                <td class="value" style="font-style: italic;">
+                    <%= transfer.varianceReason %>
+                </td>
+            </tr>
+        <% } %>
         <% if (transfer.remarks) { %>
             <tr>
                 <td class="label" style="font-weight: 600; color: #1b5e20;">Remarks / Notes</td>
@@ -105,6 +126,11 @@
            borderColor = '#ef5350';
            iconClass = 'fa-circle-xmark';
            statusText = 'GRN Stock Rejected';
+       } else if (transfer.status === 'PENDING_APPROVAL') {
+           bgColor = '#fff8e1';
+           borderColor = '#f59e0b';
+           iconClass = 'fa-clock';
+           statusText = 'Pending Manager Approval (Variance: ' + (transfer.variance > 0 ? '+' + transfer.variance : transfer.variance) + ' Trays)';
        }
     %>
     <div style="margin: 18px 0; padding: 16px 20px; border-radius: 8px; background-color: <%= bgColor %>; border: 2px solid <%= borderColor %>;">

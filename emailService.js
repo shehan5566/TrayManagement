@@ -453,6 +453,155 @@ class EmailService {
             throw error;
         }
     }
+
+    async sendGRNVarianceAlert(data) {
+        try {
+            const {
+                transferDocNo,
+                fromLocationName,
+                toLocationName,
+                vehicleNo,
+                dispatchedQty,
+                receivedQty,
+                variance,
+                varianceReason,
+                submittedBy,
+                submittedAt,
+                reviewUrl
+            } = data;
+
+            let receiver = process.env.REPORT_RECEIVER || 'shehand@nelna.lk';
+            let companyName = 'Nelna Agri Development (Pvt) Ltd';
+            try {
+                const SystemSettingModel = mongoose.model('SystemSetting');
+                const setting = await SystemSettingModel.findById('global_config');
+                if (setting) {
+                    if (setting.emailReceiver) receiver = setting.emailReceiver;
+                    if (setting.companyName) companyName = setting.companyName;
+                }
+            } catch (e) {
+                console.error('[EMAIL] Could not read settings for GRN alert:', e.message);
+            }
+
+            const isShortfall = variance < 0;
+            const varianceSign = variance > 0 ? `+${variance}` : `${variance}`;
+            const varianceType = isShortfall ? 'SHORTFALL' : 'EXCESS';
+            const alertColor = isShortfall ? '#dc2626' : '#d97706';
+            const alertBg = isShortfall ? '#fee2e2' : '#fef3c7';
+            const alertBorder = isShortfall ? '#fca5a5' : '#fde68a';
+
+            const subject = `[GRN VARIANCE APPROVAL NEEDED] Transfer Ref: ${transferDocNo || 'N/A'} (${varianceSign} Trays)`;
+
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f1f5f9; color: #1e293b; }
+                    .email-card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-top: 5px solid #144d37; }
+                    .header { padding: 22px 25px; border-bottom: 2px solid #e2e8f0; }
+                    .header h2 { margin: 0; color: #144d37; font-size: 19px; text-transform: uppercase; letter-spacing: 0.5px; }
+                    .content { padding: 25px; }
+                    .alert-box { background: ${alertBg}; border: 1.5px solid ${alertBorder}; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+                    .alert-box .title { font-weight: 700; color: ${alertColor}; font-size: 13.5px; }
+                    .alert-box .val { font-size: 18px; font-weight: 800; color: ${alertColor}; }
+                    table.details-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+                    table.details-table td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+                    table.details-table td.lbl { width: 38%; color: #64748b; font-weight: 600; background: #f8fafc; }
+                    table.details-table td.val { width: 62%; color: #0f172a; font-weight: 500; }
+                    .btn-review { display: inline-block; background-color: #144d37; color: #ffffff !important; padding: 13px 28px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 14px; text-align: center; box-shadow: 0 2px 6px rgba(20,77,55,0.3); }
+                    .footer { background: #f8fafc; padding: 16px 25px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; line-height: 1.6; }
+                </style>
+            </head>
+            <body>
+                <div class="email-card">
+                    <div class="header">
+                        <h2>${companyName}</h2>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 3px;">Smart Tray Management System • Goods Received Note (GRN)</div>
+                    </div>
+                    <div class="content">
+                        <div style="font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #1e293b;">
+                            ⚠️ GRN Quantity Discrepancy Awaiting Manager Approval
+                        </div>
+                        <div style="font-size: 13px; color: #475569; margin-bottom: 18px; line-height: 1.5;">
+                            A stock transfer has been received at <strong>${toLocationName}</strong> with a physical count variance. Destination branch warehouse stock has <strong>not</strong> been altered pending your review and authorization.
+                        </div>
+
+                        <div class="alert-box">
+                            <div class="title">Quantity Variance (${varianceType}):</div>
+                            <div class="val">${varianceSign} Trays</div>
+                        </div>
+
+                        <table class="details-table">
+                            <tr>
+                                <td class="lbl">Transfer Ref No</td>
+                                <td class="val"><strong>${transferDocNo || 'N/A'}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Dispatched From</td>
+                                <td class="val">${fromLocationName || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Receiving Destination</td>
+                                <td class="val"><strong>${toLocationName || 'N/A'}</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Dispatched Quantity</td>
+                                <td class="val"><strong>${dispatchedQty} Trays</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Actual Received Quantity</td>
+                                <td class="val"><strong style="color: ${alertColor}; font-size: 14px;">${receivedQty} Trays</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Variance Reason / Remarks</td>
+                                <td class="val" style="color: #0f172a; font-style: italic;">${varianceReason || 'No reason provided'}</td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Vehicle Number</td>
+                                <td class="val"><code>${vehicleNo || 'N/A'}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Submitted By</td>
+                                <td class="val">${submittedBy || 'System User'} (${submittedAt})</td>
+                            </tr>
+                        </table>
+
+                        <div style="text-align: center; margin: 25px 0 10px 0;">
+                            <a href="${reviewUrl}" class="btn-review" target="_blank">
+                                🔍 Open & Review GRN in System
+                            </a>
+                        </div>
+                        <div style="text-align: center; font-size: 11px; color: #94a3b8; margin-top: 8px;">
+                            Opens the Receive Stock Approvals Queue in your browser
+                        </div>
+                    </div>
+                    <div class="footer">
+                        This is an automated operational alert from Nelna Tray Management System.<br>
+                        No. 558, Avissawella Road, Ihala Bomiriya, Kaduwela | Tel: 0112054212 | 0761391535
+                    </div>
+                </div>
+            </body>
+            </html>
+            `;
+
+            const mailOptions = {
+                from: `"Nelna Tray Management System" <${process.env.EMAIL_USER || 'nelnatray@gmail.com'}>`,
+                to: receiver,
+                subject: subject,
+                html: htmlContent
+            };
+
+            const info = await this.sendMailWithFallback(mailOptions);
+            console.log(`[EMAIL] GRN Variance alert sent successfully to ${receiver}: ${info ? info.messageId : 'OK'}`);
+            return true;
+        } catch (error) {
+            console.error('[EMAIL ERROR] Failed to send GRN variance alert:', error.message || error);
+            return false;
+        }
+    }
+    }
 }
 
 module.exports = new EmailService();

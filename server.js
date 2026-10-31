@@ -3009,17 +3009,81 @@ app.post('/transfers/dispatch', requireAuth, requirePermission('stock_transfers_
 
 app.post('/transfers/:id/grn', requireAuth, requirePermission('receive_stock_approve'), async (req, res) => {
     try {
+        const transfer = await StockTransferModel.findById(req.params.id);
+        if (!transfer) return res.status(404).json({ success: false, error: 'Transfer not found' });
+
+        const receivedQty = parseInt(req.body.receivedQty);
+        if (isNaN(receivedQty) || receivedQty < 0) {
+            return res.status(400).json({ success: false, error: 'Please enter a valid received quantity.' });
+        }
+
+        const dispatchedQty = transfer.dispatchedQty;
+        const hasVariance = (receivedQty !== dispatchedQty);
+        const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
+        const canDirectApprove = isAdmin || (req.session.user.permissions && req.session.user.permissions.includes('grn_variance_direct_approve'));
+
         const grnData = {
-            action: req.body.action, // ACCEPT or REJECT
-            receivedQty: req.body.receivedQty,
-            receivedBy: req.session.user.username
+            action: req.body.action || 'ACCEPT',
+            receivedQty: receivedQty,
+            receivedBy: req.session.user.username,
+            varianceReason: req.body.varianceReason || req.body.remarks || ''
         };
 
         // Accept backdated date only if admin or permitted
-        const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
         const canBackdate = isAdmin || (req.session.user.permissions && req.session.user.permissions.includes('backdate_records'));
         if (canBackdate && req.body.receivedDate) {
             grnData.receivedDate = parseLocalDatetime(req.body.receivedDate);
+        }
+
+        // If variance exists and user cannot directly approve, queue for manager approval
+        if (hasVariance && !canDirectApprove && grnData.action !== 'REJECT') {
+            if (!req.body.varianceReason || !req.body.varianceReason.trim()) {
+                return res.status(400).json({ success: false, error: 'A variance reason is mandatory when received quantity does not match dispatched quantity.' });
+            }
+
+            grnData.action = 'QUEUE_VARIANCE';
+            const queuedTransfer = await StockTransfer.processGRN(req.params.id, grnData);
+            const refNo = queuedTransfer.transferDocNo || req.params.id;
+            const varianceCount = receivedQty - dispatchedQty;
+            const varianceStr = varianceCount > 0 ? `+${varianceCount}` : `${varianceCount}`;
+
+            await ActivityLog.log(req.session.user.username, 'UPDATE', 'Transfer', `Submitted GRN variance for approval: ${refNo} (Dispatched: ${dispatchedQty}, Received: ${receivedQty}, Variance: ${varianceStr})`);
+
+            // Send Email alert in background
+            setImmediate(async () => {
+                try {
+                    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+                    const host = req.get('host');
+                    const reviewUrl = `${protocol}://${host}/receive-stock?highlight=${req.params.id}`;
+                    await emailService.sendGRNVarianceAlert({
+                        transferDocNo: queuedTransfer.transferDocNo,
+                        fromLocationName: queuedTransfer.fromLocationName,
+                        toLocationName: queuedTransfer.toLocationName,
+                        vehicleNo: queuedTransfer.vehicleNo,
+                        dispatchedQty: dispatchedQty,
+                        receivedQty: receivedQty,
+                        variance: varianceCount,
+                        varianceReason: req.body.varianceReason,
+                        submittedBy: req.session.user.username,
+                        submittedAt: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }),
+                        reviewUrl: reviewUrl
+                    });
+                } catch (emailErr) {
+                    console.error('[EMAIL ERROR] Failed to send GRN variance alert:', emailErr);
+                }
+            });
+
+            return res.json({
+                success: true,
+                message: `Variance of ${varianceStr} trays submitted for Manager Approval. Notification email dispatched.`,
+                queued: true,
+                redirect: '/receive-stock'
+            });
+        }
+
+        // Direct approval with variance by Admin/Authorized Manager
+        if (hasVariance && canDirectApprove && grnData.action === 'ACCEPT') {
+            grnData.varianceApprovedBy = req.session.user.username + ' (Direct Approval)';
         }
 
         const updatedTransfer = await StockTransfer.processGRN(req.params.id, grnData);
@@ -3028,6 +3092,41 @@ app.post('/transfers/:id/grn', requireAuth, requirePermission('receive_stock_app
         const refStr = refNo ? ` (Ref: ${refNo})` : '';
         await ActivityLog.log(req.session.user.username, 'UPDATE', 'Transfer', `${grnData.action} transfer ${req.params.id}${refStr}`);
         res.json({ success: true, message: 'GRN processed successfully', redirect: '/receive-stock' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/transfers/:id/approve-variance', requireAuth, requirePermission('receive_stock_approve'), async (req, res) => {
+    try {
+        const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
+        const canApprove = isAdmin || (req.session.user.permissions && (req.session.user.permissions.includes('receive_stock_approve') || req.session.user.permissions.includes('grn_variance_direct_approve')));
+        if (!canApprove) {
+            return res.status(403).json({ success: false, error: 'Permission denied to approve GRN variance' });
+        }
+
+        const approvedTransfer = await StockTransfer.approveVariance(req.params.id, req.session.user.username, req.body.remarks || '');
+        const refNo = approvedTransfer.transferDocNo || req.params.id;
+        await ActivityLog.log(req.session.user.username, 'UPDATE', 'Transfer', `Approved GRN variance for ${refNo} (Received: ${approvedTransfer.receivedQty}, Variance: ${approvedTransfer.variance})`);
+        res.json({ success: true, message: 'GRN Variance approved successfully', redirect: '/receive-stock' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/transfers/:id/reject-variance', requireAuth, requirePermission('receive_stock_approve'), async (req, res) => {
+    try {
+        const isAdmin = req.session.user.role === 'admin' || req.session.user.username === 'admin';
+        const canApprove = isAdmin || (req.session.user.permissions && (req.session.user.permissions.includes('receive_stock_approve') || req.session.user.permissions.includes('grn_variance_direct_approve')));
+        if (!canApprove) {
+            return res.status(403).json({ success: false, error: 'Permission denied to reject GRN variance' });
+        }
+
+        const reason = req.body.reason || 'Physical re-count requested by manager';
+        const rejectedTransfer = await StockTransfer.rejectVariance(req.params.id, req.session.user.username, reason);
+        const refNo = rejectedTransfer.transferDocNo || req.params.id;
+        await ActivityLog.log(req.session.user.username, 'UPDATE', 'Transfer', `Rejected GRN variance for ${refNo} (Returned for re-count): ${reason}`);
+        res.json({ success: true, message: 'GRN Variance rejected and returned for physical re-count', redirect: '/receive-stock' });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }

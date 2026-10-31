@@ -81,7 +81,12 @@ const StockTransferSchema = new mongoose.Schema({
     dispatchedQty: { type: Number, required: true },
     receivedQty: { type: Number, default: 0 },
     variance: { type: Number, default: 0 },
-    status: { type: String, enum: ['PENDING', 'ACCEPTED', 'REJECTED'], default: 'PENDING' },
+    status: { type: String, enum: ['PENDING', 'PENDING_APPROVAL', 'ACCEPTED', 'REJECTED'], default: 'PENDING' },
+    varianceReason: { type: String },
+    varianceApproved: { type: Boolean, default: false },
+    varianceApprovedBy: { type: String },
+    varianceApprovalDate: { type: Date },
+    varianceRejectionReason: { type: String },
     dispatchedBy: { type: String },
     receivedBy: { type: String },
     dispatchedDate: { type: Date, default: Date.now },
@@ -419,8 +424,9 @@ const StockTransfer = {
                 conditions.push({
                     $or: [
                         { status: 'PENDING' },
-                        { status: { $ne: 'PENDING' }, receivedDate: dateCondition },
-                        { status: { $ne: 'PENDING' }, receivedDate: { $exists: false }, dispatchedDate: dateCondition }
+                        { status: 'PENDING_APPROVAL' },
+                        { status: { $nin: ['PENDING', 'PENDING_APPROVAL'] }, receivedDate: dateCondition },
+                        { status: { $nin: ['PENDING', 'PENDING_APPROVAL'] }, receivedDate: { $exists: false }, dispatchedDate: dateCondition }
                     ]
                 });
             } else {
@@ -553,7 +559,7 @@ const StockTransfer = {
     processGRN: async (id, grnData) => {
         const transfer = await StockTransferModel.findById(id);
         if (!transfer) throw new Error('Transfer not found');
-        if (transfer.status !== 'PENDING') throw new Error('Transfer already processed');
+        if (transfer.status !== 'PENDING' && transfer.status !== 'PENDING_APPROVAL') throw new Error('Transfer already processed');
 
         const toLoc = await LocationModel.findById(transfer.toLocationId);
         if (!toLoc) throw new Error('Destination location not found');
@@ -574,13 +580,37 @@ const StockTransfer = {
             return mapDoc(transfer);
         }
 
+        if (grnData.action === 'QUEUE_VARIANCE') {
+            transfer.status = 'PENDING_APPROVAL';
+            transfer.receivedQty = parseInt(grnData.receivedQty) || 0;
+            transfer.variance = transfer.receivedQty - transfer.dispatchedQty;
+            transfer.varianceReason = grnData.varianceReason || grnData.remarks || '';
+            transfer.receivedDate = grnData.receivedDate || new Date();
+            transfer.receivedBy = grnData.receivedBy;
+            if (grnData.remarks) {
+                transfer.remarks = (transfer.remarks ? transfer.remarks + ' | ' : '') + grnData.remarks;
+            }
+            await transfer.save();
+            return mapDoc(transfer);
+        }
+
         if (grnData.action === 'ACCEPT') {
             transfer.status = 'ACCEPTED';
             transfer.receivedQty = parseInt(grnData.receivedQty) || 0;
             transfer.variance = transfer.receivedQty - transfer.dispatchedQty;
+            if (grnData.varianceReason) {
+                transfer.varianceReason = grnData.varianceReason;
+            }
+            if (grnData.varianceApprovedBy) {
+                transfer.varianceApproved = true;
+                transfer.varianceApprovedBy = grnData.varianceApprovedBy;
+                transfer.varianceApprovalDate = new Date();
+            }
             transfer.receivedDate = grnData.receivedDate || new Date();
             transfer.receivedBy = grnData.receivedBy;
-            transfer.grnNo = await generateDocNo(toLoc.code, 'GRN');
+            if (!transfer.grnNo) {
+                transfer.grnNo = await generateDocNo(toLoc.code, 'GRN');
+            }
             await transfer.save();
 
             // Add received stock to destination branch
@@ -597,13 +627,58 @@ const StockTransfer = {
             return mapDoc(transfer);
         }
     },
+    approveVariance: async (id, approvedBy, remarks = '') => {
+        const transfer = await StockTransferModel.findById(id);
+        if (!transfer) throw new Error('Transfer not found');
+        if (transfer.status !== 'PENDING_APPROVAL') throw new Error('Transfer is not awaiting approval');
+
+        const toLoc = await LocationModel.findById(transfer.toLocationId);
+        if (!toLoc) throw new Error('Destination location not found');
+
+        transfer.status = 'ACCEPTED';
+        transfer.varianceApproved = true;
+        transfer.varianceApprovedBy = approvedBy;
+        transfer.varianceApprovalDate = new Date();
+        if (remarks) {
+            transfer.remarks = (transfer.remarks ? transfer.remarks + ' | ' : '') + 'Approved: ' + remarks;
+        }
+        if (!transfer.grnNo) {
+            transfer.grnNo = await generateDocNo(toLoc.code, 'GRN');
+        }
+        await transfer.save();
+
+        // Add received stock to destination branch
+        toLoc.currentStock += transfer.receivedQty;
+        await toLoc.save();
+
+        // Handle lost trays (variance) - if variance < 0, trays were lost in transit
+        if (transfer.variance < 0) {
+            toLoc.lostTrays = (toLoc.lostTrays || 0) + Math.abs(transfer.variance);
+            await toLoc.save();
+        }
+        return mapDoc(transfer);
+    },
+    rejectVariance: async (id, rejectedBy, reason = '') => {
+        const transfer = await StockTransferModel.findById(id);
+        if (!transfer) throw new Error('Transfer not found');
+        if (transfer.status !== 'PENDING_APPROVAL') throw new Error('Transfer is not awaiting approval');
+
+        // Reset to PENDING so physical recount can happen
+        transfer.status = 'PENDING';
+        transfer.varianceRejectionReason = reason || 'Rejected by manager for physical re-count';
+        transfer.remarks = (transfer.remarks ? transfer.remarks + ' | ' : '') + 'Variance rejected by ' + rejectedBy + ': ' + (reason || 'Re-count requested');
+        transfer.receivedQty = 0;
+        transfer.variance = 0;
+        await transfer.save();
+        return mapDoc(transfer);
+    },
     delete: async (id) => {
         const transfer = await StockTransferModel.findById(id);
         if (!transfer) return false;
 
         const fromLoc = await LocationModel.findById(transfer.fromLocationId);
 
-        if (transfer.status === 'PENDING') {
+        if (transfer.status === 'PENDING' || transfer.status === 'PENDING_APPROVAL') {
             if (fromLoc) {
                 fromLoc.currentStock += transfer.dispatchedQty;
                 await fromLoc.save();

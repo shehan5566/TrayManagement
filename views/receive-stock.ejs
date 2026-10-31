@@ -54,6 +54,11 @@
                                                 </td>
                                                 <td>
                                                     <%= t.remarks || '-' %>
+                                                    <% if (t.varianceRejectionReason) { %>
+                                                        <div style="margin-top: 4px; font-size: 11px; color: #dc2626; font-weight: 600;">
+                                                            <i class="fa-solid fa-rotate-left"></i> Re-count: <%= t.varianceRejectionReason %>
+                                                        </div>
+                                                    <% } %>
                                                 </td>
                                                 <td>
                                                     <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_approve'))) { %>
@@ -75,6 +80,65 @@
                     </table>
                 </div>
             </div>
+
+            <!-- GRN Variance Approvals Queue (Pending Approval State) -->
+            <% const pendingApprovals = transfers.filter(t => (user && user.locationId && user.locationId !== 'all' ? t.toLocationId === user.locationId : true) && t.status === 'PENDING_APPROVAL'); %>
+            <% if (pendingApprovals.length > 0) { %>
+            <div class="content-box" style="margin-top: 25px; border-top: 4px solid #f59e0b; display: flex; flex-direction: column; gap: 15px;">
+                <div class="box-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="box-title" style="color: #b45309;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i> GRN Variance Approvals Queue
+                    </span>
+                    <span class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 12px; padding: 4px 10px; font-weight: 700;">
+                        <%= pendingApprovals.length %> Awaiting Manager Approval
+                    </span>
+                </div>
+                <div class="table-responsive">
+                    <table id="varianceApprovalsTable" class="compact-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transfer Ref</th>
+                                <th>From Branch</th>
+                                <th>Vehicle No</th>
+                                <th>Dispatched</th>
+                                <th>Received</th>
+                                <th>Variance</th>
+                                <th>Variance Reason</th>
+                                <th>Submitted By</th>
+                                <th style="text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% pendingApprovals.forEach(t => { %>
+                                <tr style="background: #fffdf5;">
+                                    <td><%= t.receivedDate ? new Date(t.receivedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) : new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %></td>
+                                    <td><span class="badge" style="background-color: var(--accent-yellow); color: #333;"><%= t.transferDocNo || 'N/A' %></span></td>
+                                    <td><%= t.fromLocationName %></td>
+                                    <td><%= t.vehicleNo || '-' %></td>
+                                    <td><strong><%= t.dispatchedQty %></strong></td>
+                                    <td><strong style="color: <%= t.variance < 0 ? '#dc2626' : '#d97706' %>;"><%= t.receivedQty %></strong></td>
+                                    <td>
+                                        <span class="badge" style="<%= t.variance < 0 ? 'background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;' : 'background:#fef3c7; color:#b45309; border:1px solid #fde68a;' %>">
+                                            <%= t.variance > 0 ? '+' + t.variance : t.variance %> Trays
+                                        </span>
+                                    </td>
+                                    <td style="font-style: italic; color: #334155;"><%= t.varianceReason || t.remarks || '-' %></td>
+                                    <td><%= t.receivedBy || 'System' %></td>
+                                    <td style="text-align: center;">
+                                        <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_approve') || hasPerm('grn_variance_direct_approve')))) { %>
+                                            <button class="btn btn-receipt-action" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;" onclick="openReviewVarianceModal('<%= t.id %>', '<%= t.transferDocNo %>', '<%= t.fromLocationName %>', <%= t.dispatchedQty %>, <%= t.receivedQty %>, <%= t.variance %>, '<%= (t.varianceReason || t.remarks || '').replace(/'/g, \"\\\\'\") %>', '<%= t.vehicleNo || '-' %>', '<%= t.receivedBy || 'System' %>')" title="Review & Action"><i class="fa-solid fa-clipboard-check"></i></button>
+                                        <% } else { %>
+                                            <span class="badge" style="background: #f1f5f9; color: #64748b; font-size: 11px;">Pending Manager</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <% } %>
 
             <div class="content-box" style="margin-top: 25px; display: flex; flex-direction: column; gap: 15px;">
                 <div class="box-header">
@@ -123,7 +187,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <% const history = transfers.filter(t => t.status !== 'PENDING' && (user && user.locationId && user.locationId !== 'all' ? t.toLocationId === user.locationId : true)); %>
+                            <% const history = transfers.filter(t => (t.status === 'ACCEPTED' || t.status === 'REJECTED') && (user && user.locationId && user.locationId !== 'all' ? t.toLocationId === user.locationId : true)); %>
                                 <% history.forEach(t=> { %>
                                             <tr>
                                                  <td>
@@ -148,13 +212,18 @@
                                                     <%= t.status==='REJECTED' ? '-' : t.receivedQty %>
                                                 </td>
                                                 <td>
-                                                    <% if(t.variance < 0) { %>
-                                                        <span style="color: #d32f2f; font-weight: bold;">
-                                                            <%= t.variance %>
+                                                    <% if(t.variance !== 0) { %>
+                                                        <span style="color: <%= t.variance < 0 ? '#d32f2f' : '#b45309' %>; font-weight: bold;">
+                                                            <%= t.variance > 0 ? '+' + t.variance : t.variance %>
                                                         </span>
-                                                        <% } else { %>
-                                                            0
-                                                            <% } %>
+                                                        <% if (t.varianceApprovedBy) { %>
+                                                            <div style="font-size: 10px; color: #166534; font-weight: 600;" title="Approved by <%= t.varianceApprovedBy %>">
+                                                                <i class="fa-solid fa-circle-check"></i> Approved
+                                                            </div>
+                                                        <% } %>
+                                                    <% } else { %>
+                                                        0
+                                                    <% } %>
                                                 </td>
                                                 <td>
                                                     <% if (t.status==='ACCEPTED' ) { %>
@@ -193,42 +262,118 @@
             <div id="grnModal" class="modal"
                 style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
                 <div class="modal-content"
-                    style="background-color: #fefefe; margin: 10% auto; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;">
+                    style="background-color: #fefefe; margin: 8% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 420px; box-shadow: 0 10px 35px rgba(0,0,0,0.22); border-top: 5px solid var(--primary-green-dark);">
                     <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
-                        <h3 style="margin: 0; color: var(--primary-green-dark);"><i
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 2px solid var(--accent-yellow); padding-bottom: 10px;">
+                        <h3 style="margin: 0; color: var(--primary-green-dark); font-size: 17px;"><i
                                 class="fa-solid fa-boxes-packing"></i> Process GRN</h3>
                         <span onclick="document.getElementById('grnModal').style.display='none'"
-                            style="color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                            style="color: #aaa; font-size: 26px; font-weight: bold; cursor: pointer;">&times;</span>
                     </div>
 
-                    <form id="grnForm" method="POST"
-                        onsubmit="submitAjaxForm(event, this, 'GRN Processed Successfully')">
-                        <p>Receiving from: <strong id="grnFromBranch"></strong></p>
-                        <p>Transfer Ref No: <strong id="grnTransferRef"></strong></p>
-                        <p>Dispatched Quantity: <strong id="grnExpectedQty"></strong></p>
-                        <hr style="border:0; border-top: 1px solid #eee; margin: 15px 0;">
+                    <form id="grnForm" method="POST" onsubmit="submitGRNForm(event)">
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 13px;">
+                            <p style="margin: 3px 0;">Receiving from: <strong id="grnFromBranch" style="color: #1e293b;"></strong></p>
+                            <p style="margin: 3px 0;">Transfer Ref No: <strong id="grnTransferRef" style="color: #1e293b;"></strong></p>
+                            <p style="margin: 3px 0;">Dispatched Quantity: <strong id="grnExpectedQty" style="color: #166534; font-size: 14px;"></strong> Trays</p>
+                        </div>
 
                         <div class="form-group">
-                            <label>Actual Received Quantity</label>
-                            <input type="number" id="grnReceivedQty" name="receivedQty" min="0" required>
+                            <label style="font-weight: 700; font-size: 13px; color: #1e293b;">Actual Received Quantity <span style="color: #dc2626;">*</span></label>
+                            <input type="number" id="grnReceivedQty" name="receivedQty" min="0" required oninput="checkGRNVariance()" style="width: 100%; padding: 8px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                        </div>
+
+                        <!-- Real-time Variance Alert Box -->
+                        <div id="grnVarianceAlert" style="display: none; margin: 12px 0; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; line-height: 1.4;">
+                        </div>
+
+                        <!-- Variance Reason Field (Mandatory when variance exists) -->
+                        <div id="grnVarianceReasonGroup" class="form-group" style="display: none; margin-top: 12px;">
+                            <label style="color: #b45309; font-weight: 700; font-size: 12.5px;">Variance Reason / Notes <span style="color: #dc2626;">*</span></label>
+                            <textarea id="grnVarianceReason" name="varianceReason" rows="2" style="width: 100%; padding: 8px; border: 1.5px solid #fde68a; border-radius: 6px; font-size: 12.5px; box-sizing: border-box;" placeholder="Explain reason for discrepancy (e.g. broken in transit, short loaded)..."></textarea>
                         </div>
 
                         <input type="hidden" name="action" value="ACCEPT">
 
                         <% if (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_backdate'))) { %>
                             <div class="form-group" style="margin-top: 15px;">
-                                <label>Received Date & Time</label>
-                                <input type="datetime-local" id="receivedDate" name="receivedDate" class="form-control">
-                                <small style="color: var(--text-light); font-size: 11px;">Leave empty for current
-                                    time</small>
+                                <label style="font-size: 12.5px; font-weight: 600;">Received Date & Time</label>
+                                <input type="datetime-local" id="receivedDate" name="receivedDate" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;">
+                                <small style="color: var(--text-light); font-size: 11px;">Leave empty for current time</small>
                             </div>
-                            <% } %>
+                        <% } %>
 
-                                <button type="submit" class="btn btn-primary"
-                                    style="width: 100%; margin-top: 15px;">Submit
-                                    GRN</button>
+                        <button type="submit" id="btnSubmitGRN" class="btn btn-primary"
+                            style="width: 100%; margin-top: 18px; padding: 10px; font-weight: 700; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fa-solid fa-check"></i> Submit GRN
+                        </button>
                     </form>
+                </div>
+            </div>
+
+            <!-- Review GRN Variance Modal (For Managers / Admins) -->
+            <div id="reviewVarianceModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+                <div class="modal-content" style="background-color: #fff; margin: 8% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 460px; box-shadow: 0 10px 35px rgba(0,0,0,0.22); border-top: 5px solid #f59e0b;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #fde68a; padding-bottom: 10px;">
+                        <h3 style="margin: 0; color: #b45309; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b;"></i> Review GRN Discrepancy
+                        </h3>
+                        <span onclick="closeReviewVarianceModal()" style="color: #94a3b8; font-size: 24px; font-weight: bold; cursor: pointer;">&times;</span>
+                    </div>
+
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 12.5px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: #64748b;">Transfer Ref:</span>
+                            <strong id="revTransferRef" style="color: #1e293b;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: #64748b;">From Branch:</span>
+                            <strong id="revFromBranch" style="color: #1e293b;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: #64748b;">Vehicle No:</span>
+                            <strong id="revVehicleNo" style="color: #1e293b;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: #64748b;">Submitted By:</span>
+                            <strong id="revSubmittedBy" style="color: #1e293b;"></strong>
+                        </div>
+                        <hr style="border: 0; border-top: 1px dashed #fde68a; margin: 8px 0;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; text-align: center; gap: 8px; margin-top: 8px;">
+                            <div style="background: #fff; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                <div style="font-size: 10px; color: #64748b; font-weight: 600;">DISPATCHED</div>
+                                <div id="revDispatchedQty" style="font-size: 15px; font-weight: 800; color: #1e293b;"></div>
+                            </div>
+                            <div style="background: #fff; padding: 6px; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                <div style="font-size: 10px; color: #64748b; font-weight: 600;">RECEIVED</div>
+                                <div id="revReceivedQty" style="font-size: 15px; font-weight: 800; color: #144d37;"></div>
+                            </div>
+                            <div id="revVarianceCard" style="background: #fee2e2; padding: 6px; border-radius: 6px; border: 1px solid #fca5a5;">
+                                <div style="font-size: 10px; color: #b91c1c; font-weight: 600;">VARIANCE</div>
+                                <div id="revVarianceQty" style="font-size: 15px; font-weight: 800; color: #b91c1c;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; padding: 8px; background: #fff; border-radius: 6px; border: 1px solid #e2e8f0;">
+                            <div style="font-size: 10.5px; color: #64748b; font-weight: 600; margin-bottom: 2px;">REASON GIVEN BY RECEIVER:</div>
+                            <div id="revReason" style="font-size: 12px; font-style: italic; color: #1e293b;"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155;">Manager Notes (Optional):</label>
+                        <input type="text" id="revManagerNotes" class="form-control" style="width: 100%; padding: 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 12.5px; box-sizing: border-box;" placeholder="e.g. Verified with driver / stock loss acknowledged">
+                    </div>
+
+                    <input type="hidden" id="revTransferId">
+
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="button" class="btn" onclick="submitApproveVariance()" style="flex: 1; background: #144d37; color: #fff; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 12.5px; border: none; cursor: pointer;">
+                            <i class="fa-solid fa-check"></i> Approve GRN
+                        </button>
+                        <button type="button" class="btn" onclick="submitRejectVariance()" style="flex: 1; background: #dc2626; color: #fff; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 12.5px; border: none; cursor: pointer;">
+                            <i class="fa-solid fa-rotate-left"></i> Reject & Recount
+                        </button>
+                    </div>
                 </div>
             </div>
             <% } %>
@@ -240,7 +385,258 @@
                     document.getElementById('grnTransferRef').innerText = transferDocNo || 'N/A';
                     document.getElementById('grnReceivedQty').value = expectedQty;
                     document.getElementById('grnForm').action = '/transfers/' + transferId + '/grn';
+                    
+                    // Reset variance fields
+                    const reasonGroup = document.getElementById('grnVarianceReasonGroup');
+                    const alertBox = document.getElementById('grnVarianceAlert');
+                    const reasonInput = document.getElementById('grnVarianceReason');
+                    if (reasonGroup) reasonGroup.style.display = 'none';
+                    if (alertBox) alertBox.style.display = 'none';
+                    if (reasonInput) {
+                        reasonInput.value = '';
+                        reasonInput.required = false;
+                    }
+
+                    checkGRNVariance();
                     document.getElementById('grnModal').style.display = 'block';
+                }
+
+                function checkGRNVariance() {
+                    const expectedEl = document.getElementById('grnExpectedQty');
+                    const receivedEl = document.getElementById('grnReceivedQty');
+                    const alertBox = document.getElementById('grnVarianceAlert');
+                    const reasonGroup = document.getElementById('grnVarianceReasonGroup');
+                    const reasonInput = document.getElementById('grnVarianceReason');
+                    const btn = document.getElementById('btnSubmitGRN');
+
+                    if (!expectedEl || !receivedEl || !btn) return;
+
+                    const expected = parseInt(expectedEl.innerText, 10) || 0;
+                    const receivedVal = receivedEl.value;
+                    if (receivedVal === '') {
+                        if (alertBox) alertBox.style.display = 'none';
+                        if (reasonGroup) reasonGroup.style.display = 'none';
+                        return;
+                    }
+
+                    const received = parseInt(receivedVal, 10);
+                    const diff = received - expected;
+
+                    if (diff === 0) {
+                        if (alertBox) alertBox.style.display = 'none';
+                        if (reasonGroup) reasonGroup.style.display = 'none';
+                        if (reasonInput) reasonInput.required = false;
+
+                        btn.style.background = '#144d37';
+                        btn.style.borderColor = '#144d37';
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i> Submit GRN';
+                    } else if (diff < 0) {
+                        if (alertBox) {
+                            alertBox.style.display = 'block';
+                            alertBox.style.background = '#fee2e2';
+                            alertBox.style.border = '1.5px solid #fca5a5';
+                            alertBox.style.color = '#991b1b';
+                            alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <strong>Shortfall of ${Math.abs(diff)} Trays detected!</strong> Destination branch inventory will not be credited until a Manager reviews and approves this discrepancy.`;
+                        }
+                        if (reasonGroup) reasonGroup.style.display = 'block';
+                        if (reasonInput) reasonInput.required = true;
+
+                        btn.style.background = '#b45309';
+                        btn.style.borderColor = '#b45309';
+                        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit for Manager Approval';
+                    } else {
+                        if (alertBox) {
+                            alertBox.style.display = 'block';
+                            alertBox.style.background = '#fef3c7';
+                            alertBox.style.border = '1.5px solid #fde68a';
+                            alertBox.style.color = '#92400e';
+                            alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <strong>Excess of +${diff} Trays detected!</strong> This transfer requires Manager Approval before adding extra stock to destination warehouse.`;
+                        }
+                        if (reasonGroup) reasonGroup.style.display = 'block';
+                        if (reasonInput) reasonInput.required = true;
+
+                        btn.style.background = '#b45309';
+                        btn.style.borderColor = '#b45309';
+                        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit for Manager Approval';
+                    }
+                }
+
+                async function submitGRNForm(event) {
+                    event.preventDefault();
+                    const form = document.getElementById('grnForm');
+                    const submitBtn = document.getElementById('btnSubmitGRN');
+
+                    const expectedQty = parseInt(document.getElementById('grnExpectedQty').innerText, 10);
+                    const receivedQty = parseInt(document.getElementById('grnReceivedQty').value, 10);
+                    const variance = receivedQty - expectedQty;
+
+                    if (variance !== 0) {
+                        const reason = document.getElementById('grnVarianceReason').value.trim();
+                        if (!reason) {
+                            Swal.fire('Variance Reason Required', 'Please provide an explanation / reason for the quantity discrepancy.', 'warning');
+                            document.getElementById('grnVarianceReason').focus();
+                            return;
+                        }
+                    }
+
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+                    }
+
+                    try {
+                        const formData = new FormData(form);
+                        const data = Object.fromEntries(formData.entries());
+
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            if (result.queued) {
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Submitted for Manager Approval',
+                                    html: `<b>${result.message}</b><br><br>The destination branch warehouse balance will not be updated until an authorized Manager reviews and approves this variance.`,
+                                    confirmButtonColor: '#144d37'
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'GRN Processed',
+                                    text: result.message || 'Stock successfully received and credited.',
+                                    confirmButtonColor: '#144d37',
+                                    timer: 1500
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            }
+                        } else {
+                            Swal.fire('Error', result.error || 'Failed to process GRN', 'error');
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                checkGRNVariance();
+                            }
+                        }
+                    } catch (err) {
+                        Swal.fire('Error', 'Network error occurred while submitting GRN', 'error');
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            checkGRNVariance();
+                        }
+                    }
+                }
+
+                function openReviewVarianceModal(id, refNo, fromBranch, dispQty, recQty, variance, reason, vehicleNo, submittedBy) {
+                    document.getElementById('revTransferId').value = id;
+                    document.getElementById('revTransferRef').innerText = refNo || 'N/A';
+                    document.getElementById('revFromBranch').innerText = fromBranch || 'N/A';
+                    document.getElementById('revVehicleNo').innerText = vehicleNo || 'N/A';
+                    document.getElementById('revSubmittedBy').innerText = submittedBy || 'System';
+                    document.getElementById('revDispatchedQty').innerText = dispQty;
+                    document.getElementById('revReceivedQty').innerText = recQty;
+
+                    const varCard = document.getElementById('revVarianceCard');
+                    const varQty = document.getElementById('revVarianceQty');
+                    if (variance < 0) {
+                        varCard.style.background = '#fee2e2';
+                        varCard.style.borderColor = '#fca5a5';
+                        varQty.style.color = '#b91c1c';
+                        varQty.innerText = `${variance} Trays`;
+                    } else {
+                        varCard.style.background = '#fef3c7';
+                        varCard.style.borderColor = '#fde68a';
+                        varQty.style.color = '#b45309';
+                        varQty.innerText = `+${variance} Trays`;
+                    }
+
+                    document.getElementById('revReason').innerText = reason || 'No reason provided';
+                    document.getElementById('revManagerNotes').value = '';
+                    document.getElementById('reviewVarianceModal').style.display = 'block';
+                }
+
+                function closeReviewVarianceModal() {
+                    const m = document.getElementById('reviewVarianceModal');
+                    if (m) m.style.display = 'none';
+                }
+
+                async function submitApproveVariance() {
+                    const id = document.getElementById('revTransferId').value;
+                    const notes = document.getElementById('revManagerNotes').value.trim();
+
+                    const confirmed = await Swal.fire({
+                        title: 'Approve GRN with Variance?',
+                        text: 'This will authorize the quantity discrepancy, credit received trays to destination warehouse stock, and generate the official GRN document.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#144d37',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Yes, Approve GRN'
+                    });
+
+                    if (!confirmed.isConfirmed) return;
+
+                    try {
+                        const res = await fetch('/transfers/' + id + '/approve-variance', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify({ remarks: notes })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            Swal.fire('Approved!', data.message || 'GRN Variance approved successfully.', 'success').then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.error || 'Failed to approve variance', 'error');
+                        }
+                    } catch (e) {
+                        Swal.fire('Error', 'Network error occurred', 'error');
+                    }
+                }
+
+                async function submitRejectVariance() {
+                    const id = document.getElementById('revTransferId').value;
+                    const { value: reason } = await Swal.fire({
+                        title: 'Reject & Request Physical Re-count',
+                        input: 'textarea',
+                        inputLabel: 'Rejection Reason / Instructions to Storekeeper:',
+                        inputPlaceholder: 'e.g. Please physically re-count crate layers with driver...',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc2626',
+                        confirmButtonText: 'Reject & Send Back',
+                        inputValidator: (value) => {
+                            if (!value) {
+                                return 'You must enter a reason for returning the transfer for recount!';
+                            }
+                        }
+                    });
+
+                    if (!reason) return;
+
+                    try {
+                        const res = await fetch('/transfers/' + id + '/reject-variance', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify({ reason: reason })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            Swal.fire('Returned for Re-count', data.message || 'Transfer returned to incoming queue for re-counting.', 'info').then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.error || 'Failed to reject variance', 'error');
+                        }
+                    } catch (e) {
+                        Swal.fire('Error', 'Network error occurred', 'error');
+                    }
                 }
 
                   function deleteTransfer(id) {
@@ -352,6 +748,12 @@
                         pageLength: 25,
                         order: [[0, 'desc']]
                     });
+                    if ($('#varianceApprovalsTable').length) {
+                        $('#varianceApprovalsTable').DataTable({
+                            pageLength: 25,
+                            order: [[0, 'desc']]
+                        });
+                    }
                     $('#receivedHistoryTable').DataTable({
                         pageLength: 25,
                         order: [[0, 'desc']]
