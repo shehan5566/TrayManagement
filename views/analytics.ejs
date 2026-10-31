@@ -1,6 +1,6 @@
 <%- include('partials/header') %>
 
-    <div class="content-header" style="margin-bottom: 24px;">
+    <div class="content-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
         <div>
             <h2 style="font-size: 26px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 12px;">
                 <i class="fa-solid fa-chart-pie" style="color: var(--primary-green);"></i> Advanced AI Analytics & Forecasting
@@ -8,6 +8,11 @@
             <p style="color: var(--text-light); margin: 4px 0 0 0; font-size: 14px;">
                 AI-driven return cycle analysis, loss risk detection, in-transit vehicle/route variances, and branch stock forecasts.
             </p>
+        </div>
+        <div>
+            <button type="button" class="btn" onclick="openReconciliationModal()" style="background: linear-gradient(135deg, #144d37, #1f6f43); color: #ffffff; padding: 10px 18px; font-size: 14px; font-weight: 700; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(20, 77, 55, 0.25); border: none; cursor: pointer; transition: all 0.2s;">
+                <i class="fa-solid fa-file-signature" style="color: #ffc107;"></i> Tray Reconciliation Sheet
+            </button>
         </div>
     </div>
 
@@ -529,6 +534,742 @@
                 });
             }
         });
+    </script>
+
+    <!-- Tray Reconciliation Sheet Modal -->
+    <div id="reconciliationModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
+        <div style="position: relative; background: #ffffff; width: 100%; max-width: 620px; border-radius: 20px; border-top: 5px solid #144d37; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25); padding: 24px 28px; box-sizing: border-box; max-height: 90vh; overflow-y: auto;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #144d37; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-file-signature" style="color: #ffc107;"></i> Tray Counting & Reconciliation
+                    </h3>
+                    <p style="margin: 3px 0 0 0; font-size: 12.5px; color: #64748b;">
+                        Physical audit vs. system balance sheet generator (Official PDF Format)
+                    </p>
+                </div>
+                <button type="button" onclick="closeReconciliationModal()" style="background: transparent; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; line-height: 1; padding: 0 4px;">&times;</button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="reconForm" onsubmit="generateReconciliationReport(event)">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #144d37; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-info"></i> Basic Information
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                Location / Branch <span style="color: #dc2626;">*</span>
+                            </label>
+                            <select id="reconLocation" required onchange="handleLocationChange()" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                                <% (typeof locations !== 'undefined' ? locations : []).forEach(loc => { %>
+                                    <option value="<%= loc.id %>" data-stock="<%= loc.currentStock || 0 %>" data-name="<%= loc.name %>" <%= (typeof user !== 'undefined' && user.locationId === loc.id) ? 'selected' : '' %>>
+                                        <%= loc.name %> (Stock: <%= (loc.currentStock || 0).toLocaleString() %>)
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                Responsible Person <span style="color: #dc2626;">*</span>
+                            </label>
+                            <input type="text" id="reconResponsible" list="responsibleUserList" required placeholder="Select or type name" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                            <datalist id="responsibleUserList">
+                                <% (typeof allUsers !== 'undefined' ? allUsers : []).forEach(u => { %>
+                                    <option value="<%= u.name || u.username %>" data-location="<%= u.locationId || '' %>"><%= u.username %> (<%= u.locationId || 'All' %>)</option>
+                                <% }); %>
+                            </datalist>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                Counting Date <span style="color: #dc2626;">*</span>
+                            </label>
+                            <input type="date" id="reconDate" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                Period / Month <span style="color: #dc2626;">*</span>
+                            </label>
+                            <input type="text" id="reconPeriod" required placeholder="e.g. October 2026" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #144d37; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-boxes-stacked"></i> Tray Reconciliation Data
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                Tray Type
+                            </label>
+                            <input type="text" id="reconTrayType" value="Standard Plastic Egg Trays" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                System Balance (Warehouse)
+                            </label>
+                            <input type="number" id="reconSystemBalance" readonly style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; font-weight: 700; color: #144d37; background: #e2e8f0; outline: none; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                Physical Counted Balance <span style="color: #dc2626;">*</span>
+                            </label>
+                            <input type="number" id="reconPhysicalBalance" required min="0" placeholder="Enter physical trays counted in warehouse..." oninput="calculateReconMetrics()" style="width: 100%; padding: 10px 14px; border: 2px solid #144d37; border-radius: 8px; font-size: 15px; font-weight: 700; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <!-- Live Calculated Reconciliation Status Card -->
+                    <div style="background: #ffffff; border: 1.5px dashed #cbd5e1; border-radius: 10px; padding: 12px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: center;">
+                        <div>
+                            <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Difference (Physical − System)</div>
+                            <div id="reconDiffBadge" style="font-size: 18px; font-weight: 800; color: #15803d; margin-top: 2px;">
+                                0 Trays
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Reconciliation Status</div>
+                            <span id="reconStatusBadge" style="display: inline-block; margin-top: 2px; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                                MATCHED
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 12px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                            Remarks / Observation Notes
+                        </label>
+                        <input type="text" id="reconRemarks" placeholder="e.g. Physical count verified with warehouse staff" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #144d37; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-signature"></i> Sign-off Information
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
+                                Prepared By (Logged-in User) <span style="color: #dc2626;">*</span>
+                            </label>
+                            <input type="text" id="reconPreparedBy" required value="<%= (typeof user !== 'undefined' && user) ? (user.name || user.username) : '' %>" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px; align-items: center;">
+                    <button type="button" onclick="closeReconciliationModal()" style="padding: 10px 18px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 13.5px; font-weight: 600; border-radius: 8px; cursor: pointer;">
+                        Cancel
+                    </button>
+                    <button type="submit" style="padding: 10px 22px; border: none; background: linear-gradient(135deg, #144d37, #1f6f43); color: #ffffff; font-size: 14px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(20, 77, 55, 0.25);">
+                        <i class="fa-solid fa-file-pdf" style="color: #ffc107;"></i> Generate & Download PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reconciliation Sheet Scripts -->
+    <script>
+        function openReconciliationModal() {
+            const modal = document.getElementById('reconciliationModal');
+            if (!modal) return;
+            
+            // Set default date to today in Colombo local date
+            const dateInput = document.getElementById('reconDate');
+            if (dateInput && !dateInput.value) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                dateInput.value = `${year}-${month}-${day}`;
+            }
+
+            // Set default period to current month
+            const periodInput = document.getElementById('reconPeriod');
+            if (periodInput && !periodInput.value) {
+                const now = new Date();
+                periodInput.value = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            }
+
+            handleLocationChange();
+            modal.style.display = 'flex';
+        }
+
+        function closeReconciliationModal() {
+            const modal = document.getElementById('reconciliationModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        window.openReconciliationModal = openReconciliationModal;
+        window.closeReconciliationModal = closeReconciliationModal;
+
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('reconciliationModal');
+            if (modal && e.target === modal) {
+                closeReconciliationModal();
+            }
+        });
+
+        window.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeReconciliationModal();
+            }
+        });
+
+        function handleLocationChange() {
+            const locSelect = document.getElementById('reconLocation');
+            const sysBalInput = document.getElementById('reconSystemBalance');
+            if (!locSelect || !sysBalInput) return;
+            const selectedOpt = locSelect.options[locSelect.selectedIndex];
+            const stock = selectedOpt ? parseInt(selectedOpt.getAttribute('data-stock') || '0', 10) : 0;
+            sysBalInput.value = stock;
+
+            // Pre-select responsible person if datalist has options for this location
+            const locId = locSelect.value;
+            const respInput = document.getElementById('reconResponsible');
+            const datalist = document.getElementById('responsibleUserList');
+            if (respInput && datalist && !respInput.value) {
+                const matchedOption = datalist.querySelector(`option[data-location="${locId}"]`);
+                if (matchedOption) {
+                    respInput.value = matchedOption.value;
+                }
+            }
+
+            calculateReconMetrics();
+        }
+
+        function calculateReconMetrics() {
+            const sysBalInput = document.getElementById('reconSystemBalance');
+            const physInput = document.getElementById('reconPhysicalBalance');
+            const diffBadge = document.getElementById('reconDiffBadge');
+            const statusBadge = document.getElementById('reconStatusBadge');
+            
+            if (!sysBalInput || !physInput || !diffBadge || !statusBadge) return;
+            const sysBal = parseInt(sysBalInput.value || '0', 10);
+            
+            if (physInput.value === '') {
+                diffBadge.innerText = '0 Trays';
+                diffBadge.style.color = '#15803d';
+                statusBadge.innerText = 'PENDING COUNT';
+                statusBadge.style.background = '#f1f5f9';
+                statusBadge.style.color = '#475569';
+                statusBadge.style.borderColor = '#cbd5e1';
+                return;
+            }
+
+            const physBal = parseInt(physInput.value || '0', 10);
+            const diff = physBal - sysBal;
+
+            if (diff === 0) {
+                diffBadge.innerText = '0 Trays';
+                diffBadge.style.color = '#15803d';
+                statusBadge.innerText = 'MATCHED';
+                statusBadge.style.background = '#dcfce7';
+                statusBadge.style.color = '#15803d';
+                statusBadge.style.borderColor = '#86efac';
+            } else if (diff < 0) {
+                diffBadge.innerText = `${diff.toLocaleString()} Trays`;
+                diffBadge.style.color = '#b91c1c';
+                statusBadge.innerText = `SHORTAGE (${Math.abs(diff).toLocaleString()})`;
+                statusBadge.style.background = '#fee2e2';
+                statusBadge.style.color = '#b91c1c';
+                statusBadge.style.borderColor = '#fca5a5';
+            } else {
+                diffBadge.innerText = `+${diff.toLocaleString()} Trays`;
+                diffBadge.style.color = '#b45309';
+                statusBadge.innerText = `SURPLUS (+${diff.toLocaleString()})`;
+                statusBadge.style.background = '#fef3c7';
+                statusBadge.style.color = '#b45309';
+                statusBadge.style.borderColor = '#fde68a';
+            }
+        }
+
+        function generateReconciliationReport(event) {
+            if (event) event.preventDefault();
+
+            const locSelect = document.getElementById('reconLocation');
+            const locName = locSelect && locSelect.options[locSelect.selectedIndex] ? locSelect.options[locSelect.selectedIndex].getAttribute('data-name') : 'Warehouse';
+            const responsible = document.getElementById('reconResponsible').value || '-';
+            const countingDate = document.getElementById('reconDate').value || new Date().toISOString().split('T')[0];
+            const period = document.getElementById('reconPeriod').value || '-';
+            const trayType = document.getElementById('reconTrayType').value || 'Standard Plastic Egg Trays';
+            const systemBal = parseInt(document.getElementById('reconSystemBalance').value || '0', 10);
+            const physBal = parseInt(document.getElementById('reconPhysicalBalance').value || '0', 10);
+            const diff = physBal - systemBal;
+            const remarks = document.getElementById('reconRemarks').value || '-';
+            const preparedBy = document.getElementById('reconPreparedBy').value || 'System User';
+
+            let statusLabel = 'MATCHED';
+            let statusClass = 'badge-in';
+            let statusStyle = 'background-color: #dcfce7 !important; color: #15803d !important; border-color: #86efac !important;';
+            if (diff < 0) {
+                statusLabel = `SHORTAGE (${Math.abs(diff).toLocaleString()})`;
+                statusClass = 'badge-out';
+                statusStyle = 'background-color: #fee2e2 !important; color: #b91c1c !important; border-color: #fca5a5 !important;';
+            } else if (diff > 0) {
+                statusLabel = `SURPLUS (+${diff.toLocaleString()})`;
+                statusClass = 'badge-pending';
+                statusStyle = 'background-color: #fef3c7 !important; color: #b45309 !important; border-color: #fde68a !important;';
+            }
+
+            const diffText = diff > 0 ? `+${diff.toLocaleString()} Trays` : `${diff.toLocaleString()} Trays`;
+
+            closeReconciliationModal();
+            triggerReconciliationPrintWindow({
+                locName,
+                responsible,
+                countingDate,
+                period,
+                trayType,
+                systemBal,
+                physBal,
+                diff,
+                diffText,
+                statusLabel,
+                statusStyle,
+                remarks,
+                preparedBy
+            });
+        }
+
+        function triggerReconciliationPrintWindow(data) {
+            const win = window.open('', '_blank', 'height=850,width=920');
+            if (!win) {
+                alert('Pop-up blocked! Please allow pop-ups for this website to print or download the PDF.');
+                return;
+            }
+
+            const today = new Date().toLocaleDateString('en-CA');
+            const generatedAt = new Date().toLocaleString();
+
+            win.document.write(`<!DOCTYPE html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Tray Reconciliation - ${data.locName} - ${today}</title>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                        <style>
+                            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                            
+                            @page {
+                                size: A4 portrait;
+                                margin: 12mm 12mm;
+                            }
+
+                            * {
+                                box-sizing: border-box;
+                            }
+
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                margin: 0;
+                                padding: 15px 25px; 
+                                color: #1e293b;
+                                background: #fff;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+
+                            .report-action-bar {
+                                position: sticky;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                background: #ffffff;
+                                padding: 10px 20px;
+                                border-bottom: 2px solid #e2e8f0;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+                                z-index: 9999;
+                                margin: -15px -25px 20px -25px;
+                            }
+
+                            .report-action-title {
+                                font-size: 13.5px;
+                                font-weight: 700;
+                                color: #144d37;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                            }
+
+                            .report-action-buttons {
+                                display: flex;
+                                gap: 10px;
+                                align-items: center;
+                            }
+
+                            .btn-action {
+                                border: none;
+                                padding: 7px 15px;
+                                border-radius: 6px;
+                                font-size: 12.5px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 6px;
+                                transition: all 0.15s ease;
+                            }
+
+                            .btn-pdf {
+                                background-color: #144d37;
+                                color: #ffffff;
+                            }
+                            .btn-pdf:hover {
+                                background-color: #0f3929;
+                            }
+
+                            .btn-print {
+                                background-color: #2563eb;
+                                color: #ffffff;
+                            }
+                            .btn-print:hover {
+                                background-color: #1d4ed8;
+                            }
+
+                            .btn-close {
+                                background-color: #64748b;
+                                color: #ffffff;
+                            }
+                            .btn-close:hover {
+                                background-color: #475569;
+                            }
+
+                            .letterhead {
+                                display: flex;
+                                align-items: center;
+                                border-bottom: 2.5px solid #144d37;
+                                padding-bottom: 12px;
+                                margin-bottom: 16px;
+                                page-break-after: avoid;
+                            }
+
+                            .letterhead-img {
+                                width: 70px;
+                                height: 70px;
+                                object-fit: contain;
+                                margin-right: 18px;
+                            }
+
+                            .letterhead-text h1 {
+                                margin: 0;
+                                color: #144d37;
+                                font-size: 20px;
+                                text-transform: uppercase;
+                                font-weight: 700;
+                                letter-spacing: 0.5px;
+                            }
+
+                            .letterhead-text p {
+                                margin: 3px 0 0 0;
+                                font-size: 11.5px;
+                                color: #475569;
+                            }
+
+                            .doc-title-box {
+                                background: #f0fdf4;
+                                border: 1.5px solid #144d37;
+                                border-radius: 8px;
+                                padding: 10px 16px;
+                                text-align: center;
+                                margin-bottom: 16px;
+                            }
+
+                            .doc-title {
+                                font-size: 17px;
+                                font-weight: 800;
+                                margin: 0;
+                                color: #144d37;
+                                letter-spacing: 0.8px;
+                                text-transform: uppercase;
+                            }
+
+                            .doc-meta {
+                                font-size: 11px;
+                                color: #64748b;
+                                margin-top: 4px;
+                            }
+
+                            .section-header {
+                                background-color: #144d37 !important;
+                                color: #ffffff !important;
+                                padding: 7px 12px;
+                                font-size: 12px;
+                                font-weight: 700;
+                                letter-spacing: 0.5px;
+                                text-transform: uppercase;
+                                border: 1px solid #144d37;
+                                border-top-left-radius: 6px;
+                                border-top-right-radius: 6px;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+
+                            table.recon-table { 
+                                width: 100% !important; 
+                                border-collapse: collapse !important; 
+                                font-size: 11.5px !important; 
+                                margin-bottom: 16px;
+                                border: 1px solid #cbd5e1;
+                                border-bottom-left-radius: 6px;
+                                border-bottom-right-radius: 6px;
+                                overflow: hidden;
+                            }
+
+                            table.recon-table th, table.recon-table td { 
+                                border: 1px solid #cbd5e1 !important; 
+                                padding: 7px 12px !important; 
+                                text-align: left; 
+                                vertical-align: middle;
+                            }
+
+                            table.recon-table td.label-col {
+                                width: 35%;
+                                font-weight: 600;
+                                color: #334155;
+                                background-color: #f8fafc !important;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+
+                            table.recon-table td.val-col {
+                                width: 65%;
+                                color: #0f172a;
+                            }
+
+                            .table-subnote {
+                                font-size: 10px;
+                                color: #64748b;
+                                font-style: italic;
+                                margin-top: -10px;
+                                margin-bottom: 16px;
+                            }
+
+                            .badge {
+                                display: inline-block;
+                                padding: 3px 8px;
+                                border-radius: 5px;
+                                font-size: 10.5px;
+                                font-weight: 700;
+                                border: 1px solid transparent;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+
+                            .sign-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 18px;
+                                font-size: 11px;
+                            }
+
+                            .sign-table td {
+                                padding: 10px 12px;
+                                vertical-align: middle;
+                                border: 1px solid #e2e8f0;
+                            }
+
+                            .sign-title {
+                                font-weight: 700;
+                                color: #1e293b;
+                                width: 25%;
+                            }
+
+                            .sign-line {
+                                width: 75%;
+                                color: #475569;
+                            }
+
+                            @media print {
+                                .no-print, .report-action-bar {
+                                    display: none !important;
+                                }
+                                body {
+                                    padding: 0 !important;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report-action-bar no-print">
+                            <div class="report-action-title">
+                                <i class="fa-solid fa-file-signature" style="color: #144d37;"></i> Tray Counting & Balance Reconciliation
+                            </div>
+                            <div class="report-action-buttons">
+                                <button id="btnDownloadPdf" onclick="downloadReportAsPdfFile()" class="btn-action btn-pdf">
+                                    <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+                                </button>
+                                <button onclick="window.print()" class="btn-action btn-print">
+                                    <i class="fa-solid fa-print"></i> Print
+                                </button>
+                                <button onclick="window.close()" class="btn-action btn-close">
+                                    <i class="fa-solid fa-xmark"></i> Close
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="reportPrintContent">
+                            <div class="letterhead">
+                                <img src="${window.location.origin}/images/logo.png" class="letterhead-img" alt="Nelna Logo" onerror="this.style.display='none'">
+                                <div class="letterhead-text">
+                                    <h1>Nelna Agri Development (Pvt) Ltd</h1>
+                                    <p>No. 558, Avissawella Road, Ihala Bomiriya, Kaduwela | Tel: 0112054212 | 0761391535</p>
+                                    <p>Tray Management System - Official Report</p>
+                                </div>
+                            </div>
+
+                            <div class="doc-title-box">
+                                <div class="doc-title">TRAY COUNTING & BALANCE RECONCILIATION</div>
+                                <div class="doc-meta">Generated: ${generatedAt} | Location: ${data.locName}</div>
+                            </div>
+
+                            <!-- 1. BASIC INFORMATION -->
+                            <div class="section-header">Basic Information</div>
+                            <table class="recon-table">
+                                <tr>
+                                    <td class="label-col">Location</td>
+                                    <td class="val-col"><strong>${data.locName}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col">Responsible Person</td>
+                                    <td class="val-col">${data.responsible}</td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col">Counting Date</td>
+                                    <td class="val-col"><strong>${data.countingDate}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col">Period / Month</td>
+                                    <td class="val-col">${data.period}</td>
+                                </tr>
+                            </table>
+
+                            <!-- 2. TRAY RECONCILIATION DATA -->
+                            <div class="section-header">Tray Reconciliation Data</div>
+                            <table class="recon-table">
+                                <tr>
+                                    <td class="label-col">Tray Type</td>
+                                    <td class="val-col"><strong>${data.trayType}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col">System Balance (TMS)</td>
+                                    <td class="val-col"><strong>${data.systemBal.toLocaleString()} Trays</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col">Physical Balance (Counted)</td>
+                                    <td class="val-col"><strong>${data.physBal.toLocaleString()} Trays</strong></td>
+                                </tr>
+                                <tr style="background-color: #f0fdf4 !important;">
+                                    <td class="label-col" style="font-weight: 700; color: #144d37;">Difference</td>
+                                    <td class="val-col" style="font-weight: 800; font-size: 13px; color: ${data.diff === 0 ? '#15803d' : (data.diff < 0 ? '#b91c1c' : '#b45309')};">
+                                        ${data.diffText}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col">Status</td>
+                                    <td class="val-col">
+                                        <span class="badge" style="${data.statusStyle}">
+                                            ${data.statusLabel}
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="label-col">Remarks</td>
+                                    <td class="val-col">${data.remarks}</td>
+                                </tr>
+                            </table>
+                            <div class="table-subnote">Note: Difference = Physical Warehouse Balance − Tray Management System Balance.</div>
+
+                            <!-- 3. SIGN-OFF & VERIFICATION -->
+                            <div class="section-header">Sign-Off & Verification</div>
+                            <table class="sign-table">
+                                <tr>
+                                    <td class="sign-title">Prepared By:</td>
+                                    <td class="sign-line">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span><strong>${data.preparedBy}</strong></span>
+                                            <span style="color: #94a3b8; font-size: 10px;">........................................................................... (Signature)</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="sign-title">Checked By:</td>
+                                    <td class="sign-line" style="color: #94a3b8;">
+                                        ................................................................................................................................................
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="sign-title">Verified By:</td>
+                                    <td class="sign-line" style="color: #94a3b8;">
+                                        ................................................................................................................................................
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="sign-title">Date:</td>
+                                    <td class="sign-line" style="color: #94a3b8;">
+                                        ................................................................................................................................................
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+                        <script>
+                            function downloadReportAsPdfFile() {
+                                const btn = document.getElementById('btnDownloadPdf');
+                                if (btn) {
+                                    btn.disabled = true;
+                                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...';
+                                }
+                                const element = document.getElementById('reportPrintContent');
+                                const cleanFilename = 'Tray_Reconciliation_${data.locName.replace(/[^a-zA-Z0-9_-]/g, "_")}_${today}.pdf';
+                                const opt = {
+                                    margin: [10, 10, 10, 10],
+                                    filename: cleanFilename,
+                                    image: { type: 'jpeg', quality: 0.98 },
+                                    html2canvas: { scale: 2, useCORS: true, logging: false },
+                                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                                    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                                };
+                                if (window.html2pdf) {
+                                    html2pdf().set(opt).from(element).save().then(() => {
+                                        if (btn) {
+                                            btn.disabled = false;
+                                            btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Download PDF';
+                                        }
+                                    }).catch(err => {
+                                        console.error('html2pdf error:', err);
+                                        if (btn) {
+                                            btn.disabled = false;
+                                            btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Download PDF';
+                                        }
+                                        window.print();
+                                    });
+                                } else {
+                                    window.print();
+                                }
+                            }
+                        <\/script>
+                    </body>
+                </html>`);
+            win.document.close();
+        }
     </script>
 
     <%- include('partials/footer') %>

@@ -4556,6 +4556,7 @@ app.get('/analytics', requireAuth, requirePermission('analytics_view'), async (r
         const customers = await Customer.getAll();
         const locations = await Location.getAll();
         const transactions = await Transaction.getAll();
+        const users = await User.getAll();
         const sysSetting = await SystemSetting.get();
         const depositPerTray = sysSetting && sysSetting.depositPerTray ? sysSetting.depositPerTray : 2000;
 
@@ -4777,6 +4778,9 @@ app.get('/analytics', requireAuth, requirePermission('analytics_view'), async (r
             totalOut,
             returnVelocity,
             branchStats,
+            locations: locations.map(l => ({ id: l.id, name: l.name, currentStock: l.currentStock || 0 })),
+            allUsers: users.map(u => ({ id: u.id, username: u.username, name: u.name || u.username, locationId: u.locationId })),
+            currentUser,
             lossRiskCustomers,
             highRiskList,
             medRiskList,
