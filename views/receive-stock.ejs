@@ -305,7 +305,7 @@
                             <textarea id="grnVarianceReason" name="varianceReason" rows="2" style="width: 100%; padding: 8px; border: 1.5px solid #fde68a; border-radius: 6px; font-size: 12.5px; box-sizing: border-box;" placeholder="Explain reason for discrepancy (e.g. broken in transit, short loaded)..."></textarea>
                         </div>
 
-                        <input type="hidden" name="action" value="ACCEPT">
+                        <input type="hidden" name="grnAction" id="grnActionInput" value="ACCEPT">
 
                         <% if (user.role === 'admin' || user.username === 'admin' || (typeof hasPerm === 'function' && hasPerm('receive_stock_backdate'))) { %>
                             <div class="form-group" style="margin-top: 15px;">
@@ -392,11 +392,13 @@
 
             <script>
                 function openGRNModal(transferId, expectedQty, fromBranch, transferDocNo) {
+                    const form = document.getElementById('grnForm');
                     document.getElementById('grnFromBranch').innerText = fromBranch;
                     document.getElementById('grnExpectedQty').innerText = expectedQty;
                     document.getElementById('grnTransferRef').innerText = transferDocNo || 'N/A';
                     document.getElementById('grnReceivedQty').value = expectedQty;
-                    document.getElementById('grnForm').action = '/transfers/' + transferId + '/grn';
+                    form.dataset.transferId = transferId;
+                    form.setAttribute('action', '/transfers/' + transferId + '/grn');
                     
                     // Reset variance fields
                     const reasonGroup = document.getElementById('grnVarianceReasonGroup');
@@ -499,8 +501,10 @@
                     try {
                         const formData = new FormData(form);
                         const data = Object.fromEntries(formData.entries());
+                        data.action = 'ACCEPT';
 
-                        const response = await fetch(form.action, {
+                        const targetUrl = form.getAttribute('action') || ('/transfers/' + form.dataset.transferId + '/grn');
+                        const response = await fetch(targetUrl, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                             body: JSON.stringify(data)

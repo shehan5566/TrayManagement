@@ -3023,7 +3023,7 @@ app.post('/transfers/:id/grn', requireAuth, requirePermission('receive_stock_app
         const canDirectApprove = isAdmin || (req.session.user.permissions && req.session.user.permissions.includes('grn_variance_direct_approve'));
 
         const grnData = {
-            action: req.body.action || 'ACCEPT',
+            action: req.body.action || req.body.grnAction || 'ACCEPT',
             receivedQty: receivedQty,
             receivedBy: req.session.user.username,
             varianceReason: req.body.varianceReason || req.body.remarks || ''
