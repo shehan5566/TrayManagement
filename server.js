@@ -3036,7 +3036,7 @@ app.post('/transfers/:id/grn', requireAuth, requirePermission('receive_stock_app
         }
 
         // If variance exists and user cannot directly approve, queue for manager approval
-        if (hasVariance && !canDirectApprove && grnData.action !== 'REJECT') {
+        if (hasVariance && grnData.action !== 'REJECT') {
             if (!req.body.varianceReason || !req.body.varianceReason.trim()) {
                 return res.status(400).json({ success: false, error: 'A variance reason is mandatory when received quantity does not match dispatched quantity.' });
             }
@@ -3081,10 +3081,7 @@ app.post('/transfers/:id/grn', requireAuth, requirePermission('receive_stock_app
             });
         }
 
-        // Direct approval with variance by Admin/Authorized Manager
-        if (hasVariance && canDirectApprove && grnData.action === 'ACCEPT') {
-            grnData.varianceApprovedBy = req.session.user.username + ' (Direct Approval)';
-        }
+        
 
         const updatedTransfer = await StockTransfer.processGRN(req.params.id, grnData);
         let refNo = updatedTransfer.transferDocNo ? updatedTransfer.transferDocNo : '';
