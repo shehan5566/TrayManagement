@@ -127,7 +127,19 @@
                                     <td><%= t.receivedBy || 'System' %></td>
                                     <td style="text-align: center;">
                                         <% if (user.username === 'admin' || user.role === 'admin' || (typeof hasPerm === 'function' && (hasPerm('receive_stock_approve') || hasPerm('grn_variance_direct_approve')))) { %>
-                                            <button class="btn btn-receipt-action" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;" onclick="openReviewVarianceModal('<%= t.id %>', '<%= t.transferDocNo %>', '<%= t.fromLocationName %>', <%= t.dispatchedQty %>, <%= t.receivedQty %>, <%= t.variance %>, '<%= (t.varianceReason || t.remarks || '').replace(/'/g, \"\\\\'\") %>', '<%= t.vehicleNo || '-' %>', '<%= t.receivedBy || 'System' %>')" title="Review & Action"><i class="fa-solid fa-clipboard-check"></i></button>
+                                            <button class="btn btn-receipt-action" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;"
+                                                data-id="<%= t.id %>"
+                                                data-ref="<%= t.transferDocNo || 'N/A' %>"
+                                                data-from="<%= t.fromLocationName %>"
+                                                data-disp="<%= t.dispatchedQty %>"
+                                                data-rec="<%= t.receivedQty %>"
+                                                data-var="<%= t.variance %>"
+                                                data-reason="<%= t.varianceReason || t.remarks || '' %>"
+                                                data-veh="<%= t.vehicleNo || '-' %>"
+                                                data-by="<%= t.receivedBy || 'System' %>"
+                                                onclick="openReviewModalFromBtn(this)" title="Review & Action">
+                                                <i class="fa-solid fa-clipboard-check"></i>
+                                            </button>
                                         <% } else { %>
                                             <span class="badge" style="background: #f1f5f9; color: #64748b; font-size: 11px;">Pending Manager</span>
                                         <% } %>
@@ -531,6 +543,21 @@
                             checkGRNVariance();
                         }
                     }
+                }
+
+                function openReviewModalFromBtn(btn) {
+                    const ds = btn.dataset;
+                    openReviewVarianceModal(
+                        ds.id,
+                        ds.ref,
+                        ds.from,
+                        parseInt(ds.disp, 10),
+                        parseInt(ds.rec, 10),
+                        parseInt(ds.var, 10),
+                        ds.reason,
+                        ds.veh,
+                        ds.by
+                    );
                 }
 
                 function openReviewVarianceModal(id, refNo, fromBranch, dispQty, recQty, variance, reason, vehicleNo, submittedBy) {
