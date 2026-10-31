@@ -555,7 +555,7 @@ class EmailService {
                                 <td class="val"><strong style="color: ${alertColor}; font-size: 14px;">${receivedQty} Trays</strong></td>
                             </tr>
                             <tr>
-                                <td class="lbl">Variance Reason / Remarks</td>
+                                <td class="lbl">Variance Reason</td>
                                 <td class="val" style="color: #0f172a; font-style: italic;">${varianceReason || 'No reason provided'}</td>
                             </tr>
                             <tr>
