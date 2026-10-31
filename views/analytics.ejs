@@ -567,7 +567,7 @@
                             <select id="reconLocation" required onchange="handleLocationChange()" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                                 <% (typeof locations !== 'undefined' ? locations : []).forEach(loc => { %>
                                     <option value="<%= loc.id %>" data-stock="<%= loc.currentStock || 0 %>" data-name="<%= loc.name %>" <%= (typeof user !== 'undefined' && user.locationId === loc.id) ? 'selected' : '' %>>
-                                        <%= loc.name %> (Stock: <%= (loc.currentStock || 0).toLocaleString() %>)
+                                        <%= loc.name %>
                                     </option>
                                 <% }); %>
                             </select>
@@ -609,7 +609,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                         <div>
                             <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
-                                Tray Type
+                                Tray
                             </label>
                             <input type="text" id="reconTrayType" value="Standard Plastic Egg Trays" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                         </div>
@@ -1164,7 +1164,7 @@
                             <div class="section-header">Tray Reconciliation Data</div>
                             <table class="recon-table">
                                 <tr>
-                                    <td class="label-col">Tray Type</td>
+                                    <td class="label-col">Tray</td>
                                     <td class="val-col"><strong>${data.trayType}</strong></td>
                                 </tr>
                                 <tr>
