@@ -562,7 +562,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div>
                             <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
-                                Location / Branch <span style="color: #dc2626;">*</span>
+                                Warehouse <span style="color: #dc2626;">*</span>
                             </label>
                             <select id="reconLocation" required onchange="handleLocationChange()" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                                 <% (typeof locations !== 'undefined' ? locations : []).forEach(loc => { %>
@@ -597,7 +597,7 @@
 
                         <div>
                             <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
-                                Period / Month <span style="color: #dc2626;">*</span>
+                                Month <span style="color: #dc2626;">*</span>
                             </label>
                             <input type="text" id="reconPeriod" required placeholder="e.g. October 2026" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                         </div>
@@ -614,7 +614,7 @@
                             <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
                                 Tray
                             </label>
-                            <input type="text" id="reconTrayType" value="Standard Plastic Egg Trays" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                            <input type="text" id="reconTrayType" value="Standard Trays" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                         </div>
 
                         <div>
@@ -637,7 +637,7 @@
                     <!-- Live Calculated Reconciliation Status Card -->
                     <div style="background: #ffffff; border: 1.5px dashed #cbd5e1; border-radius: 10px; padding: 12px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: center;">
                         <div>
-                            <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Difference (Physical − System)</div>
+                            <div style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Difference</div>
                             <div id="reconDiffBadge" style="font-size: 18px; font-weight: 800; color: #15803d; margin-top: 2px;">
                                 0 Trays
                             </div>
@@ -665,7 +665,7 @@
                     <div style="display: grid; grid-template-columns: 1fr; gap: 12px;">
                         <div>
                             <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
-                                Prepared By (Logged-in User) <span style="color: #dc2626;">*</span>
+                                Prepared By <span style="color: #dc2626;">*</span>
                             </label>
                             <input type="text" id="reconPreparedBy" required value="<%= (typeof user !== 'undefined' && user) ? (user.name || user.username) : '' %>" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                         </div>
@@ -676,8 +676,10 @@
                     <button type="button" onclick="closeReconciliationModal()" style="padding: 10px 18px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; font-size: 13.5px; font-weight: 600; border-radius: 8px; cursor: pointer;">
                         Cancel
                     </button>
-                    <button type="submit" style="padding: 10px 22px; border: none; background: linear-gradient(135deg, #144d37, #1f6f43); color: #ffffff; font-size: 14px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(20, 77, 55, 0.25);">
+                    <button type="button" id="btnGenerateRecon" onclick="generateReconciliationReport(event)" style="padding: 10px 22px; border: none; background: linear-gradient(135deg, #144d37, #1f6f43); color: #ffffff; font-size: 14px; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(20, 77, 55, 0.25);">
                         <i class="fa-solid fa-file-pdf" style="color: #ffc107;"></i> Generate & Download PDF
+                    </button>
+                </div>
                     </button>
                 </div>
             </form>
@@ -707,6 +709,15 @@
                 periodInput.value = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
             }
 
+            // Always ensure button is ready and not loading
+            const form = document.getElementById('reconForm');
+            if (form) form.classList.remove('is-submitting');
+            const btn = document.getElementById('btnGenerateRecon');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-file-pdf" style="color: #ffc107;"></i> Generate & Download PDF';
+            }
+
             handleLocationChange();
             modal.style.display = 'flex';
         }
@@ -718,13 +729,6 @@
 
         window.openReconciliationModal = openReconciliationModal;
         window.closeReconciliationModal = closeReconciliationModal;
-
-        window.addEventListener('click', function(e) {
-            const modal = document.getElementById('reconciliationModal');
-            if (modal && e.target === modal) {
-                closeReconciliationModal();
-            }
-        });
 
         window.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -790,16 +794,26 @@
         }
 
         function generateReconciliationReport(event) {
-            if (event) event.preventDefault();
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const form = document.getElementById('reconForm');
+            if (form && !form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
 
             const locSelect = document.getElementById('reconLocation');
             const locName = locSelect && locSelect.options[locSelect.selectedIndex] ? locSelect.options[locSelect.selectedIndex].getAttribute('data-name') : 'Warehouse';
             const responsible = document.getElementById('reconResponsible').value || '-';
             const countingDate = document.getElementById('reconDate').value || new Date().toISOString().split('T')[0];
             const period = document.getElementById('reconPeriod').value || '-';
-            const trayType = document.getElementById('reconTrayType').value || 'Standard Plastic Egg Trays';
+            const trayType = document.getElementById('reconTrayType').value || 'Standard Trays';
             const systemBal = parseInt(document.getElementById('reconSystemBalance').value || '0', 10);
-            const physBal = parseInt(document.getElementById('reconPhysicalBalance').value || '0', 10);
+            const physInput = document.getElementById('reconPhysicalBalance');
+            const physBal = physInput && physInput.value !== '' ? parseInt(physInput.value, 10) : 0;
             const diff = physBal - systemBal;
             const remarks = document.getElementById('reconRemarks').value || '-';
             const preparedBy = document.getElementById('reconPreparedBy').value || 'System User';
@@ -818,6 +832,14 @@
             }
 
             const diffText = diff > 0 ? `+${diff.toLocaleString()} Trays` : `${diff.toLocaleString()} Trays`;
+
+            // Reset button and form state so it never gets stuck in Processing...
+            if (form) form.classList.remove('is-submitting');
+            const btn = document.getElementById('btnGenerateRecon');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-file-pdf" style="color: #ffc107;"></i> Generate & Download PDF';
+            }
 
             closeReconciliationModal();
             triggerReconciliationPrintWindow({
@@ -1128,14 +1150,14 @@
 
                             <div class="doc-title-box">
                                 <div class="doc-title">TRAY COUNTING & BALANCE RECONCILIATION</div>
-                                <div class="doc-meta">Generated: ${generatedAt} | Location: ${data.locName}</div>
+                                <div class="doc-meta">Generated: ${generatedAt} | Warehouse: ${data.locName}</div>
                             </div>
 
                             <!-- 1. BASIC INFORMATION -->
                             <div class="section-header">Basic Information</div>
                             <table class="recon-table">
                                 <tr>
-                                    <td class="label-col">Location</td>
+                                    <td class="label-col">Warehouse</td>
                                     <td class="val-col"><strong>${data.locName}</strong></td>
                                 </tr>
                                 <tr>
@@ -1147,7 +1169,7 @@
                                     <td class="val-col"><strong>${data.countingDate}</strong></td>
                                 </tr>
                                 <tr>
-                                    <td class="label-col">Period / Month</td>
+                                    <td class="label-col">Month</td>
                                     <td class="val-col">${data.period}</td>
                                 </tr>
                             </table>
