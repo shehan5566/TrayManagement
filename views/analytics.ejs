@@ -546,7 +546,7 @@
                         <i class="fa-solid fa-file-signature" style="color: #ffc107;"></i> Tray Counting & Reconciliation
                     </h3>
                     <p style="margin: 3px 0 0 0; font-size: 12.5px; color: #64748b;">
-                        Physical audit vs. system balance sheet generator (Official PDF Format)
+                        Physical audit vs. system balance sheet
                     </p>
                 </div>
                 <button type="button" onclick="closeReconciliationModal()" style="background: transparent; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; line-height: 1; padding: 0 4px;">&times;</button>
@@ -652,7 +652,7 @@
 
                     <div style="margin-top: 12px;">
                         <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
-                            Remarks / Observation Notes
+                            Remarks
                         </label>
                         <input type="text" id="reconRemarks" placeholder="e.g. Physical count verified with warehouse staff" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
                     </div>
@@ -688,13 +688,26 @@
 
     <!-- Reconciliation Sheet Scripts -->
     <script>
-        function openReconciliationModal() {
-            const modal = document.getElementById('reconciliationModal');
-            if (!modal) return;
-            
-            // Set default date to today in Colombo local date
+        function resetReconciliationForm() {
+            // Reset Physical Balance
+            const physInput = document.getElementById('reconPhysicalBalance');
+            if (physInput) physInput.value = '';
+
+            // Reset Responsible Person dropdown to initial empty option
+            const respSelect = document.getElementById('reconResponsible');
+            if (respSelect) respSelect.selectedIndex = 0;
+
+            // Reset Remarks
+            const remarksInput = document.getElementById('reconRemarks');
+            if (remarksInput) remarksInput.value = '';
+
+            // Reset Tray Type to Standard Trays
+            const trayInput = document.getElementById('reconTrayType');
+            if (trayInput) trayInput.value = 'Standard Trays';
+
+            // Reset Date to current today date
             const dateInput = document.getElementById('reconDate');
-            if (dateInput && !dateInput.value) {
+            if (dateInput) {
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -702,14 +715,25 @@
                 dateInput.value = `${year}-${month}-${day}`;
             }
 
-            // Set default period to current month
+            // Reset Period / Month to current month
             const periodInput = document.getElementById('reconPeriod');
-            if (periodInput && !periodInput.value) {
+            if (periodInput) {
                 const now = new Date();
                 periodInput.value = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
             }
 
-            // Always ensure button is ready and not loading
+            // Reset Warehouse dropdown to default selected (or first)
+            const locSelect = document.getElementById('reconLocation');
+            if (locSelect) {
+                const userLocOption = locSelect.querySelector('option[selected]');
+                if (userLocOption) {
+                    locSelect.value = userLocOption.value;
+                } else if (locSelect.options.length > 0) {
+                    locSelect.selectedIndex = 0;
+                }
+            }
+
+            // Reset button and form submission state
             const form = document.getElementById('reconForm');
             if (form) form.classList.remove('is-submitting');
             const btn = document.getElementById('btnGenerateRecon');
@@ -719,12 +743,20 @@
             }
 
             handleLocationChange();
+        }
+
+        function openReconciliationModal() {
+            const modal = document.getElementById('reconciliationModal');
+            if (!modal) return;
+            
+            resetReconciliationForm();
             modal.style.display = 'flex';
         }
 
         function closeReconciliationModal() {
             const modal = document.getElementById('reconciliationModal');
             if (modal) modal.style.display = 'none';
+            resetReconciliationForm();
         }
 
         window.openReconciliationModal = openReconciliationModal;
