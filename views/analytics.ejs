@@ -577,12 +577,15 @@
                             <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 4px;">
                                 Responsible Person <span style="color: #dc2626;">*</span>
                             </label>
-                            <input type="text" id="reconResponsible" list="responsibleUserList" required placeholder="Select or type name" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
-                            <datalist id="responsibleUserList">
-                                <% (typeof allUsers !== 'undefined' ? allUsers : []).forEach(u => { %>
-                                    <option value="<%= u.name || u.username %>" data-location="<%= u.locationId || '' %>"><%= u.username %> (<%= u.locationId || 'All' %>)</option>
-                                <% }); %>
-                            </datalist>
+                            <select id="reconResponsible" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; color: #1e293b; background: #fff; outline: none; box-sizing: border-box;">
+                                <option value="">Select Responsible Person</option>
+                                <option value="Sajeewa">Sajeewa</option>
+                                <option value="Nalinda">Nalinda</option>
+                                <option value="Dilshan">Dilshan</option>
+                                <option value="Devinda">Devinda</option>
+                                <option value="Madusanka">Madusanka</option>
+                                <option value="Tharaka">Tharaka</option>
+                            </select>
                         </div>
 
                         <div>
@@ -736,17 +739,6 @@
             const selectedOpt = locSelect.options[locSelect.selectedIndex];
             const stock = selectedOpt ? parseInt(selectedOpt.getAttribute('data-stock') || '0', 10) : 0;
             sysBalInput.value = stock;
-
-            // Pre-select responsible person if datalist has options for this location
-            const locId = locSelect.value;
-            const respInput = document.getElementById('reconResponsible');
-            const datalist = document.getElementById('responsibleUserList');
-            if (respInput && datalist && !respInput.value) {
-                const matchedOption = datalist.querySelector(`option[data-location="${locId}"]`);
-                if (matchedOption) {
-                    respInput.value = matchedOption.value;
-                }
-            }
 
             calculateReconMetrics();
         }
