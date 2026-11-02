@@ -390,6 +390,16 @@
         data.enableOutstandingBlock = form.enableOutstandingBlock ? form.enableOutstandingBlock.checked : false;
         data.approvers = approversList;
 
+        // Collect location approval emails into an object
+        const locationApprovalEmails = {};
+        form.querySelectorAll('[name^="locationApprovalEmails["]').forEach(input => {
+            const match = input.name.match(/locationApprovalEmails\[(.*?)\]/);
+            if (match && match[1]) {
+                locationApprovalEmails[match[1]] = input.value.trim();
+            }
+        });
+        data.locationApprovalEmails = locationApprovalEmails;
+
         try {
             const res = await fetch('/settings/update', {
                 method: 'POST',
@@ -402,8 +412,10 @@
                     icon: 'success',
                     title: 'Settings Updated!',
                     text: result.message,
-                    timer: 1500,
+                    timer: 1400,
                     showConfirmButton: false
+                }).then(() => {
+                    window.location.reload();
                 });
             } else {
                 Swal.fire('Error', result.error || 'Failed to update settings', 'error');

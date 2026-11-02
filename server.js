@@ -4601,8 +4601,18 @@ app.post('/settings/update', requireAuth, requirePermission('admin_settings'), a
 
         const updatedSettings = await SystemSetting.update(updateData);
 
+        const locEmails = {};
         if (req.body.locationApprovalEmails && typeof req.body.locationApprovalEmails === 'object') {
-            for (const [locId, emailStr] of Object.entries(req.body.locationApprovalEmails)) {
+            Object.assign(locEmails, req.body.locationApprovalEmails);
+        }
+        for (const [key, val] of Object.entries(req.body)) {
+            const match = key.match(/^locationApprovalEmails\[(.*?)\]$/);
+            if (match && match[1]) {
+                locEmails[match[1]] = val;
+            }
+        }
+        if (Object.keys(locEmails).length > 0) {
+            for (const [locId, emailStr] of Object.entries(locEmails)) {
                 await Location.update(locId, { approvalEmail: (emailStr || '').trim() });
             }
         }
