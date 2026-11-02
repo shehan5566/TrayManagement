@@ -60,6 +60,7 @@ const LocationSchema = new mongoose.Schema({
     name: { type: String, required: true },
     code: { type: String },
     address: { type: String },
+    approvalEmail: { type: String, default: '' },
     currentStock: { type: Number, default: 0 },
     lostTrays: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
@@ -365,6 +366,7 @@ const Location = {
             name: locationData.name,
             code: locationData.code,
             address: locationData.address,
+            approvalEmail: (locationData.approvalEmail || '').trim(),
             currentStock: parseInt(locationData.currentStock) || 0
         });
         await newLocation.save();
@@ -376,6 +378,7 @@ const Location = {
             if (locationData.name) loc.name = locationData.name;
             if (locationData.code) loc.code = locationData.code;
             if (locationData.address) loc.address = locationData.address;
+            if (locationData.approvalEmail !== undefined) loc.approvalEmail = (locationData.approvalEmail || '').trim();
             if (locationData.currentStock !== undefined) loc.currentStock = parseInt(locationData.currentStock) || 0;
             await loc.save();
             return mapDoc(loc);

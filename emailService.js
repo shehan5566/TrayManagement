@@ -458,7 +458,9 @@ class EmailService {
         try {
             const {
                 transferDocNo,
+                fromLocationId,
                 fromLocationName,
+                toLocationId,
                 toLocationName,
                 vehicleNo,
                 dispatchedQty,
@@ -470,17 +472,65 @@ class EmailService {
                 reviewUrl
             } = data;
 
-            let receiver = process.env.REPORT_RECEIVER || 'shehand@nelna.lk';
+            let globalReceiver = process.env.REPORT_RECEIVER || 'shehand@nelna.lk';
             let companyName = 'Nelna Agri Development (Pvt) Ltd';
             try {
                 const SystemSettingModel = mongoose.model('SystemSetting');
                 const setting = await SystemSettingModel.findById('global_config');
                 if (setting) {
-                    if (setting.emailReceiver) receiver = setting.emailReceiver;
+                    if (setting.emailReceiver) globalReceiver = setting.emailReceiver;
                     if (setting.companyName) companyName = setting.companyName;
                 }
             } catch (e) {
                 console.error('[EMAIL] Could not read settings for GRN alert:', e.message);
+            }
+
+            // Look up location-specific approval emails
+            let toEmails = [];
+            let ccEmails = [];
+            let targetBranchName = toLocationName || 'Destination Branch';
+            let recipientNote = '';
+
+            try {
+                const LocationModel = mongoose.model('Location');
+                if (toLocationId) {
+                    const toLoc = await LocationModel.findById(toLocationId).lean();
+                    if (toLoc) {
+                        targetBranchName = toLoc.name || targetBranchName;
+                        if (toLoc.approvalEmail && toLoc.approvalEmail.trim()) {
+                            toEmails = toLoc.approvalEmail
+                                .split(',')
+                                .map(e => e.trim())
+                                .filter(e => e && e.includes('@'));
+                        }
+                    }
+                }
+
+                if (fromLocationId) {
+                    const fromLoc = await LocationModel.findById(fromLocationId).lean();
+                    if (fromLoc && fromLoc.approvalEmail && fromLoc.approvalEmail.trim()) {
+                        const fromEmails = fromLoc.approvalEmail
+                            .split(',')
+                            .map(e => e.trim())
+                            .filter(e => e && e.includes('@'));
+                        fromEmails.forEach(e => {
+                            if (!toEmails.includes(e) && !ccEmails.includes(e)) {
+                                ccEmails.push(e);
+                            }
+                        });
+                    }
+                }
+            } catch (locErr) {
+                console.error('[EMAIL] Error resolving branch approval emails:', locErr.message);
+            }
+
+            // If no location-specific email configured for destination branch, fallback to global receiver
+            if (toEmails.length === 0) {
+                toEmails = globalReceiver.split(',').map(e => e.trim()).filter(e => e && e.includes('@'));
+                if (toEmails.length === 0) toEmails = ['shehand@nelna.lk'];
+                recipientNote = `Sent to Global System Alert Receiver (no custom email set for ${targetBranchName})`;
+            } else {
+                recipientNote = `Sent to designated approval recipient(s) for <strong>${targetBranchName}</strong> (${toEmails.join(', ')})`;
             }
 
             const isShortfall = variance < 0;
@@ -490,7 +540,7 @@ class EmailService {
             const alertBg = isShortfall ? '#fee2e2' : '#fef3c7';
             const alertBorder = isShortfall ? '#fca5a5' : '#fde68a';
 
-            const subject = `[GRN VARIANCE APPROVAL NEEDED] Transfer Ref: ${transferDocNo || 'N/A'} (${varianceSign} Trays)`;
+            const subject = `[GRN VARIANCE APPROVAL NEEDED] [${targetBranchName}] Transfer: ${transferDocNo || 'N/A'} (${varianceSign} Trays)`;
 
             const htmlContent = `
             <!DOCTYPE html>
@@ -502,10 +552,11 @@ class EmailService {
                     .email-card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-top: 5px solid #144d37; }
                     .header { padding: 22px 25px; border-bottom: 2px solid #e2e8f0; }
                     .header h2 { margin: 0; color: #144d37; font-size: 19px; text-transform: uppercase; letter-spacing: 0.5px; }
+                    .branch-badge { display: inline-block; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-top: 6px; border: 1px solid #bbf7d0; font-family: monospace; }
                     .content { padding: 25px; }
-                    .alert-box { background: ${alertBg}; border: 1.5px solid ${alertBorder}; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-                    .alert-box .title { font-weight: 700; color: ${alertColor}; font-size: 13.5px; }
-                    .alert-box .val { font-size: 18px; font-weight: 800; color: ${alertColor}; }
+                    .alert-box { background: \${alertBg}; border: 1.5px solid \${alertBorder}; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+                    .alert-box .title { font-weight: 700; color: \${alertColor}; font-size: 13.5px; }
+                    .alert-box .val { font-size: 18px; font-weight: 800; color: \${alertColor}; }
                     table.details-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
                     table.details-table td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
                     table.details-table td.lbl { width: 38%; color: #64748b; font-weight: 600; background: #f8fafc; }
@@ -517,59 +568,63 @@ class EmailService {
             <body>
                 <div class="email-card">
                     <div class="header">
-                        <h2>${companyName}</h2>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 3px;">Smart Tray Management System • Goods Received Note (GRN)</div>
+                        <h2>\${companyName}</h2>
+                        <div class="branch-badge">📍 Target Branch: \${targetBranchName}</div>
                     </div>
                     <div class="content">
                         <div style="font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #1e293b;">
                             ⚠️ GRN Quantity Discrepancy Awaiting Manager Approval
                         </div>
                         <div style="font-size: 13px; color: #475569; margin-bottom: 18px; line-height: 1.5;">
-                            A stock transfer has been received at <strong>${toLocationName}</strong> with a physical count variance. Destination branch warehouse stock has <strong>not</strong> been altered pending your review and authorization.
+                            A stock transfer received at <strong>\${targetBranchName}</strong> has a physical count variance. Destination branch warehouse stock has <strong>not</strong> been altered pending your review and authorization.
                         </div>
 
                         <div class="alert-box">
-                            <div class="title">Quantity Variance (${varianceType}):</div>
-                            <div class="val">${varianceSign} Trays</div>
+                            <div class="title">Quantity Variance (\${varianceType}):</div>
+                            <div class="val">\${varianceSign} Trays</div>
                         </div>
 
                         <table class="details-table">
                             <tr>
                                 <td class="lbl">Transfer Ref No</td>
-                                <td class="val"><strong>${transferDocNo || 'N/A'}</strong></td>
+                                <td class="val"><strong>\${transferDocNo || 'N/A'}</strong></td>
                             </tr>
                             <tr>
                                 <td class="lbl">Dispatched From</td>
-                                <td class="val">${fromLocationName || 'N/A'}</td>
+                                <td class="val">\${fromLocationName || 'N/A'}</td>
                             </tr>
                             <tr>
                                 <td class="lbl">Receiving Destination</td>
-                                <td class="val"><strong>${toLocationName || 'N/A'}</strong></td>
+                                <td class="val"><strong>\${targetBranchName}</strong></td>
                             </tr>
                             <tr>
                                 <td class="lbl">Dispatched Quantity</td>
-                                <td class="val"><strong>${dispatchedQty} Trays</strong></td>
+                                <td class="val"><strong>\${dispatchedQty} Trays</strong></td>
                             </tr>
                             <tr>
                                 <td class="lbl">Actual Received Quantity</td>
-                                <td class="val"><strong style="color: ${alertColor}; font-size: 14px;">${receivedQty} Trays</strong></td>
+                                <td class="val"><strong style="color: \${alertColor}; font-size: 14px;">\${receivedQty} Trays</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="lbl">Variance</td>
+                                <td class="val"><strong style="color: \${alertColor};">\${varianceSign} Trays (\${varianceType})</strong></td>
                             </tr>
                             <tr>
                                 <td class="lbl">Variance Reason</td>
-                                <td class="val" style="color: #0f172a; font-style: italic;">${varianceReason || 'No reason provided'}</td>
+                                <td class="val" style="color: #b45309; font-weight: 600; font-style: italic;">\${varianceReason || 'No reason provided'}</td>
                             </tr>
                             <tr>
                                 <td class="lbl">Vehicle Number</td>
-                                <td class="val"><code>${vehicleNo || 'N/A'}</code></td>
+                                <td class="val"><code>\${vehicleNo || 'N/A'}</code></td>
                             </tr>
                             <tr>
                                 <td class="lbl">Submitted By</td>
-                                <td class="val">${submittedBy || 'System User'} (${submittedAt})</td>
+                                <td class="val">\${submittedBy || 'System User'} (\${submittedAt})</td>
                             </tr>
                         </table>
 
                         <div style="text-align: center; margin: 25px 0 10px 0;">
-                            <a href="${reviewUrl}" class="btn-review" target="_blank">
+                            <a href="\${reviewUrl}" class="btn-review" target="_blank">
                                 🔍 Open & Review GRN in System
                             </a>
                         </div>
@@ -578,6 +633,7 @@ class EmailService {
                         </div>
                     </div>
                     <div class="footer">
+                        <div style="margin-bottom: 4px;">\${recipientNote}</div>
                         This is an automated operational alert from Nelna Tray Management System.<br>
                         No. 558, Avissawella Road, Ihala Bomiriya, Kaduwela | Tel: 0112054212 | 0761391535
                     </div>
@@ -588,13 +644,16 @@ class EmailService {
 
             const mailOptions = {
                 from: `"Nelna Tray Management System" <${process.env.EMAIL_USER || 'nelnatray@gmail.com'}>`,
-                to: receiver,
+                to: toEmails.join(', '),
+                ...(ccEmails.length > 0 ? { cc: ccEmails.join(', ') } : {}),
                 subject: subject,
                 html: htmlContent
             };
 
+            const ccLog = mailOptions.cc ? ` (CC: [${mailOptions.cc}])` : '';
+            console.log(`[EMAIL] Dispatching GRN variance alert to [${mailOptions.to}]${ccLog} for branch [${targetBranchName}]...`);
             const info = await this.sendMailWithFallback(mailOptions);
-            console.log(`[EMAIL] GRN Variance alert sent successfully to ${receiver}: ${info ? info.messageId : 'OK'}`);
+            console.log(`[EMAIL] GRN Variance alert sent successfully! MessageId: ${info ? info.messageId : 'OK'}`);
             return true;
         } catch (error) {
             console.error('[EMAIL ERROR] Failed to send GRN variance alert:', error.message || error);

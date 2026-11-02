@@ -1033,7 +1033,8 @@ app.get('/users', requireAuth, requireAdmin, async (req, res) => {
         const users = await User.getAll();
         const locations = await Location.getAll();
         const roles = await Role.getAll();
-        res.render('users', { users, locations, roles, error: null });
+        const settings = await SystemSetting.get();
+        res.render('users', { users, locations, roles, settings, error: null });
     } catch (err) {
         res.status(500).send('Error retrieving users');
     }
@@ -3057,7 +3058,9 @@ app.post('/transfers/:id/grn', requireAuth, requirePermission('receive_stock_app
                     const reviewUrl = `${protocol}://${host}/receive-stock?highlight=${req.params.id}`;
                     await emailService.sendGRNVarianceAlert({
                         transferDocNo: queuedTransfer.transferDocNo,
+                        fromLocationId: queuedTransfer.fromLocationId,
                         fromLocationName: queuedTransfer.fromLocationName,
+                        toLocationId: queuedTransfer.toLocationId,
                         toLocationName: queuedTransfer.toLocationName,
                         vehicleNo: queuedTransfer.vehicleNo,
                         dispatchedQty: dispatchedQty,
@@ -4576,8 +4579,10 @@ app.get('/settings', requireAuth, requirePermission('admin_settings'), async (re
     try {
         const currentUser = req.session.user;
         const settings = await SystemSetting.get();
+        const locations = await Location.getAll();
         res.render('settings', {
             settings,
+            locations,
             activePath: '/settings'
         });
     } catch (err) {
@@ -4595,6 +4600,12 @@ app.post('/settings/update', requireAuth, requirePermission('admin_settings'), a
         };
 
         const updatedSettings = await SystemSetting.update(updateData);
+
+        if (req.body.locationApprovalEmails && typeof req.body.locationApprovalEmails === 'object') {
+            for (const [locId, emailStr] of Object.entries(req.body.locationApprovalEmails)) {
+                await Location.update(locId, { approvalEmail: (emailStr || '').trim() });
+            }
+        }
 
         await ActivityLog.create({
             user: currentUser.username,

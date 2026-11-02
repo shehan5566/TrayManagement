@@ -171,6 +171,13 @@
                                 <label for="loc_address">Address</label>
                                 <input type="text" id="loc_address" name="address" placeholder="Branch Address">
                             </div>
+                            <div class="form-group">
+                                <label for="loc_approvalEmail">Approval Notification Email(s)</label>
+                                <input type="text" id="loc_approvalEmail" name="approvalEmail" placeholder="e.g. manager.wandama@nelna.lk">
+                                <small style="color: var(--text-light); font-size: 11.5px; display: block; margin-top: 3px;">
+                                    Email(s) to receive variance approval requests for this branch (comma-separated).
+                                </small>
+                            </div>
                             <div style="display: flex; gap: 10px; margin-top: 10px;">
                                 <button type="submit" class="btn btn-primary" style="flex-grow: 1;">
                                     <i class="fa-solid fa-plus"></i> Create Branch
@@ -192,6 +199,7 @@
                                     <th>Name</th>
                                     <th>Code</th>
                                     <th>Address</th>
+                                    <th>Approval Email</th>
                                     <th>Stock</th>
                                     <th style="text-align: center; width: 100px;">Actions</th>
                                 </tr>
@@ -202,9 +210,20 @@
                                         <td><strong><%= loc.name %></strong>
                                             <% if(loc.id === 'main') { %> <span class="badge" style="background:#1b5e20; color:white; padding:4px 8px; font-size:11px;">Main</span> <% } %>
                                         </td>
-                                        <td><%= loc.code || '-' %></td>
+                                        <td><code><%= loc.code || '-' %></code></td>
                                         <td><%= loc.address || '-' %></td>
-                                        <td><%= loc.currentStock %></td>
+                                        <td>
+                                            <% if (loc.approvalEmail && loc.approvalEmail.trim()) { %>
+                                                <span style="font-size: 11.5px; color: #0369a1; background: #e0f2fe; padding: 2px 7px; border-radius: 4px; border: 1px solid #bae6fd; display: inline-flex; align-items: center; gap: 4px; font-family: monospace;">
+                                                    <i class="fa-solid fa-envelope"></i> <%= loc.approvalEmail %>
+                                                </span>
+                                            <% } else { %>
+                                                <span style="color: #94a3b8; font-size: 11.5px; font-style: italic;">
+                                                    Global Default (<%= (typeof settings !== 'undefined' && settings && settings.emailReceiver) ? settings.emailReceiver : 'shehand@nelna.lk' %>)
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td><strong><%= loc.currentStock %></strong></td>
                                         <td>
                                             <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                                                 <button onclick="openLocationEditModal(this.getAttribute('data-loc'))" data-loc="<%= JSON.stringify(loc) %>" class="btn btn-action-edit" title="Edit Branch">
@@ -314,6 +333,13 @@
                             <input type="text" id="editLocAddress" name="address">
                         </div>
                         <div class="form-group">
+                            <label>Approval Notification Email(s)</label>
+                            <input type="text" id="editLocApprovalEmail" name="approvalEmail" placeholder="e.g. manager.wandama@nelna.lk, area.mgr@nelna.lk">
+                            <small style="color: var(--text-light); font-size: 11.5px; display: block; margin-top: 3px;">
+                                Comma-separated if multiple. Leave empty to use global default.
+                            </small>
+                        </div>
+                        <div class="form-group">
                             <label>Current Tray Stock</label>
                             <input type="number" id="editLocStock" name="currentStock" min="0" required>
                         </div>
@@ -373,6 +399,7 @@
                     document.getElementById('editLocName').value = loc.name;
                     document.getElementById('editLocCode').value = loc.code || '';
                     document.getElementById('editLocAddress').value = loc.address || '';
+                    document.getElementById('editLocApprovalEmail').value = loc.approvalEmail || '';
                     document.getElementById('editLocStock').value = loc.currentStock || 0;
                     document.getElementById('editLocationForm').action = '/locations/' + loc.id + '/update';
                     document.getElementById('editLocationModal').style.display = 'block';
