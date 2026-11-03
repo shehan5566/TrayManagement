@@ -3573,28 +3573,21 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         // Option 1: Base Opening Balance (Forward calculation from configured opening balance, e.g. 4459 for Kaduwela)
         const mongoose = require('mongoose');
         const MonthlyBalModel = mongoose.models.MonthlyBalance || mongoose.model('MonthlyBalance');
+        const rawAllIn = warehouseEvents.reduce((s, e) => s + (e.inQty || 0), 0);
+        const rawAllOut = warehouseEvents.reduce((s, e) => s + (e.outQty || 0), 0);
         let baseOpeningBalance = 0;
         if (userLoc && userLoc !== 'all') {
             const mb = await MonthlyBalModel.findOne({ locationId: userLoc }).sort({ month: 1 }).lean().catch(() => null);
             if (mb && mb.openingBalance !== undefined) {
                 baseOpeningBalance = mb.openingBalance;
             } else {
-                baseOpeningBalance = locWarehouseStock;
+                baseOpeningBalance = locWarehouseStock - rawAllIn + rawAllOut;
             }
         } else {
-            for (const loc of locations) {
-                const mb = await MonthlyBalModel.findOne({ locationId: String(loc._id) }).sort({ month: 1 }).lean().catch(() => null);
-                if (mb && mb.openingBalance !== undefined) {
-                    baseOpeningBalance += mb.openingBalance;
-                } else {
-                    baseOpeningBalance += (loc.currentStock || 0);
-                }
-            }
+            baseOpeningBalance = totalAllWarehousesOpening;
         }
 
         // Reconcile any audit discrepancy between base opening balance + movements and current warehouse stock
-        const rawAllIn = warehouseEvents.reduce((s, e) => s + (e.inQty || 0), 0);
-        const rawAllOut = warehouseEvents.reduce((s, e) => s + (e.outQty || 0), 0);
         const stockDiscrepancy = locWarehouseStock - (baseOpeningBalance + rawAllIn - rawAllOut);
 
         if (stockDiscrepancy !== 0) {
@@ -3682,7 +3675,8 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             activeTab
         });
     } catch (err) {
-        res.status(500).send('Error rendering reports');
+        console.error('Error rendering reports:', err);
+        res.status(500).send('Error rendering reports: ' + err.message);
     }
 });
 
