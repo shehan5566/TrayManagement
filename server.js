@@ -3408,7 +3408,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
                     locationName: ctxLocName,
                     refNo: refNo,
                     label: 'Customer Return: ' + (ctx.customerName || 'Customer') + ' (' + ctx.count + ' Trays Handover)',
-                    inQty: 0,
+                    inQty: ctx.count,
                     outQty: 0
                 });
             } else if (ctx.type === 'OUT' && ctx.count > 0) {
@@ -3419,7 +3419,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
                     refNo: refNo,
                     label: 'Customer Issue: ' + (ctx.customerName || 'Customer') + ' (' + ctx.count + ' Trays Handover)',
                     inQty: 0,
-                    outQty: 0
+                    outQty: ctx.count
                 });
             }
         });
@@ -3587,9 +3587,25 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             return true;
         });
 
+        // Determine Opening Balance for the filtered period
+        let periodOpeningBalance = 0;
+        if (warehouseBalanceList.length > 0) {
+            periodOpeningBalance = warehouseBalanceList[0].openingBalance;
+        } else {
+            const priorEvents = warehouseEvents.filter(ev => {
+                const evDateStr = getEventDateStr(ev.date);
+                return startStr && evDateStr && evDateStr < startStr;
+            });
+            if (priorEvents.length > 0) {
+                periodOpeningBalance = priorEvents[priorEvents.length - 1].closingBalance;
+            } else {
+                periodOpeningBalance = warehouseEvents.length > 0 ? warehouseEvents[0].openingBalance : locWarehouseStock;
+            }
+        }
+
         const totalInMovement = warehouseBalanceList.reduce((s, e) => s + (e.inQty || 0), 0);
         const totalOutMovement = warehouseBalanceList.reduce((s, e) => s + (e.outQty || 0), 0);
-        const warehouseFinalClosingBalance = locWarehouseStock;
+        const warehouseFinalClosingBalance = periodOpeningBalance + totalInMovement - totalOutMovement;
 
         let activeTab = req.query.activeTab || 'balanceReport';
 
@@ -3604,7 +3620,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             warehouseSummaryList,
             warehouseBalanceList,
             warehouseOpeningDate: startStr || today,
-            warehouseOpeningBalance: warehouseStartingStock,
+            warehouseOpeningBalance: periodOpeningBalance,
             warehouseStartingStock,
             customerInitialTotal,
             totalInMovement,
