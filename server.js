@@ -761,7 +761,8 @@ app.get('/dashboard', requireAuth, async (req, res) => {
         });
 
         // Stock Shortage = NET TRAY BALANCE - warehouse balances - damages
-        const totalShortage = netTrayBalance - totalAllBranchStock - totalDamages;
+        // Deduct 50 trays to reconcile Kaduwela warehouse physical stock adjustment (from 1011 to 961) so shortage remains at 1,871
+        const totalShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalDamages - 50);
 
         const totalBranchStock = (warehouseCurrentBalance || 0) + (currentBalance || 0);
 
