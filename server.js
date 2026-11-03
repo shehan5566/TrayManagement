@@ -3329,8 +3329,9 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         // Build Warehouse Tray Balance Ledger (Date, Ref. No, IN, OUT, Closing Balance)
         // Closing Balance = Current Tray Balance (Warehouse) + Current Tray Balance (Customer)
         let locWarehouseStock = 0;
+        let currentLocDoc = null;
         if (userLoc && userLoc !== 'all') {
-            const currentLocDoc = locations.find(l => String(l._id) === String(userLoc));
+            currentLocDoc = locations.find(l => String(l._id) === String(userLoc));
             locWarehouseStock = currentLocDoc ? (currentLocDoc.currentStock || 0) : 0;
         } else {
             locWarehouseStock = locations.reduce((s, l) => s + (l.currentStock || 0), 0);
