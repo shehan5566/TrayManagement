@@ -3570,13 +3570,35 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
 
         const customerInitialTotal = (customerBalances || []).reduce((s, c) => s + (c.initialBalance || 0), 0);
 
-        // Reconcile running balances ending exactly at locWarehouseStock (Current Tray Balance Warehouse)
-        let running = locWarehouseStock;
-        for (let i = warehouseEvents.length - 1; i >= 0; i--) {
+        // Option 1: Base Opening Balance (Forward calculation from configured opening balance, e.g. 4459 for Kaduwela)
+        const mongoose = require('mongoose');
+        const MonthlyBalModel = mongoose.models.MonthlyBalance || mongoose.model('MonthlyBalance');
+        let baseOpeningBalance = 0;
+        if (userLoc && userLoc !== 'all') {
+            const mb = await MonthlyBalModel.findOne({ locationId: userLoc }).sort({ month: 1 }).lean().catch(() => null);
+            if (mb && mb.openingBalance !== undefined) {
+                baseOpeningBalance = mb.openingBalance;
+            } else {
+                baseOpeningBalance = locWarehouseStock;
+            }
+        } else {
+            for (const loc of locations) {
+                const mb = await MonthlyBalModel.findOne({ locationId: String(loc._id) }).sort({ month: 1 }).lean().catch(() => null);
+                if (mb && mb.openingBalance !== undefined) {
+                    baseOpeningBalance += mb.openingBalance;
+                } else {
+                    baseOpeningBalance += (loc.currentStock || 0);
+                }
+            }
+        }
+
+        // Forward running balance calculation starting from baseOpeningBalance
+        let running = baseOpeningBalance;
+        for (let i = 0; i < warehouseEvents.length; i++) {
             const ev = warehouseEvents[i];
-            ev.closingBalance = running;
-            ev.openingBalance = running - (ev.inQty || 0) + (ev.outQty || 0);
-            running = ev.openingBalance;
+            ev.openingBalance = running;
+            ev.closingBalance = running + (ev.inQty || 0) - (ev.outQty || 0);
+            running = ev.closingBalance;
         }
 
         let warehouseBalanceList = warehouseEvents.filter(ev => {
@@ -3599,7 +3621,7 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             if (priorEvents.length > 0) {
                 periodOpeningBalance = priorEvents[priorEvents.length - 1].closingBalance;
             } else {
-                periodOpeningBalance = warehouseEvents.length > 0 ? warehouseEvents[0].openingBalance : locWarehouseStock;
+                periodOpeningBalance = warehouseEvents.length > 0 ? warehouseEvents[0].openingBalance : baseOpeningBalance;
             }
         }
 

@@ -2149,6 +2149,7 @@ module.exports = {
     Role,
     ActivityLog,
     MonthlyBalance,
+    MonthlyBalanceModel,
     SystemTools,
     DamageLog,
     SystemSetting,
