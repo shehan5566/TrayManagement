@@ -760,9 +760,30 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             totalDamages += (d.qty || 0);
         });
 
-        // Stock Shortage = NET TRAY BALANCE - warehouse balances - damages
-        // Deduct 50 trays to reconcile Kaduwela warehouse physical stock adjustment (from 1011 to 961) so shortage remains at 1,871
-        const totalShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalDamages - 50);
+        // Calculate Total Transit Variance (Shortages from accepted stock transfers & completed lorry trips)
+        const [allAcceptedTransfers, allCompletedTrips] = await Promise.all([
+            StockTransferModel.find({ isDeleted: false, status: 'ACCEPTED' }).lean(),
+            LorryTripModel.find({ isDeleted: false, status: 'COMPLETED' }).lean()
+        ]);
+
+        let totalTransitVariance = 0;
+        allAcceptedTransfers.forEach(t => {
+            const dispatched = t.dispatchedQty || 0;
+            const received = (t.receivedQty !== undefined && t.receivedQty !== null) ? t.receivedQty : dispatched;
+            const diff = dispatched - received;
+            if (diff > 0) totalTransitVariance += diff;
+        });
+
+        allCompletedTrips.forEach(t => {
+            if (typeof t.variance === 'number' && t.variance < 0) {
+                totalTransitVariance += Math.abs(t.variance);
+            }
+        });
+
+        // Stock Shortage: Base shortage (1,871) + Transit Variances (e.g. Wandama 15 trays -> 1,886)
+        // Any future transfer or trip variance is automatically added (+) to total shortage
+        const baseShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalDamages - 50);
+        const totalShortage = baseShortage + totalTransitVariance;
 
         const totalBranchStock = (warehouseCurrentBalance || 0) + (currentBalance || 0);
 
@@ -794,7 +815,9 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             totalShortage,
             totalDamages,
             netTrayBalance,
-            totalAllBranchStock
+            totalAllBranchStock,
+            totalTransitVariance,
+            baseShortage
         });
     } catch (err) {
         console.error('Error rendering dashboard:', err);
