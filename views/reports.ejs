@@ -404,14 +404,14 @@
             <div class="table-responsive">
                 <table id="branchStocksTable" class="display" style="width:100%; border-collapse: collapse;">
                     <thead>
-                        <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
-                            <th style="width: 45px; text-align: center; font-weight: 700;">#</th>
-                            <th style="min-width: 220px; text-align: left; font-weight: 700;">Branch / Location Name</th>
-                            <th style="text-align: right; min-width: 150px; font-weight: 700;">Warehouse Stock<br><span style="font-size: 11px; font-weight: normal; color: #64748b;">(Physical Count)</span></th>
-                            <th style="text-align: right; min-width: 150px; font-weight: 700;">Customer Balance<br><span style="font-size: 11px; font-weight: normal; color: #64748b;">(Field Outstanding)</span></th>
-                            <th style="text-align: right; min-width: 160px; font-weight: 700;">Total Branch Stock<br><span style="font-size: 11px; font-weight: normal; color: #64748b;">(Warehouse + Cust)</span></th>
-                            <th style="text-align: right; width: 100px; font-weight: 700;">% Share</th>
-                            <th style="text-align: center; width: 110px; font-weight: 700;">Status</th>
+                        <tr style="background-color: #f1f5f9; border-bottom: 2px solid #94a3b8;">
+                            <th class="text-center" style="width: 50px; text-align: center !important;">#</th>
+                            <th class="text-left" style="min-width: 220px; text-align: left !important;">Branch / Location Name</th>
+                            <th class="text-right" style="min-width: 150px; text-align: right !important;">Warehouse Stock</th>
+                            <th class="text-right" style="min-width: 150px; text-align: right !important;">Customer Balance</th>
+                            <th class="text-right" style="min-width: 160px; text-align: right !important;">Total Branch Stock</th>
+                            <th class="text-right" style="width: 110px; text-align: right !important;">% Share</th>
+                            <th class="text-center" style="width: 110px; text-align: center !important;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1454,6 +1454,42 @@
         .tab-content table thead th:last-child,
         #breakupModal table thead th:last-child {
             border-right: none !important;
+        }
+
+        /* Branch Stocks & Master Reconciliation Table - High Legibility Styles */
+        #branchStocksTable thead th {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            padding: 12px 14px !important;
+            line-height: 1.4 !important;
+            border-bottom: 2px solid #94a3b8 !important;
+            border-right: 1px solid #cbd5e1 !important;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
+        }
+        #branchStocksTable thead th.text-right {
+            text-align: right !important;
+        }
+        #branchStocksTable thead th.text-center {
+            text-align: center !important;
+        }
+        #branchStocksTable thead th.text-left {
+            text-align: left !important;
+        }
+        #branchStocksTable thead th:last-child {
+            border-right: none !important;
+        }
+        #branchStocksTable tbody td {
+            padding: 10px 14px !important;
+            font-size: 13px !important;
+            vertical-align: middle !important;
+        }
+        #branchStocksTable tfoot td {
+            padding: 12px 14px !important;
+            font-size: 13.5px !important;
+            vertical-align: middle !important;
         }
 
         /* DataTables Sorting Icon adjustments */
