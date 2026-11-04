@@ -167,8 +167,8 @@
 
     <!-- Tabs Navigation -->
     <div class="tabs">
-        <button class="tab-btn active" data-tab="balanceReport"><i class="fa-solid fa-scale-balanced"></i> Customer Tray
-            Balances</button>
+        <button class="tab-btn active" data-tab="balanceReport"><i class="fa-solid fa-scale-balanced"></i> Customer Tray Balances</button>
+        <button class="tab-btn" data-tab="branchStocksReport"><i class="fa-solid fa-sitemap"></i> Branch Stocks & Reconciliation</button>
         <button class="tab-btn" data-tab="outReport"><i class="fa-solid fa-arrow-up-from-bracket"></i> Tray Issues
             (Out)</button>
         <button class="tab-btn" data-tab="inReport"><i class="fa-solid fa-arrow-down-to-bracket"></i> Tray Returns
@@ -334,6 +334,193 @@
                             </tr>
                         </tfoot>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Branch Stocks & Reconciliation Report Tab -->
+    <div id="branchStocksReport" class="tab-content">
+        <div class="content-box">
+            <div class="box-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span class="box-title"><i class="fa-solid fa-sitemap"></i> Company Branch Stocks & Master Tray Balance Reconciliation</span>
+                <div>
+                    <button
+                        onclick="printReportToPDF('Company Branch Stocks & Master Tray Balance Reconciliation (' + (document.getElementById('startDate').value || 'All Time') + ' to ' + (document.getElementById('endDate').value || 'Today') + ')', 'branchStocksTable')"
+                        class="btn btn-sm"
+                        style="background-color: #27ae60; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                    <button onclick="exportTableToExcel('branchStocksTable', 'Company_Branch_Stocks_Reconciliation')" class="btn btn-sm"
+                        style="background-color: #1b5e20; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-file-excel"></i> Export Sheet to Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top KPI Cards Summary Matching Dashboard Badges -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 22px;">
+                <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-top: 4px solid #14532d; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-cubes" style="color: #14532d;"></i> NET TRAY BALANCE
+                    </div>
+                    <div style="font-size: 22px; font-weight: 800; color: #14532d;"><%= Number(typeof netTrayBalance !== 'undefined' ? netTrayBalance : 0).toLocaleString() %> <span style="font-size: 12px; font-weight: 600; color: #64748b;">Trays</span></div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Company Asset Baseline</div>
+                </div>
+
+                <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-top: 4px solid #0f172a; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-sitemap" style="color: #0f172a;"></i> TOTAL BRANCH STOCKS
+                    </div>
+                    <div style="font-size: 22px; font-weight: 800; color: #0f172a;"><%= Number(typeof totalAllBranchStock !== 'undefined' ? totalAllBranchStock : 0).toLocaleString() %> <span style="font-size: 12px; font-weight: 600; color: #64748b;">Trays</span></div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">WH: <%= Number(typeof totalWarehouseStock !== 'undefined' ? totalWarehouseStock : 0).toLocaleString() %> | Cust: <%= Number(typeof totalCustomerStock !== 'undefined' ? totalCustomerStock : 0).toLocaleString() %></div>
+                </div>
+
+                <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-top: 4px solid #d97706; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                    <div style="font-size: 11px; font-weight: 700; color: #b45309; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-boxes-stacked" style="color: #d97706;"></i> DAMAGES
+                    </div>
+                    <div style="font-size: 22px; font-weight: 800; color: #d97706;"><%= Number(typeof totalAllDamages !== 'undefined' ? totalAllDamages : 0).toLocaleString() %> <span style="font-size: 12px; font-weight: 600; color: #b45309;">Trays</span></div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Logged & Verified Damages</div>
+                </div>
+
+                <div style="background: #ffffff; border: 1.5px solid #cbd5e1; border-top: 4px solid #2563eb; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                    <div style="font-size: 11px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-truck-fast" style="color: #2563eb;"></i> TRANSIT VARIANCE
+                    </div>
+                    <div style="font-size: 22px; font-weight: 800; color: #2563eb;"><%= Number(typeof totalTransitVariance !== 'undefined' ? totalTransitVariance : 0).toLocaleString() %> <span style="font-size: 12px; font-weight: 600; color: #1d4ed8;">Trays</span></div>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Transfers In-Transit Loss</div>
+                </div>
+
+                <div style="background: #fff5f5; border: 1.5px solid #fecaca; border-top: 4px solid #dc2626; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                    <div style="font-size: 11px; font-weight: 700; color: #b91c1c; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626;"></i> STOCK SHORTAGE
+                    </div>
+                    <div style="font-size: 22px; font-weight: 800; color: #dc2626;"><%= Number(typeof totalShortage !== 'undefined' ? totalShortage : 0).toLocaleString() %> <span style="font-size: 12px; font-weight: 600; color: #b91c1c;">Trays</span></div>
+                    <div style="font-size: 11px; color: #b91c1c; margin-top: 2px;">Dashboard Net Shortage</div>
+                </div>
+            </div>
+
+            <!-- Master Branch Stocks Breakdown Table -->
+            <div class="table-responsive">
+                <table id="branchStocksTable" class="display" style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1;">
+                            <th style="width: 45px; text-align: center; font-weight: 700;">#</th>
+                            <th style="min-width: 220px; text-align: left; font-weight: 700;">Branch / Location Name</th>
+                            <th style="text-align: right; min-width: 150px; font-weight: 700;">Warehouse Stock<br><span style="font-size: 11px; font-weight: normal; color: #64748b;">(Physical Count)</span></th>
+                            <th style="text-align: right; min-width: 150px; font-weight: 700;">Customer Balance<br><span style="font-size: 11px; font-weight: normal; color: #64748b;">(Field Outstanding)</span></th>
+                            <th style="text-align: right; min-width: 160px; font-weight: 700;">Total Branch Stock<br><span style="font-size: 11px; font-weight: normal; color: #64748b;">(Warehouse + Cust)</span></th>
+                            <th style="text-align: right; width: 100px; font-weight: 700;">% Share</th>
+                            <th style="text-align: center; width: 110px; font-weight: 700;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (typeof allLocationsForStock !== 'undefined' && allLocationsForStock.length > 0) { %>
+                            <% allLocationsForStock.forEach((loc, idx) => { %>
+                                <% const sharePct = (typeof netTrayBalance !== 'undefined' && netTrayBalance > 0) ? ((loc.totalBranchStock / netTrayBalance) * 100).toFixed(1) : '0.0'; %>
+                                <tr style="border-bottom: 1px solid #e2e8f0; background-color: #ffffff;">
+                                    <td style="text-align: center; color: #64748b;"><%= idx + 1 %></td>
+                                    <td style="font-weight: 600; color: #0f172a;">
+                                        <%= loc.name %>
+                                        <% if (loc.id === 'main' || (loc.name && loc.name.toUpperCase().includes('HEAD'))) { %>
+                                            <span style="background: #dcfce7; color: #166534; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 700;">HEAD OFFICE</span>
+                                        <% } %>
+                                    </td>
+                                    <td style="text-align: right; color: #000; font-weight: 500;"><%= Number(loc.warehouseStock || 0).toLocaleString() %></td>
+                                    <td style="text-align: right; color: #000; font-weight: 500;"><%= Number(loc.customerBalance || 0).toLocaleString() %></td>
+                                    <td style="text-align: right; color: #14532d; font-weight: 700; font-size: 13.5px;"><%= Number(loc.totalBranchStock || 0).toLocaleString() %></td>
+                                    <td style="text-align: right; color: #475569; font-weight: 500;"><%= sharePct %>%</td>
+                                    <td style="text-align: center;">
+                                        <span style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: 600;">ACTIVE</span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">No branch records available</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                    <tfoot style="background-color: #f8fafc; border-top: 2px solid #cbd5e1;">
+                        <tr>
+                            <td colspan="2" style="text-align: right; font-weight: 700; font-size: 13px; color: #000;">TOTAL ACCOUNTED BRANCH STOCK:</td>
+                            <td style="text-align: right; font-weight: 700; font-size: 13.5px; color: #000;"><%= Number(typeof totalWarehouseStock !== 'undefined' ? totalWarehouseStock : 0).toLocaleString() %></td>
+                            <td style="text-align: right; font-weight: 700; font-size: 13.5px; color: #000;"><%= Number(typeof totalCustomerStock !== 'undefined' ? totalCustomerStock : 0).toLocaleString() %></td>
+                            <td style="text-align: right; font-weight: 800; font-size: 14.5px; color: #14532d;"><%= Number(typeof totalAllBranchStock !== 'undefined' ? totalAllBranchStock : 0).toLocaleString() %></td>
+                            <td style="text-align: right; font-weight: 700; font-size: 13px; color: #475569;"><%= (typeof netTrayBalance !== 'undefined' && netTrayBalance > 0 && typeof totalAllBranchStock !== 'undefined') ? ((totalAllBranchStock / netTrayBalance) * 100).toFixed(1) : '0.0' %>%</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Audit Reconciliation Summary Table -->
+            <div style="margin-top: 28px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14.5px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-scale-balanced" style="color: #14532d;"></i> Company Tray Reconciliation Summary (Dashboard Audit Verification)
+                </h4>
+                <div class="table-responsive">
+                    <table style="width: 100%; max-width: 850px; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #fff;">
+                        <thead>
+                            <tr style="background: #f1f5f9; color: #334155; border-bottom: 1.5px solid #cbd5e1;">
+                                <th style="padding: 10px 14px; text-align: left; font-weight: 700;">Reconciliation Component</th>
+                                <th style="padding: 10px 14px; text-align: right; width: 160px; font-weight: 700;">Quantity (Trays)</th>
+                                <th style="padding: 10px 14px; text-align: left; width: 280px; font-weight: 700;">Audit / Calculation Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 9px 14px; color: #0f172a; font-weight: 600;">
+                                    <i class="fa-solid fa-warehouse" style="color: #15803d; margin-right: 6px;"></i> All Branches Warehouse Physical Stock
+                                </td>
+                                <td style="padding: 9px 14px; text-align: right; font-weight: 600; color: #000;"><%= Number(typeof totalWarehouseStock !== 'undefined' ? totalWarehouseStock : 0).toLocaleString() %></td>
+                                <td style="padding: 9px 14px; color: #64748b; font-size: 12px;">Physically stored across all branch warehouses</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 9px 14px; color: #0f172a; font-weight: 600;">
+                                    <i class="fa-solid fa-users" style="color: #0284c7; margin-right: 6px;"></i> Customer Outstanding Balances
+                                </td>
+                                <td style="padding: 9px 14px; text-align: right; font-weight: 600; color: #000;"><%= Number(typeof totalCustomerStock !== 'undefined' ? totalCustomerStock : 0).toLocaleString() %></td>
+                                <td style="padding: 9px 14px; color: #64748b; font-size: 12px;">Total trays currently held by customers in field</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0; background: #f8fafc;">
+                                <td style="padding: 9px 14px; color: #14532d; font-weight: 700;">
+                                    <i class="fa-solid fa-sitemap" style="color: #14532d; margin-right: 6px;"></i> Subtotal: Total Accounted Branch Stock
+                                </td>
+                                <td style="padding: 9px 14px; text-align: right; font-weight: 700; color: #14532d;"><%= Number(typeof totalAllBranchStock !== 'undefined' ? totalAllBranchStock : 0).toLocaleString() %></td>
+                                <td style="padding: 9px 14px; color: #15803d; font-size: 12px; font-weight: 600;">All branches active inventory</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 9px 14px; color: #0f172a; font-weight: 600;">
+                                    <i class="fa-solid fa-boxes-stacked" style="color: #d97706; margin-right: 6px;"></i> Recorded Damages & Lost Trays
+                                </td>
+                                <td style="padding: 9px 14px; text-align: right; font-weight: 600; color: #d97706;"><%= Number(typeof totalAllDamages !== 'undefined' ? totalAllDamages : 0).toLocaleString() %></td>
+                                <td style="padding: 9px 14px; color: #64748b; font-size: 12px;">Logged and verified damaged trays</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 9px 14px; color: #0f172a; font-weight: 600;">
+                                    <i class="fa-solid fa-truck-fast" style="color: #2563eb; margin-right: 6px;"></i> In-Transit Shortages & Transfer Variances
+                                </td>
+                                <td style="padding: 9px 14px; text-align: right; font-weight: 600; color: #2563eb;"><%= Number(typeof totalTransitVariance !== 'undefined' ? totalTransitVariance : 0).toLocaleString() %></td>
+                                <td style="padding: 9px 14px; color: #64748b; font-size: 12px;">Dispatched vs Received transfer variances</td>
+                            </tr>
+                            <tr style="border-bottom: 1.5px solid #cbd5e1; background: #fff5f5;">
+                                <td style="padding: 9px 14px; color: #dc2626; font-weight: 700;">
+                                    <i class="fa-solid fa-triangle-exclamation" style="color: #dc2626; margin-right: 6px;"></i> Dashboard Stock Shortage
+                                </td>
+                                <td style="padding: 9px 14px; text-align: right; font-weight: 700; color: #dc2626;"><%= Number(typeof totalShortage !== 'undefined' ? totalShortage : 0).toLocaleString() %></td>
+                                <td style="padding: 9px 14px; color: #b91c1c; font-size: 12px; font-weight: 600;">Company Tray Variance</td>
+                            </tr>
+                            <tr style="background: #f0fdf4; border-top: 2px solid #16a34a;">
+                                <td style="padding: 11px 14px; color: #166534; font-weight: 800; font-size: 13.5px;">
+                                    <i class="fa-solid fa-check-circle" style="color: #16a34a; margin-right: 6px;"></i> NET TRAY BALANCE (Total Company Baseline)
+                                </td>
+                                <td style="padding: 11px 14px; text-align: right; font-weight: 800; font-size: 15px; color: #166534;"><%= Number(typeof netTrayBalance !== 'undefined' ? netTrayBalance : 0).toLocaleString() %></td>
+                                <td style="padding: 11px 14px; color: #15803d; font-size: 12px; font-weight: 700;">100% Fully Reconciled & Balanced</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -2330,6 +2517,7 @@
             const wb = XLSX.utils.book_new();
 
             const reportDefs = [
+                { id: 'branchStocksTable', name: 'Branch Stocks & Reconcile' },
                 { id: 'balanceTable', name: 'Customer Balances' },
                 { id: 'reportOutTable', name: 'Tray Issues (OUT)' },
                 { id: 'reportInTable', name: 'Tray Returns (IN)' },

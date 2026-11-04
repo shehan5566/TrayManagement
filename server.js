@@ -3649,9 +3649,78 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
         const totalOutMovement = warehouseBalanceList.reduce((s, e) => s + (e.outQty || 0), 0);
         const warehouseFinalClosingBalance = periodOpeningBalance + totalInMovement - totalOutMovement;
 
+        // Calculate Branch Stocks Summary (Warehouse Stocks + Customer Balances per Branch, Net Tray Balance, Damages, Shortage)
+        const allLocationsForStock = await Location.getAll();
+        const allCustomersForLocations = await CustomerModel.find({}).lean();
+        let totalAllBranchStock = 0;
+        let totalWarehouseStock = 0;
+        let totalCustomerStock = 0;
+        allLocationsForStock.forEach(loc => {
+            const branchCustBalance = allCustomersForLocations
+                .filter(c => {
+                    const cLoc = c.locationId || 'main';
+                    return String(cLoc) === String(loc.id);
+                })
+                .reduce((sum, c) => sum + (c.currentBalance || 0), 0);
+            loc.warehouseStock = loc.currentStock || 0;
+            loc.customerBalance = branchCustBalance;
+            loc.totalBranchStock = loc.warehouseStock + branchCustBalance;
+            totalWarehouseStock += loc.warehouseStock;
+            totalCustomerStock += branchCustBalance;
+            totalAllBranchStock += loc.totalBranchStock;
+        });
+
+        allLocationsForStock.sort((a, b) => {
+            const aIsHead = a.id === 'main' || (a.name && (a.name.toUpperCase().includes('HEAD OFFICE') || a.name.toUpperCase().includes('KADUWELA')));
+            const bIsHead = b.id === 'main' || (b.name && (b.name.toUpperCase().includes('HEAD OFFICE') || b.name.toUpperCase().includes('KADUWELA')));
+            if (aIsHead && !bIsHead) return -1;
+            if (!aIsHead && bIsHead) return 1;
+            return 0;
+        });
+
+        const sysSettingDoc = await SystemSetting.get();
+        const netTrayBalance = (sysSettingDoc && sysSettingDoc.netTrayBalance !== undefined) ? sysSettingDoc.netTrayBalance : 0;
+
+        const allDamageLogs = await DamageLog.getAll(null);
+        let totalAllDamages = 0;
+        allDamageLogs.forEach(d => {
+            totalAllDamages += (d.qty || 0);
+        });
+
+        const [allAcceptedTransfers, allCompletedTrips] = await Promise.all([
+            StockTransferModel.find({ isDeleted: false, status: 'ACCEPTED' }).lean(),
+            LorryTripModel.find({ isDeleted: false, status: 'COMPLETED' }).lean()
+        ]);
+
+        let totalTransitVariance = 0;
+        allAcceptedTransfers.forEach(t => {
+            const dispatched = t.dispatchedQty || 0;
+            const received = (t.receivedQty !== undefined && t.receivedQty !== null) ? t.receivedQty : dispatched;
+            const diff = dispatched - received;
+            if (diff > 0) totalTransitVariance += diff;
+        });
+
+        allCompletedTrips.forEach(t => {
+            if (typeof t.variance === 'number' && t.variance < 0) {
+                totalTransitVariance += Math.abs(t.variance);
+            }
+        });
+
+        const baseShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalAllDamages - 50);
+        const totalShortage = baseShortage + totalTransitVariance;
+
         let activeTab = req.query.activeTab || 'balanceReport';
 
         res.render('reports', {
+            allLocationsForStock,
+            netTrayBalance,
+            totalAllBranchStock,
+            totalWarehouseStock,
+            totalCustomerStock,
+            totalAllDamages,
+            totalTransitVariance,
+            totalShortage,
+            baseShortage,
             trayOutList,
             trayInList,
             customerBalances,
