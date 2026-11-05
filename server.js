@@ -3,6 +3,9 @@ const dns = require('dns');
 if (dns.setDefaultResultOrder) {
     dns.setDefaultResultOrder('ipv4first');
 }
+try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
 const express = require('express');
 const compression = require('compression');
 const session = require('express-session');
@@ -780,10 +783,10 @@ app.get('/dashboard', requireAuth, async (req, res) => {
             }
         });
 
-        // Stock Shortage: Base shortage (1,871) + Transit Variances (e.g. Wandama 15 trays -> 1,886)
-        // Any future transfer or trip variance is automatically added (+) to total shortage
-        const baseShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalDamages - 50);
-        const totalShortage = baseShortage + totalTransitVariance;
+        // Stock Shortage = Net Tray Balance - All Branch Stock (Warehouse + Customer) - Damages
+        // Reconciles 100% so Branch Stocks + Damages + Shortage = Net Tray Balance
+        const totalShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalDamages);
+        const baseShortage = totalShortage;
 
         const totalBranchStock = (warehouseCurrentBalance || 0) + (currentBalance || 0);
 
@@ -3706,8 +3709,10 @@ app.get('/reports', requireAuth, requirePermission('view_reports'), async (req, 
             }
         });
 
-        const baseShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalAllDamages - 50);
-        const totalShortage = baseShortage + totalTransitVariance;
+        // Stock Shortage = Net Tray Balance - All Branch Stock (Warehouse + Customer) - Damages
+        // Reconciles 100% so Branch Stocks + Damages + Shortage = Net Tray Balance
+        const totalShortage = Math.max(0, netTrayBalance - totalAllBranchStock - totalAllDamages);
+        const baseShortage = totalShortage;
 
         let activeTab = req.query.activeTab || 'balanceReport';
 

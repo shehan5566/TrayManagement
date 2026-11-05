@@ -9,6 +9,14 @@
  *  - Receipt data sanitization & clean remarks filter
  */
 
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
+try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
+
 const { SystemSetting, ApprovalRequest, Transaction, Customer, connectDB, CustomerModel, TransactionModel, ApprovalRequestModel, ActivityLogModel } = require('./db');
 const smsService = require('./smsService');
 const mongoose = require('mongoose');
