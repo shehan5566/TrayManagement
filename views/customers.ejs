@@ -5,6 +5,36 @@
         from { opacity: 0; transform: scale(0.96); }
         to { opacity: 1; transform: scale(1); }
     }
+
+    /* Customer Management Table Grid / Downward Vertical Borders */
+    #customersTable {
+        border-collapse: collapse !important;
+        width: 100%;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    #customersTable th {
+        border-right: 1px solid #cbd5e1 !important;
+        border-bottom: 2px solid #94a3b8 !important;
+        background-color: var(--th-bg, #f1f5f9);
+    }
+
+    #customersTable th:last-child {
+        border-right: none !important;
+    }
+
+    #customersTable td {
+        border-right: 1px solid #cbd5e1 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+
+    #customersTable td:last-child {
+        border-right: none !important;
+    }
+
+    #customersTable tbody tr:hover td {
+        background-color: var(--tr-hover-bg, #f8fafc);
+    }
 </style>
 
 <div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
