@@ -230,8 +230,8 @@
                     <tbody>
                         <% customerBalances.forEach(cb=> { %>
                             <tr>
-                                <td>
-                                    <%= cb.name %>
+                                <td class="col-customer-name" style="font-weight: 700; color: #000000;">
+                                    <strong><%= cb.name %></strong>
                                 </td>
                                 <td>
                                     <%= cb.phone %>
@@ -245,9 +245,9 @@
                                 <td style="text-align: right; color: #000000;">
                                     <%= cb.totalIn %>
                                 </td>
-                                <td
-                                    style="text-align: right; color: #000000;">
-                                    <%= cb.currentBalance %>
+                                <td class="col-closing-balance"
+                                    style="text-align: right; color: #000000; font-weight: 700;">
+                                    <strong><%= cb.currentBalance %></strong>
                                 </td>
                                 <td style="text-align: right; color: #000000;">
                                     <%= (cb.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
@@ -293,41 +293,41 @@
                             style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #cbd5e1;">
                             <tr>
                                 <td colspan="2"
-                                    style="text-align: right; color: #000000; font-size: 13px; font-weight: bold;">
-                                    OUTSTANDING TRAY BALANCE & GRAND TOTAL:</td>
-                                <td style="text-align: right; font-size: 14px; color: #000000; font-weight: bold;">
+                                    style="text-align: right; color: #000000; font-size: 13.5px; font-weight: bold;">
+                                    OUTSTANDING TRAY BALANCE:</td>
+                                <td style="text-align: right; font-size: 13.5px; color: #000000; font-weight: bold;">
                                     <%= totalInitial %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-size: 14px; font-weight: bold;">
+                                    style="text-align: right; color: #000000; font-size: 13.5px; font-weight: bold;">
                                     <%= totalOut %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-size: 14px; font-weight: bold;">
+                                    style="text-align: right; color: #000000; font-size: 13.5px; font-weight: bold;">
                                     <%= totalIn %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-size: 15px; color: #000000; font-weight: bold;">
+                                    style="text-align: right; font-size: 13.5px; color: #000000; font-weight: bold;">
                                     <%= totalCurrent %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-size: 14px; color: #000000; font-weight: bold;">
+                                    style="text-align: right; font-size: 13.5px; color: #000000; font-weight: bold;">
                                     <%= totalInitialDep.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-size: 14px; font-weight: bold;">
+                                    style="text-align: right; color: #000000; font-size: 13.5px; font-weight: bold;">
                                     <%= totalDepColl.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; color: #000000; font-size: 14px; font-weight: bold;">
+                                    style="text-align: right; color: #000000; font-size: 13.5px; font-weight: bold;">
                                     <%= totalDepRef.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-size: 15px; color: #000000; font-weight: bold;">
+                                    style="text-align: right; font-size: 13.5px; color: #000000; font-weight: bold;">
                                     <%= totalDepOut.toLocaleString() %>
                                 </td>
                                 <td
-                                    style="text-align: right; font-size: 15px; color: #000000; font-weight: bold;">
+                                    style="text-align: right; font-size: 13.5px; color: #000000; font-weight: bold;">
                                     <%= totalPendingDep.toLocaleString() %>
                                 </td>
                                 <td></td>
@@ -1547,7 +1547,25 @@
             background-color: #f8fafc !important;
         }
 
-        /* 5. Footer Summary Row (tfoot td / tfoot th) - BOLD (OUTSTANDING TRAY BALANCE & GRAND TOTAL) */
+        /* Customer Balance Summary Bold Columns & Uniform Footer */
+        #balanceTable tbody td.col-customer-name,
+        #balanceTable tbody td.col-customer-name *,
+        #balanceTable tbody td:nth-child(1),
+        #balanceTable tbody td:nth-child(1) *,
+        #balanceTable tbody td.col-closing-balance,
+        #balanceTable tbody td.col-closing-balance *,
+        #balanceTable tbody td:nth-child(6),
+        #balanceTable tbody td:nth-child(6) * {
+            font-weight: 700 !important;
+        }
+
+        #balanceTable tfoot tr td,
+        #balanceTable tfoot tr td * {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+        }
+
+        /* 5. Footer Summary Row (tfoot td / tfoot th) - BOLD (OUTSTANDING TRAY BALANCE) */
         .tab-content table tfoot th,
         .tab-content table tfoot td,
         .tab-content table.dataTable tfoot th,
@@ -2211,7 +2229,26 @@
                                 font-weight: normal !important;
                             }
 
+                            /* Bold Customer Name & Closing Balance in Customer Balance Summary PDF */
+                            #balanceTable tbody td:nth-child(1),
+                            #balanceTable tbody td:nth-child(1) *,
+                            #balanceTable tbody td.col-customer-name,
+                            #balanceTable tbody td.col-customer-name *,
+                            #balanceTable tbody td:nth-child(6),
+                            #balanceTable tbody td:nth-child(6) *,
+                            #balanceTable tbody td.col-closing-balance,
+                            #balanceTable tbody td.col-closing-balance * {
+                                font-weight: 700 !important;
+                            }
+
                             tfoot td, tfoot th, tfoot td * {
+                                font-weight: 700 !important;
+                            }
+
+                            /* Uniform Font Size for Outstanding Tray Balance Footer Row in PDF */
+                            #balanceTable tfoot tr td,
+                            #balanceTable tfoot tr td * {
+                                font-size: 10.5px !important;
                                 font-weight: 700 !important;
                             }
 
