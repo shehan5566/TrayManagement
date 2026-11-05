@@ -79,7 +79,7 @@
             const canDeleteCustomer = typeof hasPerm === 'function' && hasPerm('customer_delete');
             const canViewHistory = typeof hasPerm === 'function' && hasPerm('customer_history');
             const canSendSms = typeof hasPerm === 'function' && hasPerm('customer_sms');
-            const hasCustomerAction = canEditCustomer || canDeleteCustomer || canViewHistory;
+            const hasCustomerAction = canEditCustomer || canDeleteCustomer || canViewHistory || canSendSms;
         %>
         <div class="table-responsive">
             <table id="customersTable">
@@ -94,7 +94,7 @@
                         <th>Initial Deposit</th>
                         <th>Current Balance</th>
                         <% if (hasCustomerAction) { %>
-                        <th style="text-align: center; width: 150px;">Actions</th>
+                        <th style="text-align: center; width: 160px;">Actions</th>
                         <% } %>
                     </tr>
                 </thead>
@@ -116,15 +116,8 @@
                             <td><%= c.repPhone || '-' %></td>
                             <td><%= c.initialBalance %></td>
                             <td><%= Number(c.initialDeposit || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></td>
-                            <td style="font-weight: bold; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
-                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                    <span><%= c.currentBalance %></span>
-                                    <% if (canSendSms) { %>
-                                    <button onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" title="Send SMS Balance Update">
-                                        <i class="fa-solid fa-comment-sms"></i>
-                                    </button>
-                                    <% } %>
-                                </div>
+                            <td style="font-weight: bold; text-align: right; color: <%= c.currentBalance > 0 ? 'var(--danger)' : 'var(--success)' %>; vertical-align: middle;">
+                                <%= c.currentBalance %>
                             </td>
                             <% if (hasCustomerAction) { %>
                             <td>
@@ -133,6 +126,11 @@
                                     <a href="/customers/<%= c.id %>/history" class="btn btn-action-view" title="View History">
                                         <i class="fa-solid fa-clock-rotate-left"></i>
                                     </a>
+                                    <% } %>
+                                    <% if (canSendSms) { %>
+                                    <button type="button" onclick="sendBalanceSMS('<%= c.id %>')" class="btn btn-action-sms" title="Send SMS Balance Update">
+                                        <i class="fa-solid fa-comment-sms"></i>
+                                    </button>
                                     <% } %>
                                     <% if (canEditCustomer) { %>
                                     <button type="button" 
