@@ -39,10 +39,7 @@
                                                     <%= new Date(t.dispatchedDate).toLocaleString('en-GB', { timeZone: 'Asia/Colombo' }) %>
                                                 </td>
                                                 <td>
-                                                    <span class="badge"
-                                                        style="background-color: var(--accent-yellow); color: #333;">
-                                                        <%= t.transferDocNo || 'N/A' %>
-                                                    </span>
+                                                    <%= t.transferDocNo || '-' %>
                                                     <% if (t.varianceRejectionReason) { %>
                                                         <div style="margin-top: 4px; font-size: 11px; color: #dc2626; font-weight: 600;">
                                                             <i class="fa-solid fa-rotate-left"></i> Re-count: <%= t.varianceRejectionReason %>
