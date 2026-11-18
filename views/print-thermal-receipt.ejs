@@ -427,15 +427,17 @@
         <!-- Deposit & Refund Statement Highlight Box -->
         <div class="statement-box" style="background-color: <%= isOut ? '#fffbea' : '#f0fdf4' %>; border: 1.5px solid <%= isOut ? '#f59e0b' : '#22c55e' %>;">
             <div style="font-size: 11px; font-weight: 700; color: #1f2937;">
-                <%= isOut ? '🪙 Deposit Statement (Paid & Pending):' : '💵 Refund Statement (Paid & Pending):' %>
+                <%= isOut ? '🪙 Deposit Statement (Paid & Pending):' : '💵 Refund Statement:' %>
             </div>
+            <% if (isOut) { %>
             <div style="font-size: 10px; color: #4b5563; margin-top: 3px;">
                 Total Value: <%= countQty %> Trays × Rs. <%= rate.toLocaleString() %> = <strong>Rs. <%= totalTrayDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></strong>
             </div>
             <div style="font-size: 10.5px; margin-top: 2px; color: <%= pendingAmt > 0 ? '#dc2626' : '#15803d' %>; font-weight: bold;">
-                <%= isOut ? 'Pending Unpaid Deposit' : 'Pending Unrefunded Balance' %>: Rs. <%= pendingAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
+                Pending Unpaid Deposit: Rs. <%= pendingAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 4px; border-top: 1px dashed <%= isOut ? '#f59e0b' : '#22c55e' %>;">
+            <% } %>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 4px; <%= isOut ? 'border-top: 1px dashed #f59e0b;' : '' %>">
                 <span style="font-size: 9.5px; font-weight: bold; text-transform: uppercase; color: #6b7280;"><%= isOut ? 'Paid Amount:' : 'Refunded Amount:' %></span>
                 <span style="font-size: 15px; font-weight: 900; color: <%= isOut ? '#b45309' : '#15803d' %>;">Rs. <%= paidAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></span>
             </div>
@@ -624,12 +626,16 @@
             // 6. Statement Box (Centered title, balanced rows)
             cmd([0x1B, 0x61, 0x01]);
             cmd([0x1B, 0x45, 0x01]);
-            text("DEPOSIT/REFUND STATEMENT\n");
+            text(txData.type === 'OUT' ? "DEPOSIT STATEMENT\n" : "REFUND STATEMENT\n");
             cmd([0x1B, 0x45, 0x00]);
             cmd([0x1B, 0x61, 0x00]);
-            text(formatLine("Total Value:", "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
-            text(formatLine("Paid Amount:", "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
-            text(formatLine("Pending Dep:", "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            if (txData.type === 'OUT') {
+                text(formatLine("Total Value:", "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+                text(formatLine("Paid Amount:", "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+                text(formatLine("Pending Dep:", "Rs. " + Math.abs(pending).toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            } else {
+                text(formatLine("Refunded Amt:", "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            }
             text(divider);
 
             // 7. Customer Net Balance (Centered title, balanced rows)
