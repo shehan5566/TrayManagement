@@ -168,9 +168,10 @@
                             <% if (isOut) { %>
                                 <i class="fa-solid fa-coins"></i> Deposit Statement (Paid & Pending):
                                 <% } else { %>
-                                    <i class="fa-solid fa-hand-holding-dollar"></i> Refund Statement (Paid & Pending):
+                                    <i class="fa-solid fa-hand-holding-dollar"></i> Refund Statement:
                                     <% } %>
                         </div>
+                        <% if (isOut) { %>
                         <div style="font-size: 12px; color: #555; margin-top: 4px;">
                             Total Value: <%= countQty %> Trays × Rs. <%= rate.toLocaleString() %> = <strong>Rs. <%=
                                             totalTrayDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
@@ -178,9 +179,10 @@
                         </div>
                         <div
                             style="font-size: 12px; margin-top: 2px; color: <%= pendingAmt > 0 ? '#d32f2f' : '#2e7d32' %>; font-weight: 600;">
-                            <%= isOut ? 'Pending Unpaid Deposit' : 'Pending Unrefunded Balance' %>: Rs. <%=
+                            Pending Unpaid Deposit: Rs. <%=
                                     Math.abs(pendingAmt).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
                         </div>
+                        <% } %>
                     </div>
                     <div style="text-align: right;">
                         <div
