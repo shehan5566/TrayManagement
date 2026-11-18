@@ -2170,7 +2170,7 @@ app.get('/loading', requireAuth, requirePermission('loading_view'), async (req, 
             TransactionModel.distinct('vehicleNo', { vehicleNo: { $nin: ['N/A', '', null] } })
         ]);
         const currentStock = loc ? (loc.currentStock || 0) : 0;
-        const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'RENTED', 'OWNOUTLET'];
+        const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'LB-2606', 'RENTED', 'OWNOUTLET'];
         const vehicles = Array.from(new Set([...STANDARD_VEHICLES, ...dbVehicles])).filter(v => v !== 'N/A');
 
         res.render('loading', {
@@ -2594,7 +2594,7 @@ app.post('/unloading/:id/delete', requireAuth, requireEditAccess, requirePermiss
 // Driver Mobile Dashboard
 app.get('/driver', async (req, res) => {
     try {
-        const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'RENTED', 'OWNOUTLET'];
+        const STANDARD_VEHICLES = ['LK-3945', 'LN-4124', 'PX-1430', 'PU-4451', 'LP-3506', 'LG-1095', 'LK-8422', 'LM-6632', 'DAG-2712', 'LB-2606', 'RENTED', 'OWNOUTLET'];
         const dbVehicles = await TransactionModel.distinct('vehicleNo', { vehicleNo: { $nin: ['N/A', '', null] } });
         const vehicles = Array.from(new Set([...STANDARD_VEHICLES, ...dbVehicles])).filter(v => v !== 'N/A');
 
