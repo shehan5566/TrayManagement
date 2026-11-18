@@ -382,21 +382,25 @@
             <span class="label">Rate:</span>
             <span class="val">Rs. <%= rate.toLocaleString() %> / Tray</span>
         </div>
+        <% if (isOut) { %>
         <div class="row">
-            <span class="label"><%= isOut ? 'Total Payable Amount:' : 'Total Refundable Amount:' %></span>
+            <span class="label">Total Payable Amount:</span>
             <span class="val text-bold">Rs. <%= totalTrayDeposit.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></span>
         </div>
+        <% } %>
         <div class="row">
             <span class="label"><%= isOut ? 'Deposit Amount:' : 'Refund Amount:' %></span>
             <span class="val text-bold" style="color: <%= isOut ? '#b45309' : '#15803d' %>; font-size: 13px;">Rs. <%= paidAmt.toLocaleString('en-LK', { minimumFractionDigits: 2 }) %></span>
         </div>
+        <% if (isOut) { %>
         <div class="row">
-            <span class="label"><%= isOut ? 'Pending Deposit Balance:' : 'Pending Refund Balance:' %></span>
+            <span class="label">Pending Deposit Balance:</span>
             <span class="val text-bold" style="color: <%= pendingAmt > 0 ? '#dc2626' : '#15803d' %>;">
                 Rs. <%= Math.abs(pendingAmt).toLocaleString('en-LK', { minimumFractionDigits: 2 }) %>
-                <% if (pendingAmt === 0) { %><span style="font-size: 9.5px; font-weight: normal; color: #6b7280;">(Fully <%= isOut ? 'Paid' : 'Refunded' %>)</span><% } %>
+                <% if (pendingAmt === 0) { %><span style="font-size: 9.5px; font-weight: normal; color: #6b7280;">(Fully Paid)</span><% } %>
             </span>
         </div>
+        <% } %>
         <div class="row">
             <span class="label">Payment Mode:</span>
             <span class="val"><%= modeText %></span>
@@ -592,12 +596,14 @@
             const pending = Math.max(0, expected - paid);
 
             text(formatLine("Rate:", "Rs. " + rate.toLocaleString() + "/Tray"));
-            const totLabel = txData.type === 'OUT' ? "Total Payable:" : "Total Refund:";
-            text(formatLine(totLabel, "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            if (txData.type === 'OUT') {
+                text(formatLine("Total Payable:", "Rs. " + expected.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            }
             const depLabel = txData.type === 'OUT' ? "Deposit Paid:" : "Refund Paid:";
             text(formatLine(depLabel, "Rs. " + paid.toLocaleString('en-US', { minimumFractionDigits: 2 })));
-            const pendLabel = txData.type === 'OUT' ? "Pending Dep:" : "Pending Ref:";
-            text(formatLine(pendLabel, "Rs. " + pending.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            if (txData.type === 'OUT') {
+                text(formatLine("Pending Dep:", "Rs. " + pending.toLocaleString('en-US', { minimumFractionDigits: 2 })));
+            }
             text(formatLine("Payment Mode:", txData.depositOption || 'FULL'));
 
             const hasApproval = !!(txData.approvedBy || txData.specialApprovalId || (txData.remarks && /approved by/i.test(txData.remarks)));
